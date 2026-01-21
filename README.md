@@ -1,7 +1,8 @@
 # 2026Spring-Team05-Lavoine
 
 ## The Project
-**Sustainable Box Trivia Game** (*Proposed and sponsored by Dr. Nathalie Lavoine*) 
+**Sustainable Box Trivia Game** (*Proposed and sponsored by Dr. Nathalie Lavoine*)
+
 The science of sustainable packaging goes far beyond 'just a box', but sadly most people remain uninformed and uninterested about the subject.
 To improve education in an enjoyable and engaging fashion, we are creating a fun learning tool in the form of a packaging-themed teacher-hosted trivia game!
 
