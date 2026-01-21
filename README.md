@@ -30,13 +30,13 @@ The project is developed with the following technologies:
 - [ ] tech stack setup
 - [ ] first round of features (preliminary teacher/host dashboard & singleplayer proof-of-concept)
 
-**Long-term Goals:**
+**Long-term Milestones:**
 - multiplayer, study, and teacher game modes
 - 3d progress visualization
 - user testing
 - finalized question content
-- polishing with packaging theme
-- presentation
+- visual polish (packaging theme)
+- presentation 
 
 
 
