@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lobby</title>
+<link rel="stylesheet" href="/css/styles.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+<header class="header d-flex align-items-center justify-content-center">
+    <div class="logo"></div>
+    <h1 class="fw-bold m-0">Sustainable Box Trivia</h1>
+</header>
+
+<div class="container-fluid main-container">
+<div class="row h-100 text-white">
+
+<div class="col-md-4 left-panel p-4">
+
+    <h3>Settings</h3>
+
+    <label class="mt-3">Questions</label>
+    <label class="mt-3">Questions: <span id="questionCount">25</span></label>
+    <input type="range" min="10" max="50" value="25" id="questionSlider" class="form-range">
+
+    <h5 class="mt-4">Categories</h5>
+
+    <div>
+        <input type="checkbox" checked value="Category 1"> Category Poo<br>
+        <input type="checkbox" checked value="Category 2"> Category Tis<br>
+        <input type="checkbox" checked value="Category 3"> Category Pow
+    </div>
+
+</div>
+
+<div class="col-md-8 right-panel p-4">
+
+    <h4>CODE: <span id="roomCode">----</span></h4>
+
+    <h5 class="mt-4">Joinees</h5>
+    <div id="players"></div>
+
+    <div class="mt-5 d-flex gap-4">
+        <button class="btn btn-danger" onclick="cancelRoom()">Cancel</button>
+        <button class="btn btn-primary" onclick="startGame()">Start</button>
+    </div>
+
+</div>
+
+</div>
+</div>
+
+<script src="../js/student-host.js"></script>
+</body>
+</html>

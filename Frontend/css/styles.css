@@ -1,0 +1,59 @@
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    height: 100vh;
+}
+
+.header {
+    background-color: #8BE36B;
+    height: 90px;
+    position: relative;
+}
+
+.logo {
+    width: 50px;
+    height: 50px;
+    background-color: #8B6F2D;
+    position: absolute;
+    left: 25px;
+    transform: rotate(45deg);
+}
+
+.main-container {
+    height: calc(100vh - 90px);
+}
+
+.left-panel {
+    background: linear-gradient(#5B5BE0, #6666F6);
+}
+
+.right-panel {
+    background: linear-gradient(#7A7AE8, #8888f7);
+}
+
+.student-btn {
+    background-color: #7BC4A4;
+    border: none;
+    font-weight: bold;
+    font-size: 1.3rem;
+}
+
+.teacher-btn {
+    background-color: #78A7E0;
+    border: none;
+    font-weight: bold;
+    font-size: 1.3rem;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.study-panel {
+    background: linear-gradient(#79B79C, #8ECFB3);
+}
+
+#players div {
+    margin: 5px 0;
+    font-size: 1.2rem;
+}
