@@ -18,6 +18,31 @@ con.connect(function(err) {
     console.log("Connected!");
 })
 
+const setup = () => {
+    con.query("CREATE DATABASE trivia_questions", function (err, result) {
+        if (err) {
+            console.error(err.stack);
+            return;
+        }
+        console.log("Database created");
+    })
+    let qry =`CREATE TABLE questions (
+        questionID INT AUTO_INCREMENT PRIMARY KEY,
+        question VARCHAR(255) NOT NULL,
+        corrAnswer VARCHAR(255) NOT NULL,
+        incorrONE VAR(255) NOT NULL,
+        incorrTWO VAR(255) NOT NULL,
+        incorrTHREE VAR(255) NOT NULL,
+        category INT NOT NULL)`
+    con.query(qry, function (err, result) {
+        if (err) {
+            console.error(err.stack);
+            return;
+        }
+        console.log("Table Created");
+    })
+}
+
 module.exports = addQuestion = (body) => {
     const {question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category} = body;
 
@@ -99,6 +124,5 @@ module.exports = getByID = (id) => {
     })
 }
 
-//addQuestion();
 getAllQuestion();
 con.end();
