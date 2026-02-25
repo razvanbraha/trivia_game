@@ -3,8 +3,8 @@ let mysql = require('mysql2');
 require('dotenv').config({ path: path.join(__dirname, '../../.env')})
 
 let con = mysql.createConnection({
-    host: process.env.host,
     //Will need user account on vm 
+    host: process.env.host,
     user: process.env.user, 
     password: process.env.password,
 });
@@ -18,14 +18,21 @@ con.connect(function(err) {
 })
 
 const setup = () => {
-    con.query("CREATE DATABASE trivia_questions", function (err, result) {
+    con.query("CREATE DATABASE IF NOT EXISTS trivia_questions", function (err, result) {
         if (err) {
             console.error(err.stack);
             return;
         }
         console.log("Database created");
     })
-    let qry =`CREATE TABLE questions (
+    con = mysql.createConnection({
+        //Will need user account on vm 
+        host: process.env.host,
+        user: process.env.user, 
+        password: process.env.password,
+        database: process.env.database
+    });
+    let qry =`CREATE TABLE IF NOT EXISTS questions (
         questionID INT AUTO_INCREMENT PRIMARY KEY,
         question VARCHAR(255) NOT NULL,
         corrAnswer VARCHAR(255) NOT NULL,
