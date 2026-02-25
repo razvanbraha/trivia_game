@@ -7,7 +7,6 @@ let con = mysql.createConnection({
     //Will need user account on vm 
     user: process.env.user, 
     password: process.env.password,
-    database: process.env.database
 });
 
 con.connect(function(err) {
@@ -30,9 +29,9 @@ const setup = () => {
         questionID INT AUTO_INCREMENT PRIMARY KEY,
         question VARCHAR(255) NOT NULL,
         corrAnswer VARCHAR(255) NOT NULL,
-        incorrONE VAR(255) NOT NULL,
-        incorrTWO VAR(255) NOT NULL,
-        incorrTHREE VAR(255) NOT NULL,
+        incorrONE VARCHAR(255) NOT NULL,
+        incorrTWO VARCHAR(255) NOT NULL,
+        incorrTHREE VARCHAR(255) NOT NULL,
         category INT NOT NULL)`
     con.query(qry, function (err, result) {
         if (err) {
@@ -124,5 +123,7 @@ module.exports = getByID = (id) => {
     })
 }
 
+setup();
 getAllQuestion();
 con.end();
+
