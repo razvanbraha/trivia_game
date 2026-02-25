@@ -2,6 +2,7 @@ const path = require('node:path');
 let mysql = require('mysql2');
 require('dotenv').config({ path: path.join(__dirname, '../../.env')})
 
+ //Setup initial sql connection
 let con = mysql.createConnection({
     //Will need user account on vm 
     host: process.env.host,
@@ -9,6 +10,7 @@ let con = mysql.createConnection({
     password: process.env.password,
 });
 
+//Connect to mySQL (no database)
 con.connect(function(err) {
     if (err) {
         console.error(err.stack);
@@ -17,6 +19,11 @@ con.connect(function(err) {
     console.log("Connected!");
 })
 
+/**
+ * Setup Admins database & table if none exists.
+ * @author Riley Wickens & Razvan Braha
+ * @throws {err} if connection/query fails
+ */
 const setupAdmins = () => {
     con.query("CREATE DATABASE IF NOT EXISTS trivia_admins", function (err, result) {
         if (err) {
@@ -25,6 +32,7 @@ const setupAdmins = () => {
         }
         console.log("Database created");
     })
+    //Connect to mySQL (with database)
     con = mysql.createConnection({
         //Will need user account on vm 
         host: process.env.host,
@@ -44,7 +52,13 @@ const setupAdmins = () => {
     })
 }
 
-module.exports = addAdmin = (body) => {
+/**
+ * Add admin to database.
+ * @author Riley Wickens & Razvan Braha
+ * @param {Array} body - Array with data to be added to db
+ * @throws {err} if connection/query fails
+ */
+const addAdmin = (body) => {
     const {unityID} = body;
 
     let data = [unityID];
@@ -59,7 +73,14 @@ module.exports = addAdmin = (body) => {
     })
 }
 
-module.exports = updateAdmin = (body, id) => {
+/**
+ * Update admin in database.
+ * @author Riley Wickens & Razvan Braha
+ * @param {Array} body - Array w/ data to be added to db
+ * @param {Number} id - Admin ID of admin to update
+ * @throws {err} if connection/query fails
+ */
+const updateAdmin = (body, id) => {
     const {unityID} = body;
 
     let data = [unityID];
@@ -76,7 +97,13 @@ module.exports = updateAdmin = (body, id) => {
     })
 }
 
-module.exports = deleteAdmin = (id) => {
+/**
+ * Delete question from database.
+ * @author Riley Wickens & Razvan Braha
+ * @param {Number} id - Question ID of question to delete
+ * @throws {err} if connection/query fails
+ */
+const deleteAdmin = (id) => {
     let qry = `DELETE FROM admins WHERE adminID = ${id}`;
     con.query(qry, function (err, result) {
     if (err) {
@@ -87,7 +114,13 @@ module.exports = deleteAdmin = (id) => {
     })
 }
 
-module.exports = getAllAdmins = () => {
+/**
+ * Retreive all admins from database.
+ * @author Riley Wickens & Razvan Braha
+ * @throws {err} if connection/query fails
+ */
+//TODO: Return GET
+const getAllAdmins = () => {
     let qry = `SELECT * FROM admins`;
     con.query(qry, function (err, result) {
     if (err) {
@@ -98,7 +131,14 @@ module.exports = getAllAdmins = () => {
     })
 }
 
-module.exports = getByUnityId = (unityId) => {
+/**
+ * Retreive admin from database with matching unityID.
+ * @author Riley Wickens & Razvan Braha
+ * @param {Number} unityId - unity ID of admin to retreive
+ * @throws {err} if connection/query fails
+ */
+//TODO: Return GET
+const getByUnityId = (unityId) => {
     let qry = `SELECT * FROM admins WHERE unityID = ${unityId}`;
     con.query(qry, function (err, result) {
     if (err) {
@@ -109,7 +149,14 @@ module.exports = getByUnityId = (unityId) => {
     })
 }
 
-module.exports = getByID = (id) => {
+/**
+ * Retreive admin from database with matching id.
+ * @author Riley Wickens & Razvan Braha
+ * @param {Number} id - ID of admin to retreive
+ * @throws {err} if connection/query fails
+ */
+//TODO: Return GET
+const getByID = (id) => {
     let qry = `SELECT * FROM admins WHERE adminID = ${id}`;
     con.query(qry, function (err, result) {
     if (err) {
@@ -118,6 +165,16 @@ module.exports = getByID = (id) => {
     }
         console.log(result);
     })
+}
+
+module.exports = {
+    setupAdmins,
+    addAdmin,
+    updateAdmin, 
+    deleteAdmin,
+    getAllAdmins,
+    getByUnityId,
+    getByID
 }
 
 setupAdmins();
