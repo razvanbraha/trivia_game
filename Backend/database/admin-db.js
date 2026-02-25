@@ -17,8 +17,8 @@ con.connect(function(err) {
     console.log("Connected!");
 })
 
-const setup = () => {
-    con.query("CREATE DATABASE IF NOT EXISTS trivia_questions", function (err, result) {
+const setupAdmins = () => {
+    con.query("CREATE DATABASE IF NOT EXISTS trivia_admins", function (err, result) {
         if (err) {
             console.error(err.stack);
             return;
@@ -32,14 +32,9 @@ const setup = () => {
         password: process.env.password,
         database: process.env.database
     });
-    let qry =`CREATE TABLE IF NOT EXISTS questions (
-        questionID INT AUTO_INCREMENT PRIMARY KEY,
-        question VARCHAR(255) NOT NULL,
-        corrAnswer VARCHAR(255) NOT NULL,
-        incorrONE VARCHAR(255) NOT NULL,
-        incorrTWO VARCHAR(255) NOT NULL,
-        incorrTHREE VARCHAR(255) NOT NULL,
-        category INT NOT NULL)`
+    let qry =`CREATE TABLE IF NOT EXISTS admins (
+        adminID INT AUTO_INCREMENT PRIMARY KEY,
+        unityID VARCHAR(255) NOT NULL)`
     con.query(qry, function (err, result) {
         if (err) {
             console.error(err.stack);
@@ -49,45 +44,40 @@ const setup = () => {
     })
 }
 
-module.exports = addQuestion = (body) => {
-    const {question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category} = body;
+module.exports = addAdmin = (body) => {
+    const {unityID} = body;
 
-    let data = [question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category];
-    let qry = `INSERT INTO questions (question, corrAnswer, incorrONE, incorrTWO, incorrTHREE, category) VALUES (?, ?, ?, ?, ?, ?)`;
-
-    con.query(qry, data, function (err, result) {
-        if (err) {
-            console.error(err.stack);
-            return;
-        }
-        console.log("Question inserted");
-    })
-}
-
-module.exports = updateQuestion = (body, id) => {
-    const {question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category} = body;
-
-    let data = [question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category];
-    let qry = `UPDATE questions SET
-        question = ${question},
-        corrAnswer = ${correctAnswer},
-        incorrONE = ${wrongAnswer1},
-        incorrTWO = ${wrongAnswer2},
-        incorrTHREE = ${wrongAnswer3},
-        category = ${category}
-        WHERE questionID = ${id}`;
+    let data = [unityID];
+    let qry = `INSERT INTO admins (unityID) VALUES (?)`;
 
     con.query(qry, data, function (err, result) {
         if (err) {
             console.error(err.stack);
             return;
         }
-        console.log(`Question ${id} updated`);
+        console.log("Admin added");
     })
 }
 
-module.exports = deleteQuestion = (id) => {
-    let qry = `DELETE FROM questions WHERE questionID = ${id}`;
+module.exports = updateAdmin = (body, id) => {
+    const {unityID} = body;
+
+    let data = [unityID];
+    let qry = `UPDATE admins SET
+        unityID = ${unityID},
+        WHERE adminID = ${id}`;
+
+    con.query(qry, data, function (err, result) {
+        if (err) {
+            console.error(err.stack);
+            return;
+        }
+        console.log(`Admin ${id} updated`);
+    })
+}
+
+module.exports = deleteAdmin = (id) => {
+    let qry = `DELETE FROM admins WHERE adminID = ${id}`;
     con.query(qry, function (err, result) {
     if (err) {
         console.error(err.stack);
@@ -97,8 +87,8 @@ module.exports = deleteQuestion = (id) => {
     })
 }
 
-module.exports = getAllQuestion = () => {
-    let qry = `SELECT * FROM questions`;
+module.exports = getAllAdmins = () => {
+    let qry = `SELECT * FROM admins`;
     con.query(qry, function (err, result) {
     if (err) {
         console.error(err.stack);
@@ -108,8 +98,8 @@ module.exports = getAllQuestion = () => {
     })
 }
 
-module.exports = getByCategory = (category) => {
-    let qry = `SELECT * FROM questions WHERE category = ${category}`;
+module.exports = getByUnityId = (unityId) => {
+    let qry = `SELECT * FROM admins WHERE unityID = ${unityId}`;
     con.query(qry, function (err, result) {
     if (err) {
         console.error(err.stack);
@@ -120,7 +110,7 @@ module.exports = getByCategory = (category) => {
 }
 
 module.exports = getByID = (id) => {
-    let qry = `SELECT * FROM questions WHERE questionID = ${id}`;
+    let qry = `SELECT * FROM admins WHERE adminID = ${id}`;
     con.query(qry, function (err, result) {
     if (err) {
         console.error(err.stack);
@@ -130,7 +120,7 @@ module.exports = getByID = (id) => {
     })
 }
 
-setup();
-getAllQuestion();
+setupAdmins();
+getAllAdmins();
 con.end();
 
