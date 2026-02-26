@@ -1,0 +1,144 @@
+const path = require('node:path');
+let mysql = require('mysql2/promise');
+require('dotenv').config({ path: path.join(__dirname, '../../.env')})
+
+
+// Initialize database connection
+let con;
+
+/**
+ * Setup Questions database & table if none exists.
+ * @author Riley Wickens & Razvan Braha
+ * @throws {err} if connection/query fails
+ */
+const setupQuestions = async () => {
+
+    // Create db if needed
+    const rootCon = await mysql.createConnection({
+        host: process.env.host,
+        user: process.env.user,
+        password: process.env.password
+    });
+
+    await rootCon.query('CREATE DATABASE IF NOT EXISTS trivia_questions');
+    await rootCon.end();
+
+    // connect with db
+    con = await mysql.createConnection({
+        host: process.env.host,
+        user: process.env.user,
+        password: process.env.password,
+        database: process.env.database
+    });
+
+    // Create table if it doesn't exist
+    const createTableSql = 
+        `CREATE TABLE IF NOT EXISTS questions (
+        questionID INT AUTO_INCREMENT PRIMARY KEY,
+        question VARCHAR(255) NOT NULL,
+        corrAnswer VARCHAR(255) NOT NULL,
+        incorrONE VARCHAR(255) NOT NULL,
+        incorrTWO VARCHAR(255) NOT NULL,
+        incorrTHREE VARCHAR(255) NOT NULL,
+        category INT NOT NULL,
+        isAI BOOLEAN NOT NULL DEFAULT FALSE)`;
+
+    await con.query(createTableSql);
+}
+
+/**
+ * Add question to database.
+ * @author Riley Wickens & Razvan Braha
+ * @param {Array} body - Array with data to be added to db
+ * @throws {err} if connection/query fails
+ */
+const addQuestion = async (body) => {
+    const {question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category, ai} = body;
+
+    let data = [question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category, ai];
+    let qry = `INSERT INTO questions (question, corrAnswer, incorrONE, incorrTWO, incorrTHREE, category, isAI) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+    const [result] = await con.query(qry, data);
+    return result.insertId;
+}
+
+/**
+ * Update question in database.
+ * @author Riley Wickens & Razvan Braha
+ * @param {Array} body - Array w/ data to be added to db
+ * @param {Number} id - Question ID of question to update
+ * @throws {err} if connection/query fails
+ */
+const updateQuestion = async (body, id) => {
+    const {question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category, ai} = body;
+
+    let data = [question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category, ai, id];
+    let qry = `UPDATE questions 
+        SET question= ? , corrAnswer = ?, incorrONE = ?, incorrTWO = ?, incorrTHREE = ?, category = ?, isAI = ?
+        WHERE questionID = ?`;
+
+    const [result] = await con.query(qry, data);
+    return result.affectedRows;
+}
+
+/**
+ * Delete question from database.
+ * @author Riley Wickens & Razvan Braha
+ * @param {Number} id - Question ID of question to delete
+ * @throws {err} if connection/query fails
+ */
+const deleteQuestion = async (id) => {
+    let qry = `DELETE FROM questions WHERE questionID = ?`;
+    let [result] = await con.query(qry, [id]);
+    return result.affectedRows;
+}
+
+/**
+ * Retreive all questions from database.
+ * @author Riley Wickens & Razvan Braha
+ * @throws {err} if connection/query fails
+ */
+//TODO: Return GET
+const getAllQuestion = async () => {
+    let qry = `SELECT * FROM questions`;
+    const [result] = await con.query(qry);
+    return result;
+}
+
+/**
+ * Retreive questions from database with matching category.
+ * @author Riley Wickens & Razvan Braha
+ * @param {Number} category - category of questions to retreive
+ * @throws {err} if connection/query fails
+ */
+//TODO: Return GET
+const getByCategory = async (category) => {
+    let qry = `SELECT * FROM questions WHERE category = ?`;
+    const [result] = await con.query(qry, [category]);
+    return result;
+}
+
+/**
+ * Retreive questions from database with matching ID.
+ * @author Riley Wickens & Razvan Braha
+ * @param {Number} category - ID of question to retreive
+ * @throws {err} if connection/query fails
+ */
+//TODO: Return GET
+const getByID = async (id) => {
+    let qry = `SELECT * FROM questions WHERE questionID = ?`;
+    const[result] = await con.query(qry, [id]);
+    return result[0] || null;
+}
+
+module.exports = {
+    setupQuestions,
+    addQuestion,
+    updateQuestion,
+    deleteQuestion,
+    getAllQuestion,
+    getByCategory,
+    getByID
+}
+
+
