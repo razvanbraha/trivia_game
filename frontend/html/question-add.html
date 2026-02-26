@@ -30,19 +30,44 @@
                     <input type="text" id="aiPrompt" name="aiPrompt" minlength="1" required/>
                     <input type="submit" value="Submit"/>
                 </form>
+
+                <button class="btn btn-dark px-5" onclick="questionsManage()">Questions</button>
             </div>
 
             <div class="col-md-6 right-panel d-flex flex-column justify-content-center align-items-center text-center gap-4">
                 <h2 class="text-white fw-bold">Manual Question</h2>
-                <form class="form-container">
-                    <label for="question">Question:</label>
-                    <input type="text" id="question" name="question" minlength="1" required/>
-                    <label for="correctAnswer">Correct Answer:</label>
-                    <input type="text" id="correctAnswer" name="correctAnswer" minlength="1" required/>
-                    <label for="wrongAnswer1">Incorrect Answers:</label>
-                    <input type="text" id="wrongAnswer1" name="wrongAnswer1" minlength="1" required/>
-                    <input type="text" id="wrongAnswer2" name="wrongAnswer2" minlength="1" required/>
-                    <input type="text" id="wrongAnswer3" name="wrongAnswer3" minlength="1" required/>
+                <form class="form-container" action="/api/questions" method="post" enctype="application/json">
+
+                    <section>
+                        <label for="question">Question:</label>
+                        <input type="text" id="question" name="question" minlength="1" required/>
+                    </section>
+
+                    <section>
+                        <label for="correctAnswer">Correct Answer:</label>
+                        <input type="text" id="correctAnswer" name="correctAnswer" minlength="1" required/>
+
+                        <label for="wrongAnswer1">Incorrect Answers:</label>
+                        <input type="text" id="wrongAnswer1" name="wrongAnswer1" minlength="1" required/>
+                        <input type="text" id="wrongAnswer2" name="wrongAnswer2" minlength="1" required/>
+                        <input type="text" id="wrongAnswer3" name="wrongAnswer3" minlength="1" required/>
+                    </section>
+
+                    <section>
+                        <label for="category">Category:</label>
+                        <select id="category" name="category" required>
+                            <option value="">Select a category</option>
+                            <option value="1">Category 1</option>
+                            <option value="2">Category 2</option>
+                            <option value="3">Category 3</option>
+                            <option value="4">Category 4</option>
+                            <option value="5">Category 5</option>
+                            <option value="6">Category 6</option>
+                        </select>
+                    </section>
+
+                    <input type="hidden" name="ai" value="0"/>
+
                     <input type="submit" value="Submit"/>
                 </form>
             </div>

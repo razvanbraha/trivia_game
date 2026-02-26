@@ -98,7 +98,6 @@ const deleteQuestion = async (id) => {
  * @author Riley Wickens & Razvan Braha
  * @throws {err} if connection/query fails
  */
-//TODO: Return GET
 const getAllQuestion = async () => {
     let qry = `SELECT * FROM questions`;
     const [result] = await con.query(qry);
@@ -111,7 +110,6 @@ const getAllQuestion = async () => {
  * @param {Number} category - category of questions to retreive
  * @throws {err} if connection/query fails
  */
-//TODO: Return GET
 const getByCategory = async (category) => {
     let qry = `SELECT * FROM questions WHERE category = ?`;
     const [result] = await con.query(qry, [category]);
@@ -124,7 +122,6 @@ const getByCategory = async (category) => {
  * @param {Number} category - ID of question to retreive
  * @throws {err} if connection/query fails
  */
-//TODO: Return GET
 const getByID = async (id) => {
     let qry = `SELECT * FROM questions WHERE questionID = ?`;
     const[result] = await con.query(qry, [id]);
