@@ -1,5 +1,31 @@
-const questionList = document.querySelector('#questions-list');
+const questionList = document.querySelector('#question-list');
 const questionTemplate = document.querySelector('#questionDisplayTemplate');
+
+const popup = document.querySelector('#popup');
+const popupOpenButton = document.querySelector('#open-popup');
+const popupCloseButton = document.querySelector('#close-popup');
+
+/**
+ * Event listener, checks for click event then opens question popup & populates it
+ * @author Riley Wickens
+ */
+popupOpenButton.addEventListener("click", () => {
+    popup.classList.add("open");
+    populateQuestions()
+})
+
+/**
+ * Event listener, checks for click event then closes question popup & depopulates it
+ * @author Riley Wickens
+ */
+popupCloseButton.addEventListener("click", () => {
+    popup.classList.remove("open");
+    clearQuestions()
+})
+
+const clearQuestions = () => {
+    questionList.replaceChildren()
+}
 
 async function populateQuestions() {
     const res = await fetch(`/api/questions`);
@@ -84,5 +110,3 @@ async function deleteQuestion(id) {
     populateQuestions();
     location.reload();
 }
-
-populateQuestions();

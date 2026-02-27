@@ -7,10 +7,6 @@ function loginAsProfessor() {
     window.location.href = "../html/teacher-login.html";
 }
 
-function questionsAdd() {
-    globalThis.location.href = "../html/question-add.html";
-}
-
 function questionsManage() {
     globalThis.location.href = "../html/question-manage.html";
 }
