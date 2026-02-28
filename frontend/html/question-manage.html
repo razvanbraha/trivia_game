@@ -44,7 +44,7 @@
 
                     <section>
                         <label for="question">Question:</label>
-                        <input type="text" id="question" name="question" minlength="1" required/>
+                        <input type="text" id="question" name="question" minlength="1" required"/>
                     </section>
 
                     <section>
@@ -94,6 +94,39 @@
         <p class="wrongAnswer3"></p>
         <p class="category"></p>
         <p class="ai"></p>
+    </template>
+
+    <template id="questionEditTemplate">
+          <div class="question-edit-container">
+            <h2 class="text-white fw-bold">Edit Question</h2>
+                <input id="edit-id" type="hidden" name="edit-id"/>
+                <section>
+                    <label for="edit-question">Question:</label>
+                    <input type="text" id="edit-question" name="edit-question" minlength="1" required/>
+                </section>
+                <section>
+                    <label for="edit-correctAnswer">Correct Answer:</label>
+                    <input type="text" id="edit-correctAnswer" name="edit-correctAnswer" minlength="1" required/>
+                    <label for="edit-wrongAnswer1">Incorrect Answers:</label>
+                    <input type="text" id="edit-wrongAnswer1" name="edit-wrongAnswer1" minlength="1" required/>
+                    <input type="text" id="edit-wrongAnswer2" name="edit-wrongAnswer2" minlength="1" required/>
+                    <input type="text" id="edit-wrongAnswer3" name="edit-wrongAnswer3" minlength="1" required/>
+                </section>
+                <section>
+                    <label for="edit-category">Category:</label>
+                    <select id="edit-category" name="edit-category" required>
+                        <option value="">Select a category</option>
+                        <option value="1">Category 1</option>
+                        <option value="2">Category 2</option>
+                        <option value="3">Category 3</option>
+                        <option value="4">Category 4</option>
+                        <option value="5">Category 5</option>
+                        <option value="6">Category 6</option>
+                    </select>
+                </section>
+                <input id="edit-ai" type="hidden" name="edit-ai" value="0"/>
+                <input id="edit-submit" type="submit" value="Submit"/>
+            </div>
     </template>
 </body>
 </html>

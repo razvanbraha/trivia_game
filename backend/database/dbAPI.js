@@ -37,12 +37,20 @@ router.get('/questions', async (req, res) => {
     }
 });
 
+router.get('/redirect', async (req, res) => {
+    res.status(200).sendFile(path.join(htmlFolder, 'question-manage.html'));
+});
+
+router.put('/redirect', async (req, res) => {
+    res.status(200).sendFile(path.join(htmlFolder, 'question-manage.html'));
+});
+
 router.post('/questions', async (req, res) => {
     try {
         if (validateQuestion(req.body)) {
             addQuestion(req.body);
             console.log("Received Data:", req.body);
-            res.status(200).sendFile(path.join(htmlFolder, 'question-add.html'));
+            res.redirect('/api/redirect');
         } else {
             res.status(400).json({error: "Unable to add question"});
         }
@@ -65,12 +73,16 @@ router.delete('/questions', async (req, res) => {
 
 router.put('/questions', async (req, res) => {
     try {
-        updateQuestion(req.body, req.body.questionId);
-        console.log("Update confirmed:", req.body.questionId);
-        res.sendStatus(200);
+        if (validateQuestion(req.body.questionData)) {
+            updateQuestion(req.body.questionData, req.body.questionId);
+            console.log("Update confirmed:", req.body.questionId);
+            res.redirect('/api/redirect');
+        } else {
+            res.status(400).json({error: "Unable to add question"});
+        }
     } catch (err) {
         console.log(err);
-        res.status(500).json({error: "Unable to delete question"})
+        res.status(500).json({error: "Unable to update question"})
     }
 });
 

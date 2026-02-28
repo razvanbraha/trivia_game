@@ -1,5 +1,6 @@
 const questionList = document.querySelector('#question-list');
 const questionTemplate = document.querySelector('#questionDisplayTemplate');
+const questionEditTemplate = document.querySelector('#questionEditTemplate');
 
 const popup = document.querySelector('#popup');
 const popupOpenButton = document.querySelector('#open-popup');
@@ -93,6 +94,14 @@ async function populateQuestions() {
         });
         questionInstance.append(deleteButton)
 
+        const editButton = document.createElement('button');
+        editButton.className = "btn btn-info";
+        editButton.textContent = "Edit";
+        editButton.addEventListener('click', () => {
+            loadQuestion(question.questionID)
+        });
+        questionInstance.append(editButton)
+
         questionList.append(questionInstance)
     })
 
@@ -100,13 +109,87 @@ async function populateQuestions() {
 
 async function deleteQuestion(id) {
     const data = {questionId: id}
-    const res = await fetch(`/api/questions`, { method: "DELETE",  headers: {'Content-Type': 'application/json'},  body: JSON.stringify(data)});
+    const res = await fetch(`/api/questions`, { 
+        method: "DELETE",  
+        headers: {'Content-Type': 'application/json'},  
+        body: JSON.stringify(data)
+    });
    
     if (res.status != 200) {
         const error = res.json();
         console.log(error);
         return;
     }
+    clearQuestions()
     populateQuestions();
-    location.reload();
+}
+
+async function loadQuestion(id) {
+    clearQuestions()
+    const res = await fetch(`/api/questions?id=${id}`);
+
+    if (res.status != 200) {
+        const error = res.json();
+        console.log(error);
+        return;
+    }
+
+    const question = await res.json();
+    const questionEditInstance = questionEditTemplate.content.cloneNode(true);
+
+    const idElement = questionEditInstance.querySelector('#edit-id');
+    idElement.value = question.questionID;
+
+    const questionElement = questionEditInstance.querySelector('#edit-question');
+    questionElement.value = question.question;
+
+    const correctAnswerElement = questionEditInstance.querySelector('#edit-correctAnswer');
+    correctAnswerElement.value = question.corrAnswer;
+
+    const wrongAnswer1Element = questionEditInstance.querySelector('#edit-wrongAnswer1');
+    wrongAnswer1Element.value = question.incorrONE;
+
+    const wrongAnswer2Element = questionEditInstance.querySelector('#edit-wrongAnswer2');
+    wrongAnswer2Element.value = question.incorrTWO;
+
+    const wrongAnswer3Element = questionEditInstance.querySelector('#edit-wrongAnswer3');
+    wrongAnswer3Element.value = question.incorrTHREE;
+
+    const categoryElement = questionEditInstance.querySelector('#edit-category');
+    categoryElement.selectedIndex = Number(question.category);
+
+    const aiElement = questionEditInstance.querySelector('#edit-ai');
+    aiElement.value = question.isAI;
+
+    const submitButton = questionEditInstance.querySelector("#edit-submit");
+    submitButton.addEventListener("click", async () => {
+        let questionData = {
+            question: questionElement.value,
+            category: categoryElement.value,
+            correctAnswer: correctAnswerElement.value,
+            wrongAnswer1: wrongAnswer1Element.value,
+            wrongAnswer2: wrongAnswer2Element.value,
+            wrongAnswer3: wrongAnswer3Element.value,
+            ai: aiElement.value
+        }
+        let data = {
+            questionId: idElement.value,
+            questionData: questionData
+        }
+        const res = await fetch(`/api/questions`, { 
+            method: "PUT",  
+            headers: {'Content-Type': 'application/json'},  
+            body: JSON.stringify(data)
+        });
+
+        if (res.status != 200) {
+            const error = res.json();
+            console.log(error);
+        }
+
+        popup.classList.remove("open");
+        clearQuestions()
+    })
+
+    questionList.append(questionEditInstance);
 }
