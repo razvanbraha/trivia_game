@@ -1,10 +1,10 @@
 const express = require("express");
 const path = require("node:path");
-const dbAPI = require('./database/dbAPI');
-const userAPI = require('./database/userAPI');
+const dbAPI = require('./rest_api/dbAPI');
+const userAPI = require('./rest_api/userAPI');
 
-const { setupQuestions } = require('./database/questions-db');
-const { setupUsers } = require('./database/user-db')
+const { setupQuestions } = require("./db_queries/questions-db");
+const { setupUsers } = require('./db_queries/user-db')
 
 const app = express();
 const PORT = 8080;
@@ -15,7 +15,7 @@ app.use("/api", dbAPI);
 app.use("/api", userAPI);
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/html/index.html"));
+    res.sendFile(path.join(__dirname, "../frontend/templates/index.html"));
 });
 
 const rooms = {};

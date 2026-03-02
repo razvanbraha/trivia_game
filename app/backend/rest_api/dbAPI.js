@@ -1,6 +1,6 @@
 const express = require('express')
 const path = require("node:path");
-const validateQuestion = require('./question-validation.js');
+const validateQuestion = require('../db_queries/question-validation.js');
 const {
     addQuestion,
     updateQuestion,
@@ -8,14 +8,14 @@ const {
     getAllQuestion,
     getByCategory,
     getByID
-} = require('./questions-db.js');
+} = require('../db_queries/questions-db.js');
 
 const router = express.Router();
 router.use(express.json());
-router.use(express.static(path.join(__dirname, "../frontend")));
+router.use(express.static(path.join(__dirname, "../../frontend/public")));
 router.use(express.urlencoded({ extended: true }));
 
-const htmlFolder = path.join(__dirname, '..', '..', 'frontend', 'html');
+const templatesFolder = path.join(__dirname, '../../frontend/templates');
 
 router.get('/questions', async (req, res) => {
     try {
@@ -38,11 +38,11 @@ router.get('/questions', async (req, res) => {
 });
 
 router.get('/redirect', async (req, res) => {
-    res.status(200).sendFile(path.join(htmlFolder, 'question-manage.html'));
+    res.status(200).sendFile(path.join(templatesFolder, 'question-manage.html'));
 });
 
 router.put('/redirect', async (req, res) => {
-    res.status(200).sendFile(path.join(htmlFolder, 'question-manage.html'));
+    res.status(200).sendFile(path.join(templatesFolder, 'question-manage.html'));
 });
 
 router.post('/questions', async (req, res) => {

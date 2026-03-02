@@ -1,6 +1,6 @@
 
 module.exports = validateQuestion = (body) => {
-    const {question, category, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3 } = body;
+    const {question, category, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, ai } = body;
     let valid = true;
     let errors = [];
 
@@ -23,7 +23,11 @@ module.exports = validateQuestion = (body) => {
     }
     if (correctAnswer === wrongAnswer1 || correctAnswer === wrongAnswer2 || correctAnswer === wrongAnswer3) {
         valid = false;
-        errors.push("Correct asnwer cannot match an incorrect answer.")
+        errors.push("Correct asnwer cannot match an incorrect answer.");
+    }
+    if (ai != '0' && ai != '1') {
+        valid = false;
+        errors.push("Incorrect AI value");
     }
 
     if (!valid) {

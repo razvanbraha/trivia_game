@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require("node:path");
-const validateUser = require('./user-validation.js')
+const validateUser = require('../db_queries/user-validation')
 const {
     addUser,
     updateUser,
@@ -8,14 +8,26 @@ const {
     getAllUser,
     getByUnityId,
     getByID
-} = require('./user-db.js');
+} = require('../db_queries/user-db')
 
 const router = express.Router();
 router.use(express.json());
-router.use(express.static(path.join(__dirname, "../frontend")));
+router.use(express.static(path.join(__dirname, "../../frontend/public")));
 router.use(express.urlencoded({ extended: true }));
 
-const htmlFolder = path.join(__dirname, '..', '..', 'frontend', 'html');
+const templatesFolder = path.join(__dirname, '../../frontend/templates');
+
+/*
+
+router.get('/users/redirect', async (req, res) => {
+    res.status(200).sendFile(path.join(templatesFolder, 'user-manage.html'));
+});
+
+router.put('/redirect', async (req, res) => {
+    res.status(200).sendFile(path.join(templatesFolder, 'user-manage.html'));
+});
+
+*/
 
 router.get('/users', async (req, res) => {
     try {
@@ -42,7 +54,7 @@ router.post('/users', async (req, res) => {
         if (validateUser(req.body)) {
             await addUser(req.body);
             console.log("Received Data:", req.body);
-            res.status(200).sendFile(path.join(htmlFolder, 'user-manage.html'));
+            res.redirect('/api/users/redirect');
         } else {
             res.status(400).json({error: "Unable to add user"});
         }
@@ -67,7 +79,7 @@ router.put('/users', async (req, res) => {
     try {
         await updateUser(req.body, req.body.userId);
         console.log("Update confirmed:", req.body.userId);
-        res.sendStatus(200);
+        res.redirect('/api/redirect');
     } catch (err) {
         console.log(err);
         res.status(500).json({error: "Unable to update user"})

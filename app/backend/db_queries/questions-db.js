@@ -2,7 +2,6 @@ const path = require('node:path');
 let mysql = require('mysql2/promise');
 require('dotenv').config({ path: path.join(__dirname, '../../.env')})
 
-
 // Initialize database connection
 let con;
 
