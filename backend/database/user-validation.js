@@ -1,12 +1,12 @@
 
-module.exports = validateAdmin = (body) => {
-    const { unityId } = body;
+module.exports = validateUser = (body) => {
+    const { unityID } = body;
     let valid = true;
     let errors = [];
 
-    if (!unityId || unityId.length > 8) {
+    if (!unityID || unityID.length > 8) {
         valid = false;
-        errors.push("Invalid UnityId.");
+        errors.push("Invalid UnityID.");
     }
 
     if (!valid) {

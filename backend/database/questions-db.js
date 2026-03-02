@@ -20,7 +20,7 @@ const setupQuestions = async () => {
         password: process.env.password
     });
 
-    await rootCon.query('CREATE DATABASE IF NOT EXISTS trivia_questions');
+    await rootCon.query('CREATE DATABASE IF NOT EXISTS trivia');
     await rootCon.end();
 
     // connect with db

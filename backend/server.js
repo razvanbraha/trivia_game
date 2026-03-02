@@ -1,7 +1,10 @@
 const express = require("express");
 const path = require("node:path");
 const dbAPI = require('./database/dbAPI');
+const userAPI = require('./database/userAPI');
+
 const { setupQuestions } = require('./database/questions-db');
+const { setupUsers } = require('./database/user-db')
 
 const app = express();
 const PORT = 8080;
@@ -9,6 +12,7 @@ const PORT = 8080;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
 app.use("/api", dbAPI);
+app.use("/api", userAPI);
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/html/index.html"));
@@ -67,6 +71,7 @@ app.delete("/api/room/:code", (req, res) => {
 async function startServer() {
     try {
         await setupQuestions();
+        await setupUsers();
         app.listen(PORT, () => {
             console.log(`Server running at http://localhost:${PORT}`)
         });
