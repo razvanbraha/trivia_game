@@ -11,6 +11,10 @@ function questionsManage() {
     globalThis.location.href = "../html/question-manage.html";
 }
 
+function usersManage() {
+    globalThis.location.href = "../html/user-manage.html";
+}
+
 function home() {
     globalThis.location.href = "../html/index.html";
 }

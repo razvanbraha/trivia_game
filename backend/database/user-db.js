@@ -10,7 +10,7 @@ let con;
  * @author Riley Wickens & Razvan Braha
  * @throws {err} if connection/query fails
  */
-const setupAdmins = async () => {
+const setupUsers = async () => {
 
     // Create database if needed
     const rootCon = await mysql.createConnection({
@@ -34,7 +34,10 @@ const setupAdmins = async () => {
     const createTableSql = 
         `CREATE TABLE IF NOT EXISTS admins (
         adminID INT AUTO_INCREMENT PRIMARY KEY,
-        unityID VARCHAR(255) NOT NULL)`
+        unityID VARCHAR(255) NOT NULL,
+        questionPriv BOOLEAN NOT NULL DEFAULT FALSE,
+        userPriv BOOLEAN NOT NULL DEFAULT FALSE
+        )`
 
     await con.query(createTableSql);
 }
@@ -45,11 +48,14 @@ const setupAdmins = async () => {
  * @param {Array} body - Array with data to be added to db
  * @throws {err} if connection/query fails
  */
-const addAdmin = async (body) => {
-    const {unityID} = body;
+const addUser = async (body) => {
+    const {unityID, questionPriv, userPriv} = body;
 
-    let data = [unityID];
-    let qry = `INSERT INTO admins (unityID) VALUES (?)`;
+    const questionPrivBool = questionPriv === "on" || questionPriv === true || questionPriv === 1;
+    const userPrivBool = userPriv === "on" || userPriv === true || userPriv === 1;
+
+    let data = [unityID, questionPrivBool ? 1 : 0, userPrivBool ? 1: 0];
+    let qry = `INSERT INTO admins (unityID, questionPriv, userPriv) VALUES (?, ?, ?)`;
 
     const [result] = await con.query(qry, data);
     return result.insertId;
@@ -62,16 +68,19 @@ const addAdmin = async (body) => {
  * @param {Number} id - Admin ID of admin to update
  * @throws {err} if connection/query fails
  */
-const updateAdmin = async (body, id) => {
-    const {unityID} = body;
+const updateUser = async (body, id) => {
+    const {unityID, questionPriv, userPriv} = body;
 
-    let data = [unityID];
-    let qry = `UPDATE admins SET
-        unityID = ${unityID},
-        WHERE adminID = ${id}`;
+    const questionPrivBool = questionPriv === "on" || questionPriv === true || questionPriv === 1;
+    const userPrivBool = userPriv === "on" || userPriv === true || userPriv === 1;
+
+    let data = [unityID, questionPrivBool ? 1 : 0, userPrivBool ? 1 : 0, id];
+    let qry = `UPDATE admins 
+        SET unityID = ?, questionPriv = ?, userPriv = ?
+        WHERE adminID = ?`;
 
     const [result] = await con.query(qry, data);
-    return result.insertId;
+    return result.affectedRows;
 }
 
 /**
@@ -80,11 +89,10 @@ const updateAdmin = async (body, id) => {
  * @param {Number} id - Question ID of question to delete
  * @throws {err} if connection/query fails
  */
-const deleteAdmin = async (id) => {
+const deleteUser = async (id) => {
     let qry = `DELETE FROM admins WHERE adminID = ?`;
     let [result] = await con.query(qry, [id]);
-
-
+    return result.affectedRows;
 }
 
 /**
@@ -92,8 +100,7 @@ const deleteAdmin = async (id) => {
  * @author Riley Wickens & Razvan Braha
  * @throws {err} if connection/query fails
  */
-//TODO: Return GET
-const getAllAdmins = async () => {
+const getAllUser = async () => {
     let qry = `SELECT * FROM admins`;
     const [result] = await con.query(qry);
     return result;
@@ -105,7 +112,6 @@ const getAllAdmins = async () => {
  * @param {Number} unityId - unity ID of admin to retreive
  * @throws {err} if connection/query fails
  */
-//TODO: Return GET
 const getByUnityId = async (unityId) => {
     let qry = `SELECT * FROM admins WHERE unityID = ?`;
     const [result] = await con.query(qry, [unityId]);
@@ -118,23 +124,18 @@ const getByUnityId = async (unityId) => {
  * @param {Number} id - ID of admin to retreive
  * @throws {err} if connection/query fails
  */
-//TODO: Return GET
 const getByID = async (id) => {
     let qry = `SELECT * FROM admins WHERE adminID = ?`;
     const [result] = await con.query(qry, [id]);
+    return result;
 }
 
 module.exports = {
-    setupAdmins,
-    addAdmin,
-    updateAdmin, 
-    deleteAdmin,
-    getAllAdmins,
+    setupUsers,
+    addUser,
+    updateUser, 
+    deleteUser,
+    getAllUser,
     getByUnityId,
     getByID
 }
-
-setupAdmins();
-getAllAdmins();
-con.end();
-
