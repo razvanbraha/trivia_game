@@ -12,7 +12,7 @@ function questionsManage() {
 }
 
 function usersManage() {
-    globalThis.location.href = ".../../templates/user-manage.html";
+    globalThis.location.href = "../../templates/user-manage.html";
 }
 
 function home() {
