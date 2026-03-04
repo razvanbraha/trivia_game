@@ -1,15 +1,21 @@
 const express = require("express");
-const path = require("path");
+const path = require("node:path");
+const dbAPI = require('./rest_api/dbAPI');
+const userAPI = require('./rest_api/userAPI');
+
+const { setupQuestions } = require("./db_queries/questions-db");
+const { setupUsers } = require('./db_queries/user-db')
 
 const app = express();
 const PORT = 8080;
 
 app.use(express.json());
-
 app.use(express.static(path.join(__dirname, "../frontend")));
+app.use("/api", dbAPI);
+app.use("/api", userAPI);
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/html/index.html"));
+    res.sendFile(path.join(__dirname, "../frontend/templates/index.html"));
 });
 
 const rooms = {};
@@ -62,6 +68,17 @@ app.delete("/api/room/:code", (req, res) => {
     res.json({ success: true });
 });
 
-app.listen(PORT, () =>
-    console.log(`Server running at http://localhost:${PORT}`)
-);
+async function startServer() {
+    try {
+        await setupQuestions();
+        await setupUsers();
+        app.listen(PORT, () => {
+            console.log(`Server running at http://localhost:${PORT}`)
+        });
+    } catch(err) {
+        console.error("Startup failed:", err);
+        process.exit(1);
+    }
+};
+
+startServer();
