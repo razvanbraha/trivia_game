@@ -62,22 +62,22 @@ async function populateQuestions() {
         let category = "";
         switch(question.category) {
             case 1:
-                category = "Category One"
+                category = "History & Evolution"
                 break;
             case 2:
-                category = "Category Two"
+                category = "Technical Aspects & Engineering"
                 break;
             case 3:
-                category = "Category Three"
+                category = "Sustainability"
                 break;
             case 4:
-                category = "Category Four"
+                category = "Consumerism & Ethics"
                 break;
             case 5:
-                category = "Category Five"
+                category = "End-of-Life & Data"
                 break;
             case 6:
-                category = "Category Six"
+                category = "Logistics & Distribution"
                 break;
         }
 
