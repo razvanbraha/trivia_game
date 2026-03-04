@@ -1,12 +1,21 @@
-//-----------------------------------------------------------------------------
+//--- HEADER ------------------------------------------------------------------
 /** 
  * File teaching-game.js
  * 
  * Authors: Will Mungas, Connor Hekking
- * Details: script for a thread running a teaching game to execute - registers 
- * several callbacks to handle different events based on game state
+ * 
+ * Script for a thread running a teaching game to execute - registers several 
+ * callbacks to handle different events based on game state
  */ 
-//-----------------------------------------------------------------------------
+//--- INCLUDE -----------------------------------------------------------------
+
+// TODO require() stuff
+
+//--- EXPORTS -----------------------------------------------------------------
+
+// TODO add exports for other files
+
+//--- CONSTANTS ---------------------------------------------------------------
 
 const states = {
     LOBBY: 1, // lobby state - awaiting game start 
@@ -17,9 +26,13 @@ const states = {
     DONE: 6, // final state: close out all data (maybe unnecessary)
 }
 
+//--- GLOBALS -----------------------------------------------------------------
+
 let state = ""; // the current state
 let host = {}; // the host WebSocket connection
 let players = []; // list of player WebSocket connections
+
+//--- FUNCTIONS ---------------------------------------------------------------
 
 /**
  * Entry point for a teaching session thread: initializes data, registers
