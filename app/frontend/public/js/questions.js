@@ -159,7 +159,7 @@ async function loadQuestion(id) {
     wrongAnswer3Element.value = question.incorrTHREE;
 
     const categoryElement = questionEditInstance.querySelector('#edit-category');
-    categoryElement.selectedIndex = Number(question.category);
+    categoryElement.value = question.category;
 
     const aiElement = questionEditInstance.querySelector('#edit-ai');
     aiElement.value = question.isAI;
@@ -195,4 +195,38 @@ async function loadQuestion(id) {
     })
 
     questionList.append(questionEditInstance);
+}
+
+const questionForm = document.querySelector("#questionForm");
+
+if (questionForm) {
+    questionForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(questionForm);
+
+        const questionData = {
+            question: formData.get("question"),
+            correctAnswer: formData.get("correctAnswer"),
+            wrongAnswer1: formData.get("wrongAnswer1"),
+            wrongAnswer2: formData.get("wrongAnswer2"),
+            wrongAnswer3: formData.get("wrongAnswer3"),
+            category: Number(formData.get("category")),
+            ai: Number(formData.get("ai"))
+        };
+
+        const res = await fetch("/api/questions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(questionData)
+        });
+
+        if (!res.ok) {
+            console.error(await res.text());
+            return;
+        }
+
+        questionForm.reset();
+        alert("Question added successfully!");
+    });
 }

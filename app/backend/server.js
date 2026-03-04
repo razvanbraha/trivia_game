@@ -9,14 +9,10 @@ const { setupUsers } = require('./db_queries/user-db')
 const app = express();
 const PORT = 8080;
 
+app.use("/public", express.static(path.join(__dirname, "../frontend/public")));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../frontend")));
-app.use("/api", dbAPI);
-app.use("/api", userAPI);
-
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/templates/index.html"));
-});
+app.use("/", dbAPI);
+app.use("/", userAPI);
 
 const rooms = {};
 
@@ -66,6 +62,18 @@ app.post("/api/room/:code/settings", (req, res) => {
 app.delete("/api/room/:code", (req, res) => {
     delete rooms[req.params.code];
     res.json({ success: true });
+});
+
+app.get("/teacher", (req, res) => {
+    const user = req.headers["remote-user"];
+
+    if (!user) {
+        return res.status(401).send("Unauthorized");
+    }
+
+    res.send(`
+        <h1>Welcome Professor ${user}</h1>
+    `);
 });
 
 async function startServer() {
