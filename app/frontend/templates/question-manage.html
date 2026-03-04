@@ -44,17 +44,17 @@
 
                     <section>
                         <label for="question">Question:</label>
-                        <input type="text" id="question" name="question" minlength="1" required"/>
+                        <input type="text" id="question" name="question" minlength="1" autocomplete="off" required/>
                     </section>
 
                     <section>
                         <label for="correctAnswer">Correct Answer:</label>
-                        <input type="text" id="correctAnswer" name="correctAnswer" minlength="1" required/>
+                        <input type="text" id="correctAnswer" name="correctAnswer" minlength="1" autocomplete="off" required/>
 
                         <label for="wrongAnswer1">Incorrect Answers:</label>
-                        <input type="text" id="wrongAnswer1" name="wrongAnswer1" minlength="1" required/>
-                        <input type="text" id="wrongAnswer2" name="wrongAnswer2" minlength="1" required/>
-                        <input type="text" id="wrongAnswer3" name="wrongAnswer3" minlength="1" required/>
+                        <input type="text" id="wrongAnswer1" name="wrongAnswer1" minlength="1" autocomplete="off" required/>
+                        <input type="text" id="wrongAnswer2" name="wrongAnswer2" minlength="1" autocomplete="off" required/>
+                        <input type="text" id="wrongAnswer3" name="wrongAnswer3" minlength="1" autocomplete="off" required/>
                     </section>
 
                     <section>
@@ -87,13 +87,17 @@
     </div>
 
     <template id="questionDisplayTemplate">
-        <h2 class="question"></h2>
-        <h4 class="correctAnswer"></h4>
-        <p class="wrongAnswer1"></p>
-        <p class="wrongAnswer2"></p>
-        <p class="wrongAnswer3"></p>
-        <p class="category"></p>
-        <p class="ai"></p>
+        <div class="questionDisplayContainer">
+            <h2 class="question"></h2>
+            <div class="answers">
+                <p class="correctAnswer"></p>
+                <p class="wrongAnswer1"></p>
+                <p class="wrongAnswer2"></p>
+                <p class="wrongAnswer3"></p>
+            </div>
+            <p class="category"></p>
+            <p class="ai"></p>
+        </div>
     </template>
 
     <template id="questionEditTemplate">
@@ -102,15 +106,15 @@
                 <input id="edit-id" type="hidden" name="edit-id"/>
                 <section>
                     <label for="edit-question">Question:</label>
-                    <input type="text" id="edit-question" name="edit-question" minlength="1" required/>
+                    <input type="text" id="edit-question" name="edit-question" minlength="1" autocomplete="off" required/>
                 </section>
                 <section>
                     <label for="edit-correctAnswer">Correct Answer:</label>
-                    <input type="text" id="edit-correctAnswer" name="edit-correctAnswer" minlength="1" required/>
+                    <input type="text" id="edit-correctAnswer" name="edit-correctAnswer" minlength="1" autocomplete="off" required/>
                     <label for="edit-wrongAnswer1">Incorrect Answers:</label>
-                    <input type="text" id="edit-wrongAnswer1" name="edit-wrongAnswer1" minlength="1" required/>
-                    <input type="text" id="edit-wrongAnswer2" name="edit-wrongAnswer2" minlength="1" required/>
-                    <input type="text" id="edit-wrongAnswer3" name="edit-wrongAnswer3" minlength="1" required/>
+                    <input type="text" id="edit-wrongAnswer1" name="edit-wrongAnswer1" minlength="1" autocomplete="off" required/>
+                    <input type="text" id="edit-wrongAnswer2" name="edit-wrongAnswer2" minlength="1" autocomplete="off" required/>
+                    <input type="text" id="edit-wrongAnswer3" name="edit-wrongAnswer3" minlength="1" autocomplete="off" required/>
                 </section>
                 <section>
                     <label for="edit-category">Category:</label>

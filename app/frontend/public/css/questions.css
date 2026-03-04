@@ -28,8 +28,8 @@
 
 .popup-container {
     border-radius: 10px;
-    background-color: rgb(220, 220, 220);
-    width: 40%;
+    background-color: rgb(255, 253, 253);
+    width: 45%;
     min-width: 400px;
     max-width: 600px;
     height: 80%;
@@ -47,5 +47,105 @@
     width: 30%;
     max-width: 300px;
 }
+
+.questionDisplayContainer {
+    margin: 5px;
+    background-color: rgb(220, 217, 217);
+    border-radius: 5px;
+    display: grid;
+    grid-template-areas: 
+        "question question"
+        "answers answers"
+        "category ai"
+        "edit delete";
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 3fr auto auto;
+    text-align: center;
+}
+
+/*
+    <template id="questionDisplayTemplate">
+        <div class="questionDisplayContainer">
+            <h2 class="question"></h2>
+            <p class="correctAnswer"></p>
+            <p class="wrongAnswer1"></p>
+            <p class="wrongAnswer2"></p>
+            <p class="wrongAnswer3"></p>
+            <p class="category"></p>
+            <p class="ai"></p>
+        </div>
+    </template> 
+*/
+
+.question {
+    grid-area: question;
+    padding: 5px;
+}
+
+.answers {
+    grid-area: answers;
+    display: grid;
+    grid-template-areas: 
+    "corr wrong1"
+    "wrong2 wrong3";
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    place-items: center;
+    width:  100%;
+    height: 100%;
+    padding: 5px;
+}
+
+.correctAnswer {
+    grid-area: corr;
+    background-color: rgb(159, 214, 75);
+    width:  100%;
+    height: 100%;
+    border-top-left-radius: 5px;
+}
+
+.wrongAnswer1 {
+    grid-area: wrong1;
+    background-color: rgb(233, 80, 80);
+    width:  100%;
+    height: 100%;
+    border-top-right-radius: 5px;
+}
+
+.wrongAnswer2 {
+    grid-area: wrong2;
+    background-color: rgb(233, 80, 80);
+    width:  100%;
+    height: 100%;
+    border-bottom-left-radius: 5px;
+}
+
+.wrongAnswer3 {
+    grid-area: wrong3;
+    text-align: center;
+    background-color: rgb(233, 80, 80);
+    border-bottom-right-radius: 5px;
+    width:  100%;
+    height: 100%;
+}
+
+.category {
+    grid-area: category;
+    text-align: left;
+}
+
+.ai {
+    grid-area: ai;
+    text-align: right;
+}
+
+#editBtn {
+    grid-area: edit;
+}
+
+#deleteBtn {
+    grid-area: delete;
+}
+
 
 

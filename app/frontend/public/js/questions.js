@@ -42,6 +42,7 @@ async function populateQuestions() {
     questions.forEach(question => {
         const questionInstance = questionTemplate.content.cloneNode(true);
         questionInstance.id = question.questionID;
+        const questionContainer = questionInstance.querySelector('.questionDisplayContainer');
 
         const questionElement = questionInstance.querySelector('.question');
         questionElement.textContent = question.question;
@@ -84,23 +85,25 @@ async function populateQuestions() {
         categoryElement.textContent = category;
 
         const aiElement = questionInstance.querySelector('.ai');
-        aiElement.textContent =  question.isAI === 1;
+        aiElement.textContent = question.isAI === 1 ? "Made with AI" : "No AI Used";
 
         const deleteButton = document.createElement('button');
+        deleteButton.id = "deleteBtn"
         deleteButton.className = "btn btn-danger";
         deleteButton.textContent = "Delete";
         deleteButton.addEventListener('click', () => {
             deleteQuestion(question.questionID)
         });
-        questionInstance.append(deleteButton)
+        questionContainer.append(deleteButton)
 
         const editButton = document.createElement('button');
+        editButton.id = "editBtn"
         editButton.className = "btn btn-info";
         editButton.textContent = "Edit";
         editButton.addEventListener('click', () => {
             loadQuestion(question.questionID)
         });
-        questionInstance.append(editButton)
+        questionContainer.append(editButton)
 
         questionList.append(questionInstance)
     })
