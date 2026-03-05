@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
 app.use("/api", dbAPI);
 app.use("/api", userAPI);
-app.use("/api", gameAPI);
+//app.use("/api", gameAPI);
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/templates/index.html"));
@@ -82,5 +82,8 @@ async function startServer() {
         process.exit(1);
     }
 };
+
+const ws = require("./websocket-server");
+ws();
 
 startServer();
