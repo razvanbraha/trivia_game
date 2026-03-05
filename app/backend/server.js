@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("node:path");
+const http = require("http");
 const dbAPI = require('./rest_api/dbAPI');
 const userAPI = require('./rest_api/userAPI');
 const gameAPI = require('./rest_api/gameAPI');
@@ -19,6 +20,9 @@ app.use("/api", userAPI);
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/templates/index.html"));
 });
+
+// Create http server that can be shared by express router AND websocket
+const server = http.createServer(app);
 
 const rooms = {};
 
@@ -74,7 +78,7 @@ async function startServer() {
     try {
         await setupQuestions();
         await setupUsers();
-        app.listen(PORT, () => {
+        server.listen(PORT, () => {
             console.log(`Server running at http://localhost:${PORT}`)
         });
     } catch(err) {
@@ -83,7 +87,8 @@ async function startServer() {
     }
 };
 
-const ws = require("./websocket-server");
-ws();
 
 startServer();
+const ws = require("./websocket-server");
+function startWebsocketServer() {ws(server)}
+setTimeout(startWebsocketServer, 500); // small delay so websocket connectes after server start

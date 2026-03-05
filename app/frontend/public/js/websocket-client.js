@@ -1,6 +1,6 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications
 
-const wsUri = "ws://127.0.0.1:8081";
+const wsUri = "ws://127.0.0.1:8080";
 const websocket = new WebSocket(wsUri);
 
 function startWebsocket() {
@@ -19,8 +19,9 @@ function startWebsocket() {
     });
 
     websocket.addEventListener("message", (e) => {
-        log(`RECEIVED: ${e.data}`);
+        console.log(`RECEIVED: ${e.data}`);
     });
+    console.log("client websocket initialized");
 
     // websocket.addEventListener("message", (e) => {
     //     const message = JSON.parse(e.data);
@@ -30,17 +31,19 @@ function startWebsocket() {
 }
 
 function sendWebsocket(message) {
-    const msg = {
-        time: Date(),
-        content: message,
-    };
-    websocket.send(JSON.stringify(message));
-    console.log("sent " + JSON.stringify(message));
+    // const msg = {
+    //     time: Date(),
+    //     content: message,
+    // };
+    // websocket.send(JSON.stringify(message));
+    // console.log("sent " + JSON.stringify(message));
+    websocket.send(message);
+    console.log("sent " + message);
 }
 
 function disconnectWebsocket() {
     websocket.addEventListener("close", () => {
-        log("DISCONNECTED");
+        console.log("DISCONNECTED");
         clearInterval(pingInterval);
     });
 }
