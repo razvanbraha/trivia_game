@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("node:path");
 const dbAPI = require('./rest_api/dbAPI');
 const userAPI = require('./rest_api/userAPI');
+const geminiAPI = require('./rest_api/geminiAPI');
 
 const { setupQuestions } = require("./db_queries/questions-db");
 const { setupUsers } = require('./db_queries/user-db')
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
 app.use("/api", dbAPI);
 app.use("/api", userAPI);
+app.use("/api", geminiAPI);
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/templates/index.html"));
