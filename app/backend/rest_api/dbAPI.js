@@ -23,12 +23,10 @@ router.get('/questions', async (req, res) => {
         let questions;
         if (Object.keys(qry).length === 0) {
             questions = await getAllQuestion();
-        } else {
-            if (qry.id) {
+        } else if (qry.id) {
                 questions = await getByID(qry.id);
-            } else {
-                questions = await getByCategory(qry.category);
-            }
+        } else {
+            questions = await getByCategory(qry.category);
         }
         res.status(200).json(questions);
     } catch (err) {
@@ -38,11 +36,11 @@ router.get('/questions', async (req, res) => {
 });
 
 router.get('/redirect', async (req, res) => {
-    res.status(200).sendFile(path.join(templatesFolder, 'question-manage.html'));
+    res.status(200).sendFile(path.join(templatesFolder, 'teacher-question-manage.html'));
 });
 
 router.put('/redirect', async (req, res) => {
-    res.status(200).sendFile(path.join(templatesFolder, 'question-manage.html'));
+    res.status(200).sendFile(path.join(templatesFolder, 'teacher-question-manage.html'));
 });
 
 router.post('/questions', async (req, res) => {
