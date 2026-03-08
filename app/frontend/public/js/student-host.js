@@ -50,7 +50,14 @@ async function startGame() {
 
 async function cancelRoom() {
     await fetch(`/api/room/${roomCode}`, { method: "DELETE" });
-    window.location.href = "/";
+    window.location.href = "/templates/student-menu.html";
 }
+
+const cancelRoomButton = document.querySelector("#cancelRoomButton")
+cancelRoomButton.onclick = cancelRoom;
+
+const startGameButton = document.querySelector("#startGameButton")
+startGameButton.onclick = startGame;
+
 
 createRoom();

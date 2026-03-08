@@ -2,6 +2,8 @@ const questionList = document.querySelector('#question-list');
 const questionTemplate = document.querySelector('#questionDisplayTemplate');
 const questionEditTemplate = document.querySelector('#questionEditTemplate');
 
+const aiForm = document.querySelector('#aiForm');
+
 const popup = document.querySelector('#popup');
 const popupOpenButton = document.querySelector('#open-popup');
 const popupCloseButton = document.querySelector('#close-popup');
@@ -195,4 +197,55 @@ async function loadQuestion(id) {
     })
 
     questionList.append(questionEditInstance);
+}
+
+aiForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const aiPrompt = document.querySelector("#aiPrompt");
+
+    fetch(`/api/gemini`, { 
+        method: "POST",  
+        headers: {'Content-Type': 'application/json'},  
+        body: JSON.stringify({ aiPrompt: aiPrompt.value})
+    }).then(res => {
+        if (!res.ok) {
+            const error = res.json();
+            console.log(error);
+        }
+        return res.json();
+    }).then(question => {
+        if (question.error) {
+            alert(question.error);
+            return;
+        }
+        formSetter(question);
+    }).catch(error => {
+        console.log("Error: Problem connecting with gemini", error);
+    }).finally(() => {
+        aiPrompt.value = "";
+    });
+
+})
+
+const formSetter = (question) => {
+    const questionInput = document.querySelector("#question");
+    questionInput.value = question.question;
+
+    const corrAnswerInput = document.querySelector("#correctAnswer");
+    corrAnswerInput.value = question.corrAnswer;
+
+    const wrongAnswerOneInput = document.querySelector('#wrongAnswer1');
+    wrongAnswerOneInput.value = question.incorrAnswer1;
+
+    const wrongAnswerTwoInput = document.querySelector('#wrongAnswer2');
+    wrongAnswerTwoInput.value = question.incorrAnswer2;
+
+    const wrongAnswerThreeInput = document.querySelector('#wrongAnswer3');
+    wrongAnswerThreeInput.value = question.incorrAnswer3;
+
+    const categoryInput = document.querySelector('#category');
+    categoryInput.selectedIndex = Number(question.category);
+
+    const aiInput = document.querySelector("#ai");
+    aiInput.value = 1;
 }

@@ -9,7 +9,13 @@ body {
 .header {
     background-color: #8BE36B;
     height: 90px;
-    position: relative;
+}
+
+.header .buttons {
+    display: flexbox;
+    flex-direction: row;
+    position: absolute;
+    right: 25px;
 }
 
 .logo {
