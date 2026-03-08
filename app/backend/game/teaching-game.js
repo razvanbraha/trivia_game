@@ -10,26 +10,9 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 // TODO require() stuff
-
-//--- EXPORTS -----------------------------------------------------------------
-
-// TODO add exports for other files
+const {messages} = require("../websocket-server");
 
 //--- CONSTANTS ---------------------------------------------------------------
-
-const messages = {
-// See API Endpoint Design - https://docs.google.com/document/d/12ijNjsGuGOg7Xqv12Mo_Kprgvlrn7opl86L4AKaVjaU/edit?usp=sharing
-    INIT: 1,
-    START: 2,
-    QUESTION: 3,
-    CHOICES: 4,
-    READY: 5, 
-    ANSWER: 6,
-    CLOSE: 7, 
-    CONTINUE: 8,
-    RESULTS: 9,
-    DONE: 10,
-}
 
 const states = {
     LOBBY: 1, // lobby state - awaiting game start 
@@ -87,3 +70,6 @@ const startTeachingGame = () => {
 
 }
 
+//--- EXPORTS -----------------------------------------------------------------
+
+// TODO add exports for other files

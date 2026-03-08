@@ -9,10 +9,7 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 // TODO require() things
-
-//--- EXPORTS -----------------------------------------------------------------
-
-// TODO add exports for use in gameAPI.js
+const {messages} = require("../websocket-server");
 
 //--- CONSTANTS ---------------------------------------------------------------
 
@@ -43,9 +40,12 @@ const createCommonSessionData = () => {
 /**
  * Creates a game session of a given type running on a new thread
  * @author Will Mungas
- * @param {String} type the type of session to create
+ * @param {String} ws the type of session to create
  */
-const createSession = (type) => {
+const createSession = (ws, data) => {
+    //TODO
+    const type = data.game_type;
+
     switch(type) {
         case sessionTypes.TEACHING:
             // TODO implement
@@ -61,3 +61,16 @@ const createSession = (type) => {
     // start the thread, add data to sessions []
     return;
 };
+
+const joinSession = (ws, data) => {
+    // TODO
+    const code = data.game_code;
+}
+
+//--- EXPORTS -----------------------------------------------------------------
+
+// TODO add exports for use in gameAPI.js
+
+// Export create/join for websocket-server to use
+exports.createSession = createSession;
+exports.joinSession = joinSession;
