@@ -33,7 +33,7 @@ async function populateUsers() {
     users.forEach((user) => {
         const userInstance = userTemplate.content.cloneNode("true");
 
-        userInstance.querySelector(".adminID").textContent = `Admin ID: ${user.adminID}`;
+        userInstance.querySelector(".userID").textContent = `User ID: ${user.userID}`;
         userInstance.querySelector(".unityID").textContent = `Unity ID: ${user.unityID}`;
         userInstance.querySelector(".questionPriv").textContent = `Question Privelage: ${user.questionPriv ? "Yes" : "No"}`;
         userInstance.querySelector(".userPriv").textContent = `User Privelage: ${user.userPriv ? "Yes" : "No"}`;
@@ -42,7 +42,7 @@ async function populateUsers() {
         deleteButton.className = "btn btn-danger";
         deleteButton.textContent = "Delete";
         deleteButton.addEventListener("click", () => {
-            deleteUser(user.adminID);
+            deleteUser(user.userID);
         });
 
         userInstance.append(deleteButton);
@@ -51,7 +51,7 @@ async function populateUsers() {
 }
 
 async function deleteUser(id) {
-    const data = {userId: id};
+    const data = {userID: id};
     const res = await fetch("/api/users", {
         method: "DELETE",
         headers: {
@@ -66,6 +66,6 @@ async function deleteUser(id) {
         return;
     }
 
+    clearUsers();
     populateUsers();
-    location.reload();
 }

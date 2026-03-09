@@ -33,7 +33,7 @@ let setButtons = () => {
         dynamicButton2.textContent = "Home";
         dynamicButton2.removeAttribute('hidden');
     } 
-    else if (location.includes('/teacher')) {
+    else if (location.includes('/teacher') || location.includes('/redirect') || location.includes('/users')) {
         if (!location.includes('menu')) {
             dynamicButton1.onclick = teacherMenu;
             dynamicButton1.textContent = "Dash";

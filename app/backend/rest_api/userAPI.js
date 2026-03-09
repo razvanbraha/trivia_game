@@ -54,7 +54,8 @@ router.post('/users', async (req, res) => {
         if (validateUser(req.body)) {
             await addUser(req.body);
             console.log("Received Data:", req.body);
-            res.redirect('/api/users/redirect');
+            //res.redirect('/api/users/redirect');
+            res.status(200).sendFile(path.join(templatesFolder, 'teacher-user-manage.html'));
         } else {
             res.status(400).json({error: "Unable to add user"});
         }
@@ -66,8 +67,8 @@ router.post('/users', async (req, res) => {
 
 router.delete('/users', async (req, res) => {
     try {
-        await deleteUser(req.body.userId);
-        console.log("Delete confirmed:", req.body.userId);
+        await deleteUser(req.body.userID);
+        console.log("Delete confirmed:", req.body.userID);
         res.sendStatus(200);
     } catch (err) {
         console.log(err);
@@ -79,7 +80,8 @@ router.put('/users', async (req, res) => {
     try {
         await updateUser(req.body, req.body.userId);
         console.log("Update confirmed:", req.body.userId);
-        res.redirect('/api/redirect');
+        //res.redirect('/api/redirect');
+        res.status(200).sendFile(path.join(templatesFolder, 'teacher-user-manage.html'));
     } catch (err) {
         console.log(err);
         res.status(500).json({error: "Unable to update user"})
