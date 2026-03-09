@@ -95,7 +95,7 @@ function startWebSocketServer(server) {
                         ws.handler.receiveMessage(ws, data_obj);
                     }
                 } catch (e) {
-                    sendWebSocketMessage(socket, {
+                    sendWebSocketMessage(ws, {
                         "type": messages.ERROR,
                         "message": "Message format is invalid",
                     });
