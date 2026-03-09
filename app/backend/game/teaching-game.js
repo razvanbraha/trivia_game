@@ -62,8 +62,6 @@ class teachingGame {
         state = 1;
         players = [];
         host.handler = this.receiveMessage;
-
-        // TODO what to send back to host? anything?
     }
 
     /**
@@ -127,9 +125,6 @@ class teachingGame {
         this.players.push(socket);
         socket.handler = this.receiveMessage;
     }
-
-    // TODO add event handlers for the various events give the game state
-    // These will alter the game state and process user messages
 
     /**
      * Configures settings from message, gets list of questions from database,

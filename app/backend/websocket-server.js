@@ -53,17 +53,18 @@ function startWebSocketServer(server) {
         console.log(`Client connected.`);
         ws.on('error', console.error);
         ws.handler = null;
-        ws.on("message", onMessage);
+        ws.on("message", (data) => {onMessage(ws, data)});
     });
     console.log(`Websocket server running.`);
 }
 
 /**
  * Handles an incoming message
- * @param {*} data 
+ * @param {WebSocket} ws Websocket sending the message
+ * @param {Object} data Data object from message
  * @returns 
  */
-function onMessage(data) {
+function onMessage(ws, data) {
     // explicitly handle ping
     if(data.toString() === "ping") {
         ws.send("pong");
