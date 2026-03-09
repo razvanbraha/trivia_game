@@ -61,6 +61,7 @@ class teachingGame {
         type = data.type;
         state = 1;
         players = [];
+        host.handler = this.receiveMessage;
 
         // TODO what to send back to host? anything?
     }
@@ -68,8 +69,8 @@ class teachingGame {
     /**
      * Handles processing an incoming WebSocket message from a user, validates
      * message format on our protocol
-     * @param {WebSocket} socket 
-     * @param {Object} message 
+     * @param {WebSocket} socket Websocket which sent the request
+     * @param {Object} message Message object containing the request
      */
     receiveMessage(socket, message) {
         // TODO other validation?
@@ -124,6 +125,7 @@ class teachingGame {
      */
     playerJoin(socket) {
         this.players.push(socket);
+        socket.handler = this.receiveMessage;
     }
 
     // TODO add event handlers for the various events give the game state
@@ -132,8 +134,8 @@ class teachingGame {
     /**
      * Configures settings from message, gets list of questions from database,
      * and sends out the first question.
-     * @param {WebSocket} socket 
-     * @param {Object} message 
+     * @param {WebSocket} socket Host websocket which initiated the request
+     * @param {Object} message Message object containing the request
      */
     startGame(socket, message) {
         // TODO load settings(&validate) and start
@@ -141,8 +143,8 @@ class teachingGame {
 
     /**
      * Registers a player's answer in the game state.
-     * @param {WebSocket} socket 
-     * @param {Object} message 
+     * @param {WebSocket} socket Player websocket which initiated the request
+     * @param {Object} message Message object containing the request
      */
     registerAnswer(socket, message) {
         // TODO
@@ -150,8 +152,8 @@ class teachingGame {
 
     /**
      * Sends out next question.
-     * @param {WebSocket} socket 
-     * @param {Object} message 
+     * @param {WebSocket} socket Host websocket which initiated the request
+     * @param {Object} message Message object containing the request
      */
     advanceQuestion(socket, message) {
         // TODO
@@ -161,8 +163,8 @@ class teachingGame {
 
     /**
      * Sends out DONE signal then closes all connections
-     * @param {WebSocket} socket 
-     * @param {Object} message 
+     * @param {WebSocket} socket Host websocket which initiated the request
+     * @param {Object} message Message object containing the request
      */
     endGame(socket, message) {
         this.state = STATES.FINAL;
