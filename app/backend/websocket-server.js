@@ -60,8 +60,15 @@ function startWebSocketServer(server) {
                 console.log("Ping recieved");
             } else {
                 console.log(`Message recieved: ${data}`);
+                // Catch any message format issues
                 try {
                     const data_obj = JSON.parse(data);
+
+                    // Report error and don't pass to session
+                    if(data_obj.type === messages.ERROR) {
+                        console.log(`Client reports error: ${data_obj.message}`);
+                        return;
+                    }
                 
                     if(ws.handler === null) {
                         // Send to sessions to create/join
@@ -87,7 +94,10 @@ function startWebSocketServer(server) {
                                 }
                                 break;
                             default:
-
+                                sendWebSocketMessage(ws, {
+                                        "type": messages.ERROR,
+                                        "message": "Message type is invalid.",
+                                    });
                                 break;
                         }
                     } else {
@@ -106,10 +116,34 @@ function startWebSocketServer(server) {
     console.log(`Websocket server running.`);
 }
 
+
+/**
+ * Handles sending out a generic message with our protocol on a socket
+ * @param {WebSocket} ws Client websocket to send to
+ * @param {String} error_message error message text
+ */
 function sendWebSocketMessage(ws, message) {
     ws.send(JSON.stringify(message));
 }
 
+/**
+ * Handles sending out an error message with our protocol on a socket
+ * @param {WebSocket} socket Client websocket to send to
+ * @param {String} error_message error message text
+ */
+function sendError(socket, error_message) {
+    sendWebSocketMessage(socket, {
+        "type": messages.ERROR,
+        "message": error_message,
+    });
+}
+
+/**
+ * Handles closing out a websocket connection with a closing code and reason
+ * @param {WebSocket} socket Client websocket to close
+ * @param {Number} code closing message code
+ * @param {String} reason closing message text
+ */
 function closeWebsocket(ws, code, reason) {
     ws.close(code, reason);
 }
@@ -118,9 +152,9 @@ function closeWebsocket(ws, code, reason) {
 
 // Export server start for use in server.js
 exports.startWebSocketServer = startWebSocketServer;
-// Export general send message function
+// Export general websocket functions
 exports.sendWebSocketMessage = sendWebSocketMessage;
-// Export close websocket function
+exports.sendError = sendError;
 exports.closeWebsocket = closeWebsocket;
 // Export message types for use in games
 exports.messages = messages;

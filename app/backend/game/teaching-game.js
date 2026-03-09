@@ -10,7 +10,7 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 // TODO require() stuff
-const {messages, sendWebSocketMessage, closeWebsocket} = require("../websocket-server");
+const {messages, sendWebSocketMessage, closeWebsocket, sendError} = require("../websocket-server");
 
 
 //--- OBJECT ---------------------------------------------------------------
@@ -29,7 +29,7 @@ class teachingGame {
         // After final state, game is closed out
     }
 
-    //--- GLOBALS -----------------------------------------------------------------
+    //--- STATE DATA -----------------------------------------------------------------
 
     // Given by sessions
     code = null; // Game join code
@@ -38,6 +38,11 @@ class teachingGame {
 
     state = 0; // the current state
     players = []; // list of player WebSocket connections
+    questions = []; // List of questions to be used by the game
+    current_question_idx = 0; // Index of current question in game(increment on "CONTINUE")
+    answers = {}; // Dict[{socket(player): List(answer #)}] - list indicies correspond to questions list
+    // -1 = no answer
+    points = {}; // Dict{socket(player): int}
 
     //--- FUNCTIONS ---------------------------------------------------------------
 
@@ -58,18 +63,6 @@ class teachingGame {
         players = [];
 
         // TODO what to send back to host? anything?
-    }
-
-    /**
-     * Handles sending out an error message with our protocol on a socket
-     * @param {WebSocket} socket 
-     * @param {String} error_message error message text
-     */
-    sendError(socket, error_message) {
-        sendWebSocketMessage(socket, {
-            "type": messages.ERROR,
-            "message": error_message,
-        });
     }
 
     /**
@@ -115,11 +108,9 @@ class teachingGame {
                         this.sendError(socket, "Game has already started.");
                     }
                     break;
-                case (messages.ERROR):
-                    console.log(`Client reports error: ${message.message}`);
-                    break;
                 default:
                     this.sendError(socket, "Message type is invalid.");
+                    break;
             }
         } catch (error) {
             this.sendError(socket, "Message format is invalid.");
