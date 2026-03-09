@@ -10,6 +10,7 @@
 
 // TODO require() things
 const {messages} = require("../websocket-server");
+const {teachingGame} = require("./teaching-game");
 
 //--- CONSTANTS ---------------------------------------------------------------
 
@@ -20,6 +21,9 @@ const sessionTypes = {
     STUDY: "study"
 };
 
+// Possible code range
+const code_range = 10000;
+
 //--- GLOBALS -----------------------------------------------------------------
 
 // list of all open game sessions for the server to keep track of
@@ -28,43 +32,110 @@ const sessions = [];
 //--- FUNCTIONS ---------------------------------------------------------------
 
 /**
- * Creates an object with data common to all game sessions
- * @author Will Mungas
+ * Generates a unique room code
+ * @author Connor Hekking
  */
-const createCommonSessionData = () => {
-    return {
+function generateRoomCode() {
+    const randomCode = () => {
+        Math.floor(Math.random() * code_range);
+    }
+    let code = -1;
+    let duplicate = true;
 
+    // Generate random codes until one found which isn't taken
+    while(duplicate) {
+        code = randomCode();
+        duplicate = sessions.some((session) => session.code === code);
+    }
+
+    return code;
+}
+
+/**
+ * Creates an object with data common to all game sessions
+ * @author Connor Hekking
+ */
+const createCommonSessionData = (host, type) => {
+    return {
+        code: generateRoomCode(),
+        host: host,
+        type: type,
     };
 };
 
 /**
+ * Checks if authentication token is valid
+ * @author Connor Hekking
+ */
+const isTokenValid = (auth_token) => {
+    // TODO implement
+    return true;
+};
+
+/**
  * Creates a game session of a given type running on a new thread
- * @author Will Mungas
- * @param {String} ws the type of session to create
+ * @author Connor Hekking
+ * @param {WebSocket} ws the websocket of the new game session host
+ * @param {Object} data the data of the request to create the new session
+ * @return true/false whether the creation was successful
  */
 const createSession = (ws, data) => {
-    //TODO
+    //TODO threads not implemented
     const type = data.game_type;
+    const auth_token = data.auth_token;
+    
+    if(!isTokenValid(auth_token)) {
+        return false;
+    }
+
 
     switch(type) {
         case sessionTypes.TEACHING:
-            // TODO implement
+            let data = createCommonSessionData(ws, sessionTypes.TEACHING);
+            sessions.push(teachingGame(data)); 
             break;
         case sessionTypes.MULTIPLAYER:
             // TODO implement
+            return false;
             break;
         case sessionTypes.STUDY:
             // TODO implement
+            return false;
             break;
     }
 
     // start the thread, add data to sessions []
-    return;
+    return true;
 };
 
+/**
+ * Joins an existing game session
+ * @author Connor Hekking
+ * @param {WebSocket} ws the websocket of the new game session host
+ * @param {Object} data the data of the request to create the new session
+ * @return true/false whether the creation was successful
+ */
 const joinSession = (ws, data) => {
-    // TODO
     const code = data.game_code;
+    const type = data.game_type;
+
+    switch(type) {
+        case sessionTypes.TEACHING:
+            let found_session = false;
+            for(const session in sessions) {
+                if(session.code === code && session.state === teachingGame.STATES.LOBBY) {
+                    session.playerJoin(ws);
+                    found_session = true;
+                    break;
+                }
+            }
+            return found_session;
+            break;
+        case sessionTypes.MULTIPLAYER:
+            // TODO implement
+            return false;
+            break;
+    }
 }
 
 //--- EXPORTS -----------------------------------------------------------------

@@ -30,6 +30,7 @@ const messages = {
     CONTINUE: 9,
     RESULTS: 10,
     DONE: 11,
+    ERROR: 12,
 }
 
 //--- GLOBALS -----------------------------------------------------------------
@@ -65,10 +66,24 @@ function startWebSocketServer(server) {
                     // Send to sessions to create/join
                     switch(data_obj.type) {
                         case messages.INIT:
-                            createSession(ws, data_obj);
+                            res = createSession(ws, data_obj);
+                            if(!res) {
+                                // Send error
+                                sendWebSocketMessage(ws, {
+                                    "type": messages.ERROR,
+                                    "message": "Session could not be created.",
+                                });
+                            }
                             break;
                         case messages.JOIN:
-                            joinSession(ws, data_obj);
+                            res = joinSession(ws, data_obj);
+                            if(!res) {
+                                // Send error
+                                sendWebSocketMessage(ws, {
+                                    "type": messages.ERROR,
+                                    "message": "Session could not be joined.",
+                                });
+                            }
                             break;
                     }
                 } else {
@@ -81,9 +96,21 @@ function startWebSocketServer(server) {
     console.log(`Websocket server running.`);
 }
 
+function sendWebSocketMessage(ws, message) {
+    ws.send(JSON.stringify(message));
+}
+
+function closeWebsocket(ws, code, reason) {
+    ws.close(code, reason);
+}
+
 //--- EXPORTS -----------------------------------------------------------------
 
 // Export server start for use in server.js
 exports.startWebSocketServer = startWebSocketServer;
+// Export general send message function
+exports.sendWebSocketMessage = sendWebSocketMessage;
+// Export close websocket function
+exports.closeWebsocket = closeWebsocket;
 // Export message types for use in games
 exports.messages = messages;
