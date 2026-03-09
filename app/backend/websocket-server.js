@@ -53,67 +53,63 @@ function startWebSocketServer(server) {
         console.log(`Client connected.`);
         ws.on('error', console.error);
         ws.handler = null;
-
-        ws.on("message", (data) => {
-            if(data.toString() === "ping") {
-                ws.send("pong");
-                console.log("Ping recieved");
-            } else {
-                console.log(`Message recieved: ${data}`);
-                // Catch any message format issues
-                try {
-                    const data_obj = JSON.parse(data);
-
-                    // Report error and don't pass to session
-                    if(data_obj.type === messages.ERROR) {
-                        console.log(`Client reports error: ${data_obj.message}`);
-                        return;
-                    }
-                
-                    if(ws.handler === null) {
-                        // Send to sessions to create/join
-                        switch(data_obj.type) {
-                            case messages.INIT:
-                                res = createSession(ws, data_obj);
-                                if(!res) {
-                                    // Send error
-                                    sendWebSocketMessage(ws, {
-                                        "type": messages.ERROR,
-                                        "message": "Session could not be created.",
-                                    });
-                                }
-                                break;
-                            case messages.JOIN:
-                                res = joinSession(ws, data_obj);
-                                if(!res) {
-                                    // Send error
-                                    sendWebSocketMessage(ws, {
-                                        "type": messages.ERROR,
-                                        "message": "Session could not be joined.",
-                                    });
-                                }
-                                break;
-                            default:
-                                sendWebSocketMessage(ws, {
-                                        "type": messages.ERROR,
-                                        "message": "Message type is invalid.",
-                                    });
-                                break;
-                        }
-                    } else {
-                        // Send to handler if exists
-                        ws.handler.receiveMessage(ws, data_obj);
-                    }
-                } catch (e) {
-                    sendWebSocketMessage(ws, {
-                        "type": messages.ERROR,
-                        "message": "Message format is invalid",
-                    });
-                }
-            }
-        });
+        ws.on("message", onMessage);
     });
     console.log(`Websocket server running.`);
+}
+
+/**
+ * Handles an incoming message
+ * @param {*} data 
+ * @returns 
+ */
+function onMessage(data) {
+    // explicitly handle ping
+    if(data.toString() === "ping") {
+        ws.send("pong");
+        console.log("Ping recieved");
+        return;
+    }
+    
+    console.log(`Message recieved: ${data}`);
+
+    // Catch any message format issues
+    try {
+        const data_obj = JSON.parse(data);
+
+        // Report error and don't pass to session
+        if(data_obj.type === messages.ERROR) {
+            console.log(`Client reports error: ${data_obj.message}`);
+            return;
+        }
+
+        // defer to handler (game object) if it exists
+        if(ws.handler) {
+            ws.handler(ws, data_obj);
+            return;
+        }
+    
+        // Otherwise handle a few root level messages
+        switch(data_obj.type) {
+            case messages.INIT:
+                res = createSession(ws, data_obj);
+                if(!res) {
+                    sendError(ws, "Session could not be created.");
+                }
+                break;
+            case messages.JOIN:
+                res = joinSession(ws, data_obj);
+                if(!res) {
+                    sendError("Session could not be joined");
+                }
+                break;
+            default:
+                sendError("Message type is invalid.");
+                break;
+        }
+    } catch (e) {
+        sendError("Message format is invalid.");
+    }
 }
 
 
