@@ -100,15 +100,15 @@ function onMessage(data) {
             case messages.JOIN:
                 res = joinSession(ws, data_obj);
                 if(!res) {
-                    sendError("Session could not be joined");
+                    sendError(ws, "Session could not be joined");
                 }
                 break;
             default:
-                sendError("Message type is invalid.");
+                sendError(ws, "Message type is invalid.");
                 break;
         }
     } catch (e) {
-        sendError("Message format is invalid.");
+        sendError(ws, "Message format is invalid.");
     }
 }
 
