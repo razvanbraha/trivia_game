@@ -60,35 +60,45 @@ function startWebSocketServer(server) {
                 console.log("Ping recieved");
             } else {
                 console.log(`Message recieved: ${data}`);
-                const data_obj = JSON.parse(data);
+                try {
+                    const data_obj = JSON.parse(data);
                 
-                if(ws.handler === null) {
-                    // Send to sessions to create/join
-                    switch(data_obj.type) {
-                        case messages.INIT:
-                            res = createSession(ws, data_obj);
-                            if(!res) {
-                                // Send error
-                                sendWebSocketMessage(ws, {
-                                    "type": messages.ERROR,
-                                    "message": "Session could not be created.",
-                                });
-                            }
-                            break;
-                        case messages.JOIN:
-                            res = joinSession(ws, data_obj);
-                            if(!res) {
-                                // Send error
-                                sendWebSocketMessage(ws, {
-                                    "type": messages.ERROR,
-                                    "message": "Session could not be joined.",
-                                });
-                            }
-                            break;
+                    if(ws.handler === null) {
+                        // Send to sessions to create/join
+                        switch(data_obj.type) {
+                            case messages.INIT:
+                                res = createSession(ws, data_obj);
+                                if(!res) {
+                                    // Send error
+                                    sendWebSocketMessage(ws, {
+                                        "type": messages.ERROR,
+                                        "message": "Session could not be created.",
+                                    });
+                                }
+                                break;
+                            case messages.JOIN:
+                                res = joinSession(ws, data_obj);
+                                if(!res) {
+                                    // Send error
+                                    sendWebSocketMessage(ws, {
+                                        "type": messages.ERROR,
+                                        "message": "Session could not be joined.",
+                                    });
+                                }
+                                break;
+                            default:
+
+                                break;
+                        }
+                    } else {
+                        // Send to handler if exists
+                        ws.handler.receiveMessage(ws, data_obj);
                     }
-                } else {
-                    // Send to handler if exists
-                    ws.handler.receiveMessage(ws, data_obj);
+                } catch (e) {
+                    sendWebSocketMessage(socket, {
+                        "type": messages.ERROR,
+                        "message": "Message format is invalid",
+                    });
                 }
             }
         });
