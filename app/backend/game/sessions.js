@@ -88,11 +88,11 @@ const createSession = (ws, data) => {
         return false;
     }
 
-
+    let session_data;
     switch(type) {
         case sessionTypes.TEACHING:
-            let session_data = createCommonSessionData(ws, sessionTypes.TEACHING);
-            sessions.push(teachingGame(session_data)); 
+            session_data = createCommonSessionData(ws, sessionTypes.TEACHING);
+            
             break;
         case sessionTypes.MULTIPLAYER:
             // TODO implement
@@ -103,8 +103,9 @@ const createSession = (ws, data) => {
             return false;
             break;
     }
+    sessions.push(teachingGame(session_data)); 
 
-    // start the thread, add data to sessions []
+    // add data to sessions []
     return true;
 };
 
