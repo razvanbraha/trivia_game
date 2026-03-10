@@ -88,21 +88,7 @@ const createSession = (ws, data) => {
         return false;
     }
 
-    let session_data;
-    switch(type) {
-        case sessionTypes.TEACHING:
-            session_data = createCommonSessionData(ws, sessionTypes.TEACHING);
-            
-            break;
-        case sessionTypes.MULTIPLAYER:
-            // TODO implement
-            return false;
-            break;
-        case sessionTypes.STUDY:
-            // TODO implement
-            return false;
-            break;
-    }
+    let session_data = createCommonSessionData(ws, type);
     sessions.push(teachingGame(session_data)); 
 
     // add data to sessions []
