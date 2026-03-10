@@ -6,10 +6,10 @@ const websocket = new WebSocket(wsUri);
 function startWebsocket() {
     websocket.addEventListener("open", () => {
         console.log("CONNECTED");
-        pingInterval = setInterval(() => {
-            console.log(`SENT: ping`);
-            websocket.send("ping");
-        }, 1000);
+        // pingInterval = setInterval(() => {
+        //     console.log(`SENT: ping`);
+        //     websocket.send("ping");
+        // }, 1000);
         sendWebsocket('hi');
     });
 
