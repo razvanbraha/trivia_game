@@ -19,18 +19,17 @@ const {createSession, joinSession} = require("./game/sessions");
 // Websocket message types
 // See API Endpoint Design - https://docs.google.com/document/d/12ijNjsGuGOg7Xqv12Mo_Kprgvlrn7opl86L4AKaVjaU/edit?usp=sharing
 const messages = {
-    INIT: 1,
-    JOIN: 2,
-    START: 3,
-    QUESTION: 4,
-    CHOICES: 5,
-    READY: 6, 
-    ANSWER: 7,
-    CLOSE: 8, 
-    CONTINUE: 9,
-    RESULTS: 10,
-    DONE: 11,
-    ERROR: 12,
+    JOIN: 1,
+    START: 2,
+    QUESTION: 3,
+    CHOICES: 4,
+    READY: 5, 
+    ANSWER: 6,
+    CLOSE: 7, 
+    CONTINUE: 8,
+    RESULTS: 9,
+    DONE: 10,
+    ERROR: 11,
 }
 
 //--- GLOBALS -----------------------------------------------------------------
@@ -109,6 +108,7 @@ function onMessage(ws, data) {
                 break;
         }
     } catch (e) {
+        // This catches any cascading error from createSession, joinSession, or handler.
         sendError(ws, "Message format is invalid.");
     }
 }

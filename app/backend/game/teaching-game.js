@@ -42,7 +42,15 @@ class teachingGame {
     current_question_idx = 0; // Index of current question in game(increment on "CONTINUE")
     answers = {}; // Dict[{socket(player): List(answer #)}] - list indicies correspond to questions list
     // -1 = no answer
-    points = {}; // Dict{socket(player): int}
+    points = {}; // Dict{socket(player): Number}
+
+    // Game settings 
+    num_questions = 0;
+    categories = [];
+    preview_time = 0;
+    dead_time = 0;
+    live_time = 0;
+
 
     //--- FUNCTIONS ---------------------------------------------------------------
 
@@ -56,12 +64,15 @@ class teachingGame {
      * @param {} data common session data
      */
     initTeachingSession(data) {
-        code = data.code;
-        host = data.host;
-        type = data.type;
-        state = 1;
-        players = [];
-        host.handler = this.receiveMessage;
+        this.code = data.game_code;
+        this.host = data.host;
+        this.type = data.game_type;
+        this.state = STATES.LOBBY;
+        this.host.handler = this.receiveMessage;
+
+        // TODO get questions
+
+
     }
 
     /**
@@ -78,29 +89,29 @@ class teachingGame {
             // Handle all messages
             switch(type) {
                 case (messages.START):
-                    if (state === STATES.LOBBY && socket === host) {
+                    if (this.state === STATES.LOBBY && socket === this.host) {
                         this.startGame(socket, message);
-                    } else if(socket !== host) {
+                    } else if(socket !== this.host) {
                         this.sendError(socket, "Only host can contiinue.");
                     } else {
                         this.sendError(socket, "Game has already started.");
                     }
                     break;
                 case (messages.ANSWER):
-                    if (state === STATES.RECEIVE_RESPONSES && socket !== host) {
+                    if (this.state === STATES.RECEIVE_RESPONSES && socket !== this.host) {
                         this.registerAnswer(socket, message);
-                    } else if(socket === host) {
+                    } else if(socket === this.host) {
                         this.sendError(socket, "Host cannot submit an answer.");
                     } else {
                         this.sendError(socket, "Game is not accepting answers.");
                     }
                     break;
                 case (messages.CONTINUE):
-                    if (state === STATES.AWAIT_NEXT && socket === host) {
+                    if (this.state === STATES.AWAIT_NEXT && socket === this.host) {
                         this.advanceQuestion(socket, message);
-                    } else if (state === STATES.FINAL && socket === host) {
+                    } else if (this.state === STATES.FINAL && socket === this.host) {
                         this.endGame(socket, message);
-                    } else if(socket !== host) {
+                    } else if(socket !== this.host) {
                         this.sendError(socket, "Only host can contiinue.");
                     }
                     else {
@@ -122,8 +133,12 @@ class teachingGame {
      * @param {WebSocket} socket
      */
     playerJoin(socket) {
-        this.players.push(socket);
         socket.handler = this.receiveMessage;
+
+        // Add player entries to data
+        this.players.push(socket);
+        this.answers[socket] = [];
+        this.points[socket] = 0;
     }
 
     /**
@@ -180,5 +195,4 @@ class teachingGame {
 
 //--- EXPORTS -----------------------------------------------------------------
 
-// TODO add exports for other files
 module.teachingGame = teachingGame;
