@@ -91,12 +91,6 @@ function onMessage(ws, data) {
     
         // Otherwise handle a few root level messages
         switch(data_obj.type) {
-            case messages.INIT:
-                res = createSession(ws, data_obj);
-                if(!res) {
-                    sendError(ws, "Session could not be created.");
-                }
-                break;
             case messages.JOIN:
                 res = joinSession(ws, data_obj);
                 if(!res) {

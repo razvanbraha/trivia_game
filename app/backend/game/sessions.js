@@ -55,40 +55,24 @@ function generateRoomCode() {
  * Creates an object with data common to all game sessions
  * @author Connor Hekking
  */
-const createCommonSessionData = (host, type) => {
+const createCommonSessionData = (type) => {
     return {
-        code: generateRoomCode(),
-        host: host,
-        type: type,
+        game_code: generateRoomCode(),
+        game_type: type,
     };
-};
-
-/**
- * Checks if authentication token is valid
- * @author Connor Hekking
- */
-const isTokenValid = (auth_token) => {
-    // TODO implement
-    return true;
 };
 
 /**
  * Creates a game session of a given type running on a new thread
  * @author Connor Hekking
- * @param {WebSocket} ws the websocket of the new game session host
- * @param {Object} data the data of the request to create the new session
+ * @param {Number} code the websocket of the new game session host
  * @return true/false whether the creation was successful
  */
-const createSession = (ws, data) => {
+const createSession = (code) => {
     //TODO threads not implemented
-    const type = data.game_type;
-    const auth_token = data.auth_token;
-    
-    if(!isTokenValid(auth_token)) {
-        return false;
-    }
+    const type = data.game_type; 
 
-    let session_data = createCommonSessionData(ws, type);
+    let session_data = createCommonSessionData(type);
     sessions.push(teachingGame(session_data)); 
 
     // add data to sessions []
@@ -111,7 +95,7 @@ const joinSession = (ws, data) => {
             let found_session = false;
             for(const session in sessions) {
                 if(session.code === code && session.state === teachingGame.STATES.LOBBY) {
-                    session.playerJoin(ws);
+                    session.join(ws);
                     found_session = true;
                     break;
                 }
@@ -125,10 +109,22 @@ const joinSession = (ws, data) => {
     }
 }
 
+/**
+ * Checks if a game session exists with a given code
+ * @author Connor Hekking
+ * @param {Number} code the code to check
+ * @return true/false whether the game session exists
+ */
+const sessionExists = (code) => {
+    const exists = sessions.some((session) => 
+        (session.code === code && session.state === teachingGame.STATES.LOBBY)
+    );
+    return exists;
+}
+
 //--- EXPORTS -----------------------------------------------------------------
 
-// TODO add exports for use in gameAPI.js
-
+exports.sessionExists = sessionExists;
 // Export create/join for websocket-server to use
 exports.createSession = createSession;
 exports.joinSession = joinSession;

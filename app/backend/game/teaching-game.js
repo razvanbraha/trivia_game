@@ -11,6 +11,7 @@
 
 // TODO require() stuff
 const {messages, sendWebSocketMessage, closeWebsocket, sendError} = require("../websocket-server");
+const questionsDB = require("../db_queries/questions-db");
 
 
 //--- OBJECT ---------------------------------------------------------------
@@ -65,14 +66,9 @@ class teachingGame {
      */
     initTeachingSession(data) {
         this.code = data.game_code;
-        this.host = data.host;
         this.type = data.game_type;
         this.state = STATES.LOBBY;
         this.host.handler = this.receiveMessage;
-
-        // TODO get questions
-
-
     }
 
     /**
@@ -129,11 +125,17 @@ class teachingGame {
     }
 
     /**
-     * Handles player joining the game through a websocket connection
+     * Handles user joining the game through a websocket connection
      * @param {WebSocket} socket
      */
-    playerJoin(socket) {
+    join(socket) {
         socket.handler = this.receiveMessage;
+
+        // First join = host, later joins = player
+        if(this.host === null) {
+            this.host = socket;
+            return;
+        }
 
         // Add player entries to data
         this.players.push(socket);
@@ -148,7 +150,7 @@ class teachingGame {
      * @param {Object} message Message object containing the request
      */
     startGame(socket, message) {
-        // TODO load settings(&validate) and start
+        // TODO load settings(&validate), get questions, and start
     }
 
     /**

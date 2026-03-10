@@ -30,8 +30,25 @@ game_router.use(express.urlencoded({ extended: true }));
 
 // --- FUNCTIONS --------------------------------------------------------------
 
-game_router.get("/games", (req, res) => {
-    
+/**
+ * Route handler to check if a game session exists
+ * method: GET 
+ * route: /api/games:code 
+ * @author Connor Hekking
+ */
+game_router.get("/games:code", (req, res) => {
+    const code = req.body.code;
+
+    const exists = session.sessionExists(code);
+
+    // if the session exists, respond OK
+    if(exists) {
+        res.status(200);
+    }
+    // otherwise, respond not found
+    else {
+        res.status(404);
+    }
 });
 
 /**
@@ -42,14 +59,13 @@ game_router.get("/games", (req, res) => {
  * @author Will Mungas
  */
 game_router.post("/games", (req, res) => {
-    const type = req.params.type;
+    const type = req.body.type;
     
     const code = session.createSession(type);
 
     // if a session was created, respond OK with the code
     if(code) {
-        res.json(code);
-        res.status(200);
+        res.json(code).status(200);
     }
     // otherwise, respond that an internal server error occured
     else {
