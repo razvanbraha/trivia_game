@@ -27,7 +27,7 @@ class teachingGame {
         RECEIVE_RESPONSES: 4, // state of each turn when game accepts responses
         AWAIT_NEXT: 5, // state of each turn when game waits for teacher to proceed & shows player progress
         FINAL: 6, // final state: game shows final results & waits for game to end
-        // After final state, game is closed out
+        ENDED: 7, // After final state, game is closed out
     }
 
     //--- STATE DATA -----------------------------------------------------------------
@@ -41,9 +41,9 @@ class teachingGame {
     players = []; // list of player WebSocket connections
     questions = []; // List of questions to be used by the game
     current_question_idx = 0; // Index of current question in game(increment on "CONTINUE")
-    answers = {}; // Dict{socket(player): List(answer #)} - list indicies correspond to questions list
+    answers = new Map(); // Map{socket(player): List(answer #)} - list indicies correspond to questions list
     // -1 = no answer
-    points = {}; // Dict{socket(player): Number}
+    points = new Map(); // Map{socket(player): Number}
     current_correct_answer_number = -1; // Correct answer number (1/2/3/4)
     
     answering_start_time = null; // Date() of the time when the answering period/"live time" started
@@ -134,6 +134,8 @@ class teachingGame {
                         this.endGame(socket, message);
                     } else if(socket !== this.host) {
                         sendError(socket, "Only host can continue.");
+                    } else if(this.state === teachingGame.STATES.ENDED) {
+                        sendError(socket, "Game has already ended.");
                     }
                     else {
                         sendError(socket, "Game has already started.");
@@ -164,8 +166,8 @@ class teachingGame {
 
         // Add player entries to data
         this.players.push(socket);
-        this.answers[socket] = [];
-        this.points[socket] = 0;
+        this.answers.set(socket, []);
+        this.points.set(socket, 0);
     }
 
     /**
@@ -183,27 +185,22 @@ class teachingGame {
         if(num_questions > this.MAX_QUESTIONS || num_questions < this.MIN_QUESTIONS) {
             sendError(socket, "Invalid setting: number of questions.");
             valid = false;
-            return;
         }
         if(preview_time > this.MAX_PREVIEW_TIME || preview_time < this.MIN_PREVIEW_TIME) {
             sendError(socket, "Invalid setting: preview time.");
             valid = false;
-            return;
         }
         if(dead_time > this.MAX_DEAD_TIME || dead_time < this.MIN_DEAD_TIME) {
             sendError(socket, "Invalid setting: dead time.");
             valid = false;
-            return;
         }
         if(live_time > this.MAX_LIVE_TIME || live_time < this.MIN_LIVE_TIME) {
             sendError(socket, "Invalid setting: live time.");
             valid = false;
-            return;
         }
         if(categories.length > this.NUM_CATEGORIES || categories.length < 1){
             sendError(socket, "Invalid setting: categories.");
             valid = false;
-            return;
         }
         categories.forEach((categoryNum) => {
             if(categoryNum > this.NUM_CATEGORIES || categoryNum < 1){
@@ -233,14 +230,14 @@ class teachingGame {
     shuffle(array) {
         let currentIndex = array.length;
 
-        // While there remain elements to shuffle...
+        // While there remain elements to shuffle
         while (currentIndex != 0) {
 
-            // Pick a remaining element...
+            // pick a remaining element
             let randomIndex = Math.floor(Math.random() * currentIndex);
             currentIndex--;
 
-            // And swap it with the current element.
+            // and swap it with the current element
             [array[currentIndex], array[randomIndex]] = [
             array[randomIndex], array[currentIndex]];
         }
@@ -255,27 +252,36 @@ class teachingGame {
         const allQuestions = [];
 
         for(const category of categories) {
-            const questions = await questionsDB.getByCategory(category)
-            allQuestions.push(questions);
+            const questions = await questionsDB.getByCategory(category);
+            allQuestions.push(...questions); // use "..." spread operator to push array contents instead of array itself
         }
 
         this.shuffle(allQuestions);
 
         this.questions = allQuestions.slice(0, count);
+
+        if(this.questions.length < count) {
+            currentMessage = {
+                "type": messages.ERROR,
+                "message": "Not enough questions in Database. Expect unstable behavior.",
+            };
+            sendWebSocketMessage(this.host, currentMessage);
+            this.sendAllPlayers(currentMessage);
+        }
     }
 
     /**
      * Returns rankings of players, including their number rank and points value associated to their websocket.
-     * @returns Dict{Websocket: {rank: Number, points: Number}} (nested)
+     * @returns Map{Websocket: {rank: Number, points: Number}} (nested)
      */
     getRankings() {
-       const rankings = {};
+       const rankings = new Map();
        const rankings_list = [];
 
        this.players.forEach((player) => {
             rankings_list.push({
                 "player": player,
-                "points": this.points[player],
+                "points": this.points.get(player),
             });
        });
 
@@ -291,10 +297,10 @@ class teachingGame {
 
        // Reformat
        rankings_list.forEach((ranking) => {
-            rankings[ranking.player] = {
+            rankings.set(ranking.player, {
                 "rank": ranking.rank,
                 "points": ranking.points,
-            };
+            });
        });
 
        return rankings;
@@ -313,7 +319,7 @@ class teachingGame {
         const dead_time = message.dead_time;
         const live_time = message.live_time;
 
-        const valid = this.validateSettings(socket, num_questions, categories, preview_time, dead_time);
+        const valid = this.validateSettings(socket, num_questions, categories, preview_time, dead_time, live_time);
         if(!valid) {
             return; // Do nothing
         }
@@ -339,7 +345,7 @@ class teachingGame {
      * See "Teaching Game Flow" https://drive.google.com/file/d/1Ot5iEwynpoNxzL3qfV24YOHXDSmfGL-P/view?usp=sharing
      */
     async serveQuestions() {
-        let rankings = null; // Declare for later use
+        let allRankings = null; // Declare for later use
         while(this.current_question_idx  < this.num_questions) {
             // Send QUESTION to host & players
             let currentMessage = {
@@ -393,33 +399,31 @@ class teachingGame {
 
             // Fill in incorrect response(-1) for players who didn't answer
             this.players.forEach((player) => {
-                if(this.answers[player][this.current_question_idx] === undefined) {
-                    this.answers[player][this.current_question_idx] = this.NO_ANSWER_NUM;
+                if(this.answers.get(player)[this.current_question_idx] === undefined) {
+                    this.answers.get(player)[this.current_question_idx] = this.NO_ANSWER_NUM;
                 }
                 // Don't need to add any points
             });
 
 
             // Send CLOSE
-            rankings = this.getRankings();
+            allRankings = this.getRankings();
             sendWebSocketMessage(this.host, {
                 "type": messages.CLOSE,
                 "correct_answer_number": this.current_correct_answer_number,
                 "current_player": null,
-                "other_players": rankings,
+                "other_players": Array.from(allRankings.values()),
             });
             this.players.forEach((player) => {
-                const other_players = [];
-                this.players.forEach((p) => {
-                    if(p !== player) {
-                        other_players.push(rankings[p]);
-                    }
-                });
+                // Get other players
+                const other_players = Array.from(allRankings) // Convert to array [[Websocket, {rank: Number, points: Number}], ...]
+                                    .filter((entry) => entry[0] !== player) // Filter out this player
+                                    .map(([ws, stats]) => stats); // Then map to a new array with just the data
 
                 sendWebSocketMessage(player, {
                     "type": messages.CLOSE,
                     "correct_answer_number": this.current_correct_answer_number,
-                    "current_player": rankings[player],
+                    "current_player": allRankings.get(player),
                     "other_players": other_players,
                 });
             });
@@ -434,31 +438,37 @@ class teachingGame {
         }
 
         // Send RESULTS
-        rankings = this.getRankings();
+        allRankings = this.getRankings();
             sendWebSocketMessage(this.host, {
-                "type": messages.CLOSE,
+                "type": messages.RESULTS,
                 "correct_answer_number": this.current_correct_answer_number,
                 "current_player": null,
-                "other_players": rankings,
+                "other_players": Array.from(allRankings.values()),
             });
             this.players.forEach((player) => {
-                const other_players = [];
-                this.players.forEach((p) => {
-                    if(p !== player) {
-                        other_players.push(rankings[p]);
-                    }
-                });
+                // Get other players
+                const other_players = Array.from(allRankings) // Convert to array [[Websocket, {rank: Number, points: Number}], ...]
+                                    .filter((entry) => entry[0] !== player) // Filter out this player
+                                    .map(([ws, stats]) => stats); // Then map to a new array with just the data
 
                 sendWebSocketMessage(player, {
-                    "type": messages.CLOSE,
+                    "type": messages.RESULTS,
                     "correct_answer_number": this.current_correct_answer_number,
-                    "current_player": rankings[player],
+                    "current_player": allRankings.get(player),
                     "other_players": other_players,
                 });
             });
 
-            this.state = teachingGame.STATES.FINAL;
-            // Now wait till CONTINUE to end game
+        this.state = teachingGame.STATES.FINAL;
+
+        // Now wait till CONTINUE to end game
+
+        await this.delay(1000 * this.AUTO_CLOSE_TIMER);
+
+        // If game not closed yet, do it manually
+        if(this.state === teachingGame.STATES.FINAL) {
+            this.endGame(this.host, null);
+        }
     }
 
     /**
@@ -470,12 +480,12 @@ class teachingGame {
         const answer_number = message.answer_number;
 
         // Stop duplicate answers
-        if (this.answers[socket][this.current_question_idx] !== undefined) {
+        if (this.answers.get(socket)[this.current_question_idx] !== undefined) {
             return;
         } 
 
         // Register answer
-        this.answers[socket][this.current_question_idx] = answer_number;
+        this.answers.get(socket)[this.current_question_idx] = answer_number;
         // Add points
         if (answer_number === this.current_correct_answer_number) {
             const elapsed_time = new Date() - this.answering_start_time;
@@ -489,10 +499,10 @@ class teachingGame {
                 // Timed out, no points
                 points = 0;
                 // Set no answer because answer did not come in time
-                this.answers[socket][this.current_question_idx] = this.NO_ANSWER_NUM;
+                this.answers.get(socket)[this.current_question_idx] = this.NO_ANSWER_NUM;
             }
 
-            this.points[socket] += points;
+            this.points.set(socket) = this.points.get(socket) + points;
         }
     }
 
@@ -549,6 +559,8 @@ class teachingGame {
             });
             closeWebsocket(player, 0, "Game finished.");
         });
+
+        this.state = teachingGame.STATES.ENDED;
     }
 }
 
