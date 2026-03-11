@@ -64,6 +64,9 @@ class teachingGame {
     NO_ANSWER_NUM = -1;
     BASE_QUESTION_POINTS = 1000;
 
+    AUTO_CONTINUE_TIMER = 2 * 60; // 2 mins
+    AUTO_CLOSE_TIMER = 5 * 60; // 5 mins
+
     num_questions = 0;
     categories = [];
     preview_time = 0;
@@ -85,7 +88,7 @@ class teachingGame {
     initTeachingSession(data) {
         this.code = data.game_code;
         this.type = data.game_type;
-        this.state = this.STATES.LOBBY;
+        this.state = teachingGame.STATES.LOBBY;
     }
 
     sendAllPlayers(message) {
@@ -107,7 +110,7 @@ class teachingGame {
             // Handle all messages
             switch(type) {
                 case (messages.START):
-                    if (this.state === this.STATES.LOBBY && socket === this.host) {
+                    if (this.state === teachingGame.STATES.LOBBY && socket === this.host) {
                         this.startGame(socket, message);
                     } else if(socket !== this.host) {
                         sendError(socket, "Only host can contiinue.");
@@ -116,7 +119,7 @@ class teachingGame {
                     }
                     break;
                 case (messages.ANSWER):
-                    if (this.state === this.STATES.RECEIVE_RESPONSES && socket !== this.host) {
+                    if (this.state === teachingGame.STATES.RECEIVE_RESPONSES && socket !== this.host) {
                         this.registerAnswer(socket, message);
                     } else if(socket === this.host) {
                         sendError(socket, "Host cannot submit an answer.");
@@ -125,9 +128,9 @@ class teachingGame {
                     }
                     break;
                 case (messages.CONTINUE):
-                    if (this.state === this.STATES.AWAIT_NEXT && socket === this.host) {
+                    if (this.state === teachingGame.STATES.AWAIT_NEXT && socket === this.host) {
                         this.advanceQuestion(socket, message);
-                    } else if (this.state === this.STATES.FINAL && socket === this.host) {
+                    } else if (this.state === teachingGame.STATES.FINAL && socket === this.host) {
                         this.endGame(socket, message);
                     } else if(socket !== this.host) {
                         sendError(socket, "Only host can continue.");
@@ -222,7 +225,11 @@ class teachingGame {
         return valid
     }
 
-
+    /**
+     * Shuffles array randomly using
+     * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+     * @param {Array} array Array to be shuffled
+     */
     shuffle(array) {
         let currentIndex = array.length;
 
@@ -244,16 +251,17 @@ class teachingGame {
      * @param {Array} categories Array of numbers corresponding to categories included in the game
      * @param {Number} count Number of questions
      */
-    loadQuestions(categories, count) {
+    async loadQuestions(categories, count) {
         const allQuestions = [];
 
-        categories.forEach((category) => {
-            allQuestions.push(questionsDB.getByCategory(category));
-        });
+        for(const category of categories) {
+            const questions = await questionsDB.getByCategory(category)
+            allQuestions.push(questions);
+        }
 
         this.shuffle(allQuestions);
 
-        this.questions = allQuestions.slice(count - 1);
+        this.questions = allQuestions.slice(0, count);
     }
 
     /**
@@ -277,11 +285,9 @@ class teachingGame {
        });
 
        // Add the rankings value
-       rankings_list.reduce((counter, cur) => {
-            counter = (counter || 0) + 1;
-            cur.rank = counter;
-            return acc;
-       });
+       rankings_list.forEach((entry, index) => {
+            entry.rank = index + 1;
+        });
 
        // Reformat
        rankings_list.forEach((ranking) => {
@@ -300,7 +306,7 @@ class teachingGame {
      * @param {WebSocket} socket Host websocket which initiated the request
      * @param {Object} message Message object containing the request
      */
-    startGame(socket, message) {
+    async startGame(socket, message) {
         const num_questions = message.num_questions;
         const categories = message.categories;
         const preview_time = message.preview_time;
@@ -318,7 +324,7 @@ class teachingGame {
         this.live_time = live_time;
 
         // Load questions
-        this.loadQuestions(categories, num_questions);
+        await this.loadQuestions(categories, num_questions);
 
         // Start main game flow
         this.serveQuestions();
@@ -345,7 +351,7 @@ class teachingGame {
             sendWebSocketMessage(this.host, currentMessage);
             this.sendAllPlayers(currentMessage);
 
-            this.state = this.STATES.SHOW_QUESTION;
+            this.state = teachingGame.STATES.SHOW_QUESTION;
 
             // Delay 1 - Show question
             await this.delay(1000 * this.preview_time);
@@ -367,7 +373,7 @@ class teachingGame {
             sendWebSocketMessage(this.host, currentMessage);
             this.sendAllPlayers(currentMessage);
 
-            this.state = this.STATES.SHOW_ANSWERS;
+            this.state = teachingGame.STATES.SHOW_ANSWERS;
 
             // Delay 2 - Show Answers
             await this.delay(1000 * this.dead_time);
@@ -379,15 +385,15 @@ class teachingGame {
             sendWebSocketMessage(this.host, currentMessage);
             this.sendAllPlayers(currentMessage);
 
-            this.state = this.STATES.RECEIVE_RESPONSES;
+            this.state = teachingGame.STATES.RECEIVE_RESPONSES;
 
             // Delay 3 - Accept Answers
-            this.answering_start_time = Date();
+            this.answering_start_time = new Date();
             await this.delay(1000 * this.live_time);
 
             // Fill in incorrect response(-1) for players who didn't answer
             this.players.forEach((player) => {
-                if(this.answers[player].length < this.current_question_idx + 1) {
+                if(this.answers[player][this.current_question_idx] === undefined) {
                     this.answers[player][this.current_question_idx] = this.NO_ANSWER_NUM;
                 }
                 // Don't need to add any points
@@ -418,7 +424,7 @@ class teachingGame {
                 });
             });
 
-            this.state = this.STATES.AWAIT_NEXT;
+            this.state = teachingGame.STATES.AWAIT_NEXT;
 
             // Wait for CONTINUE (advanceQuestion)
             await this.waitForContinue();
@@ -451,7 +457,7 @@ class teachingGame {
                 });
             });
 
-            this.state = this.STATES.FINAL;
+            this.state = teachingGame.STATES.FINAL;
             // Now wait till CONTINUE to end game
     }
 
@@ -463,15 +469,21 @@ class teachingGame {
     registerAnswer(socket, message) {
         const answer_number = message.answer_number;
 
+        // Stop duplicate answers
+        if (this.answers[socket][this.current_question_idx] !== undefined) {
+            return;
+        } 
+
         // Register answer
         this.answers[socket][this.current_question_idx] = answer_number;
         // Add points
         if (answer_number === this.current_correct_answer_number) {
-            const elapsed_time = this.answering_start_time - date();
-            const elapsed_seconds = (elapsed_time.getMinutes() * 60) + elapsed_time.getSeconds();
+            const elapsed_time = new Date() - this.answering_start_time;
+            const elapsed_seconds = elapsed_time / 1000; // Date() is in milliseconds
 
             // Points = ratio of elapsed time to live time, multiplied by the base number of points
-            let points = (elapsed_seconds / this.live_time) * this.BASE_QUESTION_POINTS;
+            let points = ((this.live_time - elapsed_seconds) / this.live_time) * this.BASE_QUESTION_POINTS;
+            points = Math.round(points); // Round to integer
 
             if(points < 0) {
                 // Timed out, no points
@@ -490,7 +502,16 @@ class teachingGame {
      */
     waitForContinue() {
         return new Promise(resolve => {
-            this.signalContinue = resolve;
+            this.signalContinue = () => {
+                clearTimeout(timeout);
+                resolve();
+            };
+
+            // In case host disconnects, auto-continue
+            const timeout = setTimeout(() => {
+                this.signalContinue = null;
+                resolve();
+            }, this.AUTO_CONTINUE_TIMER);
         });
     }
 
@@ -533,4 +554,4 @@ class teachingGame {
 
 //--- EXPORTS -----------------------------------------------------------------
 
-module.teachingGame = teachingGame;
+module.exports.teachingGame = teachingGame;
