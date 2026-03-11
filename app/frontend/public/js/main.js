@@ -10,7 +10,6 @@ Also, this script needs documentation from whoever wrote it
 */
 
 function studentMenu() {
-    fetch()
     window.location.href = "/student/home";
 }
 
