@@ -20,7 +20,7 @@ export function usersManage() {
 }
 
 export function home() {
-    globalThis.location.href = "../../templates/index.html";
+    globalThis.location.href = "../../index.html";
 }
 
 export default {studentMenu, teacherMenu, home, questionsManage, usersManage, loginAsProfessor};
