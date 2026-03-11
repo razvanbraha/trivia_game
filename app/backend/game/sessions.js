@@ -36,9 +36,7 @@ const sessions = [];
  * @author Connor Hekking
  */
 function generateRoomCode() {
-    const randomCode = () => {
-        Math.floor(Math.random() * code_range);
-    }
+    const randomCode = () => Math.floor(Math.random() * code_range);
     let code = -1;
     let duplicate = true;
 
@@ -65,18 +63,21 @@ const createCommonSessionData = (type) => {
 /**
  * Creates a game session of a given type running on a new thread
  * @author Connor Hekking
- * @param {Number} code the websocket of the new game session host
- * @return true/false whether the creation was successful
+ * @return The code of the newly created session
  */
-const createSession = (code) => {
+const createSession = (type) => {
     //TODO threads not implemented
-    const type = data.game_type; 
 
     let session_data = createCommonSessionData(type);
-    sessions.push(teachingGame(session_data)); 
+    //TODO multiple game types
+    if(type === sessionTypes.TEACHING) {
+        sessions.push(new teachingGame(session_data)); 
+    } else {
+        return null;
+    }
+    
 
-    // add data to sessions []
-    return true;
+    return session_data.game_code;
 };
 
 /**
@@ -93,7 +94,7 @@ const joinSession = (ws, data) => {
     switch(type) {
         case sessionTypes.TEACHING:
             let found_session = false;
-            for(const session in sessions) {
+            for(const session of sessions) {
                 if(session.code === code && session.state === teachingGame.STATES.LOBBY) {
                     session.join(ws);
                     found_session = true;
@@ -101,11 +102,11 @@ const joinSession = (ws, data) => {
                 }
             }
             return found_session;
-            break;
         case sessionTypes.MULTIPLAYER:
             // TODO implement
             return false;
-            break;
+        default:
+            return false;
     }
 }
 
@@ -128,7 +129,7 @@ const sessionExists = (code) => {
  * @param {teachingGame} session the session to remove
  */
 const removeSession = (session) => {
-    const idx = sessions.indexOf(session);
+    const idx = sessions.findIndex(s => s.code === session.code);
     if(idx > -1) {
         sessions.splice(idx, 1);
     }

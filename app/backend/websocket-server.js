@@ -12,7 +12,7 @@
 const {WebSocketServer} = require("ws");
 
 // Include sessions.js for starting/joining sessions
-const {createSession, joinSession} = require("./game/sessions");
+const {joinSession} = require("./game/sessions");
 
 //--- CONSTANTS ---------------------------------------------------------------
 
@@ -67,7 +67,7 @@ function onMessage(ws, data) {
     // explicitly handle ping
     if(data.toString() === "ping") {
         ws.send("pong");
-        console.log("Ping recieved");
+        console.log("Ping received");
         return;
     }
     
@@ -75,7 +75,7 @@ function onMessage(ws, data) {
 
     // Catch any message format issues
     try {
-        const data_obj = JSON.parse(data);
+        const data_obj = JSON.parse(data.toString());
 
         // Report error and don't pass to session
         if(data_obj.type === messages.ERROR) {
@@ -92,7 +92,7 @@ function onMessage(ws, data) {
         // Otherwise handle a few root level messages
         switch(data_obj.type) {
             case messages.JOIN:
-                res = joinSession(ws, data_obj);
+                const res = joinSession(ws, data_obj);
                 if(!res) {
                     sendError(ws, "Session could not be joined");
                 }
@@ -102,7 +102,7 @@ function onMessage(ws, data) {
                 break;
         }
     } catch (e) {
-        // This catches any cascading error from createSession, joinSession, or handler.
+        // This catches any cascading error from joinSession, or handler.
         sendError(ws, "Message format is invalid.");
     }
 }
@@ -114,7 +114,9 @@ function onMessage(ws, data) {
  * @param {String} error_message error message text
  */
 function sendWebSocketMessage(ws, message) {
-    ws.send(JSON.stringify(message));
+    if(ws.readyState === WebSocket.OPEN){
+        ws.send(JSON.stringify(message));
+    }
 }
 
 /**

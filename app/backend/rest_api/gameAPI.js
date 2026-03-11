@@ -18,7 +18,6 @@
 const express = require('express');
 const path = require("node:path");
 const session = require("../game/sessions");
-const e = require('express');
 
 //--- EXPORTS -----------------------------------------------------------------
 
@@ -33,21 +32,21 @@ game_router.use(express.urlencoded({ extended: true }));
 /**
  * Route handler to check if a game session exists
  * method: GET 
- * route: /api/games:code 
+ * route: /api/games/:code 
  * @author Connor Hekking
  */
-game_router.get("/games:code", (req, res) => {
-    const code = req.body.code;
+game_router.get("/games/:code", (req, res) => {
+    const code = req.params.code;
 
     const exists = session.sessionExists(code);
 
     // if the session exists, respond OK
     if(exists) {
-        res.status(200);
+        res.status(200).send();
     }
     // otherwise, respond not found
     else {
-        res.status(404);
+        res.status(404).send();
     }
 });
 
@@ -65,11 +64,11 @@ game_router.post("/games", (req, res) => {
 
     // if a session was created, respond OK with the code
     if(code) {
-        res.json(code).status(200);
+        res.status(200).json(code);
     }
     // otherwise, respond that an internal server error occured
     else {
-        res.status(500);
+        res.status(500).send();
     }
 });
 
