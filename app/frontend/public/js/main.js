@@ -1,20 +1,31 @@
+/*
+edited by Will Mungas
+Changes:
+Edited routes to match server routes rather than hardcoded file paths
+The whole point of serving static content from public is that it is the only folder
+that the frontend 'knows' about; everything else about our file structure is hidden
+and only served via route handlers. 
+
+Also, this script needs documentation from whoever wrote it
+*/
 
 function studentMenu() {
-    window.location.href = "../../templates/student-menu.html";
+    fetch()
+    window.location.href = "/student/home";
 }
 
 function loginAsProfessor() {
-    window.location.href = "../../templates/teacher-login.html";
+    window.location.href = "/teacher/login";
 }
 
 function questionsManage() {
-    globalThis.location.href = "../../templates/question-manage.html";
+    window.location.href = "/teacher/questions";
 }
 
 function usersManage() {
-    globalThis.location.href = "../../templates/user-manage.html";
+    window.location.href = "/teacher/users";
 }
 
 function home() {
-    globalThis.location.href = "../../templates/index.html";
+    window.location.href = "/";
 }
