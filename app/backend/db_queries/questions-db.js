@@ -1,9 +1,22 @@
 const path = require('node:path');
 let mysql = require('mysql2/promise');
-require('dotenv').config({ path: path.join(__dirname, '../../.env')})
+require('dotenv').config();
 
 // Initialize database connection
 let con;
+
+async function connectWithRetry(config, retries = 10, delay = 3000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            console.log(`Attempting DB connection (${i + 1}/${retries})...`);
+            return await mysql.createConnection(config);
+        } catch (err) {
+            console.log("Database not ready, retrying...");
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+    throw new Error("Could not connect to MySQL after multiple attempts.");
+}
 
 /**
  * Setup Questions database & table if none exists.
@@ -13,21 +26,21 @@ let con;
 const setupQuestions = async () => {
 
     // Create db if needed
-    const rootCon = await mysql.createConnection({
-        host: process.env.host,
-        user: process.env.user,
-        password: process.env.password
+    const rootCon = await connectWithRetry({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD
     });
 
     await rootCon.query('CREATE DATABASE IF NOT EXISTS trivia');
     await rootCon.end();
 
     // connect with db
-    con = await mysql.createConnection({
-        host: process.env.host,
-        user: process.env.user,
-        password: process.env.password,
-        database: process.env.database
+    con = await connectWithRetry({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
     });
 
     // Create table if it doesn't exist

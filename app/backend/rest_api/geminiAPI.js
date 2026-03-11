@@ -6,7 +6,7 @@ const { GoogleGenAI } = require("@google/genai");
 const { z } = require('zod');
 const { zodToJsonSchema } = require('zod-to-json-schema');
 
-const ai = new GoogleGenAI({ apiKey: process.env.geminiKey});
+const ai = new GoogleGenAI({ GEMINI_KEY: process.env.geminiKey});
 
 const router = express.Router();
 router.use(express.json());

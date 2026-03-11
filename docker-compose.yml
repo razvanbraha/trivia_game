@@ -1,0 +1,53 @@
+services:
+
+  api:
+    build:
+      context: ./app/backend
+    container_name: trivia-api
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    command: node server.js
+
+  frontend:
+    image: nginx:alpine
+    container_name: trivia-frontend
+    volumes:
+      - ./app/frontend:/usr/share/nginx/html
+    expose:
+      - "80"
+
+  db:
+    image: mysql:8.0
+    container_name: trivia-db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  apacheshib:
+    image: dockerhub.csc.ncsu.edu/ignacioxd/apacheshib-proxy
+    container_name: shib-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api
+      - frontend
+    environment:
+      - SERVER_NAME=localhost
+      - LOGIN_PATH=/teacher
+      - BACKEND_HOST=api
+      - BACKEND_PORT=8080
+      - BACKEND_PATH=/api
+      - BACKEND_PROTOCOL=http
+      - FRONTEND_HOST=frontend
+      - FRONTEND_PORT=80
+      - FRONTEND_PROTOCOL=http
+
+volumes:
+  mysql-data:
