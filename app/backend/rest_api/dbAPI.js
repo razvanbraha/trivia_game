@@ -12,12 +12,11 @@ const {
 
 const router = express.Router();
 router.use(express.json());
-router.use(express.static(path.join(__dirname, "../../frontend/public")));
 router.use(express.urlencoded({ extended: true }));
 
 const templatesFolder = path.join(__dirname, '../../frontend/templates');
 
-router.get('/questions', async (req, res) => {
+router.get('/populate', async (req, res) => {
     try {
         let qry = structuredClone(req.query)
         let questions;
@@ -37,20 +36,12 @@ router.get('/questions', async (req, res) => {
     }
 });
 
-router.get('/redirect', async (req, res) => {
-    res.status(200).sendFile(path.join(templatesFolder, 'question-manage.html'));
-});
-
-router.put('/redirect', async (req, res) => {
-    res.status(200).sendFile(path.join(templatesFolder, 'question-manage.html'));
-});
-
-router.post('/questions', async (req, res) => {
+router.post('/create', async (req, res) => {
     try {
         if (validateQuestion(req.body)) {
             addQuestion(req.body);
             console.log("Received Data:", req.body);
-            res.redirect('/api/redirect');
+            res.status(201).json({ message: "Question added" });
         } else {
             res.status(400).json({error: "Unable to add question"});
         }
@@ -60,7 +51,7 @@ router.post('/questions', async (req, res) => {
     }
 });
 
-router.delete('/questions', async (req, res) => {
+router.delete('/delete', async (req, res) => {
     try {
         deleteQuestion(req.body.questionId);
         console.log("Delete confirmed:", req.body.questionId);
@@ -71,12 +62,12 @@ router.delete('/questions', async (req, res) => {
     }
 });
 
-router.put('/questions', async (req, res) => {
+router.put('/update', async (req, res) => {
     try {
         if (validateQuestion(req.body.questionData)) {
             updateQuestion(req.body.questionData, req.body.questionId);
             console.log("Update confirmed:", req.body.questionId);
-            res.redirect('/api/redirect');
+            res.status(200).json({ message: "Question updated" });
         } else {
             res.status(400).json({error: "Unable to add question"});
         }

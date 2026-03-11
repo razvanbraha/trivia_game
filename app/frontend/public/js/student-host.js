@@ -1,56 +1,58 @@
-let roomCode;
+document.addEventListener("DOMContentLoaded", () => {
+    let roomCode;
 
-async function createRoom() {
-    const res = await fetch("/api/room/create", { method: "POST" });
-    const data = await res.json();
-
-    roomCode = data.code;
-    document.getElementById("roomCode").innerText = roomCode;
-
-    pollPlayers();
-}
-
-function pollPlayers() {
-    setInterval(async () => {
-        const res = await fetch(`/api/room/${roomCode}`);
+    async function createRoom() {
+        const res = await fetch("/api/room/create", { method: "POST" });
         const data = await res.json();
 
-        const playersHTML = data.players.length
-            ? data.players.map(p => `<div>${p}</div>`).join("")
-            : "<div>No players yet</div>";
+        roomCode = data.code;
+        document.getElementById("roomCode").innerText = roomCode;
 
-        document.getElementById("players").innerHTML = playersHTML;
-    }, 1000);
-}
+        pollPlayers();
+    }
 
-const slider = document.getElementById("questionSlider");
-const countDisplay = document.getElementById("questionCount");
+    function pollPlayers() {
+        setInterval(async () => {
+            const res = await fetch(`/api/room/${roomCode}`);
+            const data = await res.json();
 
-slider.addEventListener("input", () => {
-    countDisplay.innerText = slider.value;
-});
+            const playersHTML = data.players.length
+                ? data.players.map(p => `<div>${p}</div>`).join("")
+                : "<div>No players yet</div>";
 
-async function saveSettings() {
-    const questions = slider.value;
+            document.getElementById("players").innerHTML = playersHTML;
+        }, 1000);
+    }
 
-    const categories = [...document.querySelectorAll("input[type=checkbox]:checked")]
-        .map(c => c.value);
+    const slider = document.getElementById("questionSlider");
+    const countDisplay = document.getElementById("questionCount");
 
-    await fetch(`/api/room/${roomCode}/settings`, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ questions, categories })
+    slider.addEventListener("input", () => {
+        countDisplay.innerText = slider.value;
     });
-}
 
-async function startGame() {
-    await saveSettings();
-    alert("Game starting!");
-}
+    async function saveSettings() {
+        const questions = slider.value;
 
-async function cancelRoom() {
-    await fetch(`/api/room/${roomCode}`, { method: "DELETE" });
-    window.location.href = "/";
-}
+        const categories = [...document.querySelectorAll("input[type=checkbox]:checked")]
+            .map(c => c.value);
 
-createRoom();
+        await fetch(`/api/room/${roomCode}/settings`, {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ questions, categories })
+        });
+    }
+
+    async function startGame() {
+        await saveSettings();
+        alert("Game starting!");
+    }
+
+    async function cancelRoom() {
+        await fetch(`/api/room/${roomCode}`, { method: "DELETE" });
+        window.location.href = "/";
+    }
+
+    createRoom();
+});

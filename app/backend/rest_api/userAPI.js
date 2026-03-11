@@ -17,18 +17,6 @@ router.use(express.urlencoded({ extended: true }));
 
 const templatesFolder = path.join(__dirname, '../../frontend/templates');
 
-/*
-
-router.get('/users/redirect', async (req, res) => {
-    res.status(200).sendFile(path.join(templatesFolder, 'user-manage.html'));
-});
-
-router.put('/redirect', async (req, res) => {
-    res.status(200).sendFile(path.join(templatesFolder, 'user-manage.html'));
-});
-
-*/
-
 router.get('/users', async (req, res) => {
     try {
         let qry = structuredClone(req.query)
@@ -54,7 +42,7 @@ router.post('/users', async (req, res) => {
         if (validateUser(req.body)) {
             await addUser(req.body);
             console.log("Received Data:", req.body);
-            res.redirect('/api/users/redirect');
+            res.redirect('/templates/user-manage.html');
         } else {
             res.status(400).json({error: "Unable to add user"});
         }
@@ -79,7 +67,7 @@ router.put('/users', async (req, res) => {
     try {
         await updateUser(req.body, req.body.userId);
         console.log("Update confirmed:", req.body.userId);
-        res.redirect('/api/redirect');
+        res.redirect('/templates/user-manage.html');
     } catch (err) {
         console.log(err);
         res.status(500).json({error: "Unable to update user"})
