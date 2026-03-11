@@ -72,3 +72,5 @@ game_router.post("/games", (req, res) => {
         res.status(500);
     }
 });
+
+module.exports = game_router;
