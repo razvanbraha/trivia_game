@@ -12,33 +12,33 @@ const path = require("path");
 
 const templates_dir = path.join(__dirname, "../../frontend/templates");
 
-const router = express.Router();
+const game_page_router = express.Router();
 
 //--- ROUTES ------------------------------------------------------------------
 
-router.get("/teacher-host", (req, res) => {
+game_page_router.get("/teacher-host", (req, res) => {
     res.send(path.join(templates_dir, "tg-host.html"));
 });
 
-router.get("/teacher-play", (req, res) => {
+game_page_router.get("/teacher-play", (req, res) => {
     res.send(path.join(templates_dir, "tg-play.html"));
 
 });
 
-router.get("/multi-host", (req, res) => {
+game_page_router.get("/multi-host", (req, res) => {
     res.send(path.join(templates_dir, "mg-host.html"));
 });
 
 // TODO implement pages for these routes
 
-router.get("/multi-play", (req, res) => {
+game_page_router.get("/multi-play", (req, res) => {
     res.send(path.join(templates_dir, "mg-play.html"));
 });
 
-router.get("/study", (req, res) => {
+game_page_router.get("/study", (req, res) => {
     res.send(path.join(templates_dir, "sg-play.html"));
 });
 
 //--- EXPORTS -----------------------------------------------------------------
 
-module.exports = router;
+module.exports = game_page_router;

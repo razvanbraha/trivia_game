@@ -12,14 +12,14 @@ const path = require("path");
 
 const templates_dir = path.join(__dirname, "../../frontend/templates");
 
-const router = express.Router();
+const student_page_router = express.Router();
 
 //--- ROUTES ------------------------------------------------------------------
 
-router.get("/home", (req, res) => {
+student_page_router.get("/home", (req, res) => {
     res.send(path.join(templates_dir, "student-menu.html"));
 });
 
 //--- EXPORTS -----------------------------------------------------------------
 
-module.exports = router;
+module.exports = student_page_router;

@@ -12,28 +12,28 @@ const path = require("path");
 
 const templates_dir = path.join(__dirname, "../../frontend/templates");
 
-const router = express.Router();
+const teacher_page_router = express.Router();
 
 // TODO add middleware to authenticate via shib before serving any of these
 // pages
 
 //--- ROUTES ------------------------------------------------------------------
 
-router.get("/questions", (req, res) => {
+teacher_page_router.get("/questions", (req, res) => {
     res.send(path.join(templates_dir, "question-manage.html"));
 });
 
-router.get("/users", (req, res) => {
+teacher_page_router.get("/users", (req, res) => {
     res.send(path.join(templates_dir, "user-manage.html"));
 
 });
 
 // TODO implement pages for these routes
 
-router.get("/home", (req, res) => {
+teacher_page_router.get("/home", (req, res) => {
     res.send(path.join(templates_dir, "teacher-home.html"));
 });
 
 //--- EXPORTS -----------------------------------------------------------------
 
-module.exports = router;
+module.exports = teacher_page_router;
