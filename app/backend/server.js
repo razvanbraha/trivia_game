@@ -12,8 +12,8 @@ const PORT = 8080;
 
 app.use("/public", express.static(path.join(__dirname, "../frontend/public")));
 app.use(express.json());
-app.use("/", dbAPI);
-app.use("/", userAPI);
+app.use("/questions", dbAPI);
+app.use("/users", userAPI);
 app.use("/room", roomAPI);
 
 app.get("/teacher", (req, res) => {

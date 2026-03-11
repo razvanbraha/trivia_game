@@ -29,7 +29,7 @@ const clearQuestions = () => {
 }
 
 async function populateQuestions() {
-    const res = await fetch(`/api/questions`);
+    const res = await fetch(`/api/questions/populate`);
 
     if (res.status != 200) {
         const error = res.json();
@@ -112,7 +112,7 @@ async function populateQuestions() {
 
 async function deleteQuestion(id) {
     const data = {questionId: id}
-    const res = await fetch(`/api/questions`, { 
+    const res = await fetch(`/api/questions/delete`, { 
         method: "DELETE",  
         headers: {'Content-Type': 'application/json'},  
         body: JSON.stringify(data)
@@ -129,7 +129,7 @@ async function deleteQuestion(id) {
 
 async function loadQuestion(id) {
     clearQuestions()
-    const res = await fetch(`/api/questions?id=${id}`);
+    const res = await fetch(`/api/questions/populate?id=${id}`);
 
     if (res.status != 200) {
         const error = res.json();
@@ -179,7 +179,7 @@ async function loadQuestion(id) {
             questionId: idElement.value,
             questionData: questionData
         }
-        const res = await fetch(`/api/questions`, { 
+        const res = await fetch(`/api/questions/update`, { 
             method: "PUT",  
             headers: {'Content-Type': 'application/json'},  
             body: JSON.stringify(data)
@@ -215,7 +215,7 @@ if (questionForm) {
             ai: Number(formData.get("ai"))
         };
 
-        const res = await fetch("/api/questions", {
+        const res = await fetch("/api/questions/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(questionData)
