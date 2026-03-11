@@ -47,34 +47,5 @@
     </div>
 </div>
 
-<script>
-async function joinRoom() {
-    const code = document.getElementById("roomCode").value;
-    const name = prompt("Enter your name");
-
-    if (!code || !name) return;
-
-    const res = await fetch("/api/room/join", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ code, name })
-    });
-
-    if (res.ok) {
-        alert("Joined room!");
-    } else {
-        alert("Room not found");
-    }
-}
-
-function launchMultiplayer() {
-    window.location.href = "/html/student-host.html";
-}
-
-function launchStudy() {
-    alert("dum dum");
-}
-</script>
-
 </body>
 </html>
