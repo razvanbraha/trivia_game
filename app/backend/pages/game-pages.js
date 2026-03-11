@@ -17,26 +17,26 @@ const game_page_router = express.Router();
 //--- ROUTES ------------------------------------------------------------------
 
 game_page_router.get("/teacher-host", (req, res) => {
-    res.send(path.join(templates_dir, "tg-host.html"));
+    res.sendFile(path.join(templates_dir, "tg-host.html"));
 });
 
 game_page_router.get("/teacher-play", (req, res) => {
-    res.send(path.join(templates_dir, "tg-play.html"));
+    res.sendFile(path.join(templates_dir, "tg-play.html"));
 
 });
 
 game_page_router.get("/multi-host", (req, res) => {
-    res.send(path.join(templates_dir, "mg-host.html"));
+    res.sendFile(path.join(templates_dir, "mg-host.html"));
 });
 
 // TODO implement pages for these routes
 
 game_page_router.get("/multi-play", (req, res) => {
-    res.send(path.join(templates_dir, "mg-play.html"));
+    res.sendFile(path.join(templates_dir, "mg-play.html"));
 });
 
 game_page_router.get("/study", (req, res) => {
-    res.send(path.join(templates_dir, "sg-play.html"));
+    res.sendFile(path.join(templates_dir, "sg-play.html"));
 });
 
 //--- EXPORTS -----------------------------------------------------------------

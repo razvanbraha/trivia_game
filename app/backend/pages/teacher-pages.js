@@ -20,18 +20,18 @@ const teacher_page_router = express.Router();
 //--- ROUTES ------------------------------------------------------------------
 
 teacher_page_router.get("/questions", (req, res) => {
-    res.send(path.join(templates_dir, "question-manage.html"));
+    res.sendFile(path.join(templates_dir, "question-manage.html"));
 });
 
 teacher_page_router.get("/users", (req, res) => {
-    res.send(path.join(templates_dir, "user-manage.html"));
+    res.sendFile(path.join(templates_dir, "user-manage.html"));
 
 });
 
 // TODO implement pages for these routes
 
 teacher_page_router.get("/home", (req, res) => {
-    res.send(path.join(templates_dir, "teacher-home.html"));
+    res.sendFile(path.join(templates_dir, "teacher-home.html"));
 });
 
 //--- EXPORTS -----------------------------------------------------------------

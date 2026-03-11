@@ -17,7 +17,7 @@ const student_page_router = express.Router();
 //--- ROUTES ------------------------------------------------------------------
 
 student_page_router.get("/home", (req, res) => {
-    res.send(path.join(templates_dir, "student-menu.html"));
+    res.sendFile(path.join(templates_dir, "student-menu.html"));
 });
 
 //--- EXPORTS -----------------------------------------------------------------
