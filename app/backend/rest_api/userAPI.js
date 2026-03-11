@@ -1,3 +1,15 @@
+//-----------------------------------------------------------------------------
+/**
+ * @file userAPI.js
+ * @author 
+ * TODO add authors
+ * 
+ * Handles operations on the api endpoint /api/users
+ */
+//-----------------------------------------------------------------------------
+
+
+
 const express = require('express');
 const path = require("node:path");
 const validateUser = require('../db_queries/user-validation')
@@ -12,10 +24,7 @@ const {
 
 const router = express.Router();
 router.use(express.json());
-router.use(express.static(path.join(__dirname, "../../frontend/public")));
-router.use(express.urlencoded({ extended: true }));
-
-const templatesFolder = path.join(__dirname, '../../frontend/templates');
+router.use(express.urlencoded({ extended: true }));k
 
 /*
 
