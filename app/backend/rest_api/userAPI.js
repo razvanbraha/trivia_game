@@ -24,7 +24,7 @@ const {
 
 const router = express.Router();
 router.use(express.json());
-router.use(express.urlencoded({ extended: true }));k
+router.use(express.urlencoded({ extended: true }));
 
 /*
 
