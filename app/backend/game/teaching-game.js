@@ -10,9 +10,8 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 const {messages, sendWebSocketMessage, closeWebsocket, sendError} = require("../websocket-server");
+const {removeSession} = require("./sessions");
 const questionsDB = require("../db_queries/questions-db");
-const { all } = require("../rest_api/dbAPI");
-
 
 //--- OBJECT ---------------------------------------------------------------
 // Declare this file as an object to be able to use multiple instances of it
@@ -64,8 +63,8 @@ class teachingGame {
     NO_ANSWER_NUM = -1;
     BASE_QUESTION_POINTS = 1000;
 
-    AUTO_CONTINUE_TIMER = 2 * 60; // 2 mins
-    AUTO_CLOSE_TIMER = 5 * 60; // 5 mins
+    AUTO_CONTINUE_TIMER = 120; // 2 mins
+    AUTO_CLOSE_TIMER = 300; // 5 mins
 
     num_questions = 0;
     categories = [];
@@ -156,6 +155,11 @@ class teachingGame {
      * @param {WebSocket} socket
      */
     join(socket) {
+        if (this.state !== teachingGame.STATES.LOBBY) {
+            sendError(socket, "Game already started.");
+            return;
+        }
+
         socket.handler = this.receiveMessage.bind(this);
 
         // First join = host, later joins = player
@@ -209,15 +213,11 @@ class teachingGame {
                 return;
             }
         });
-        categories.reduce((acc, cur) => {
-            acc[cur] = (acc[cur] || 0) + 1;
-            if(acc[cur] > 1) {
-                sendError(socket, "Invalid setting: categories.");
-                valid = false;
-                return;
-            }
-            return acc;
-        });
+        const duplicates = categories.filter((item, index) => categories.indexOf(item) !== index);
+        if(duplicates.length > 0) {
+            sendError(socket, "Invalid setting: categories.");
+            valid = false;
+        }
 
         return valid
     }
@@ -261,7 +261,7 @@ class teachingGame {
         this.questions = allQuestions.slice(0, count);
 
         if(this.questions.length < count) {
-            currentMessage = {
+            let currentMessage = {
                 "type": messages.ERROR,
                 "message": "Not enough questions in Database. Expect unstable behavior.",
             };
@@ -479,6 +479,12 @@ class teachingGame {
     registerAnswer(socket, message) {
         const answer_number = message.answer_number;
 
+        // Check invalid answer number
+        if(answer_number > 4 || answer_number < 1) {
+            sendError(socket, "Invalid answer number.");
+            return;
+        }
+
         // Stop duplicate answers
         if (this.answers.get(socket)[this.current_question_idx] !== undefined) {
             return;
@@ -502,7 +508,7 @@ class teachingGame {
                 this.answers.get(socket)[this.current_question_idx] = this.NO_ANSWER_NUM;
             }
 
-            this.points.set(socket) = this.points.get(socket) + points;
+            this.points.set(socket, this.points.get(socket) + points);
         }
     }
 
@@ -521,7 +527,7 @@ class teachingGame {
             const timeout = setTimeout(() => {
                 this.signalContinue = null;
                 resolve();
-            }, this.AUTO_CONTINUE_TIMER);
+            }, this.AUTO_CONTINUE_TIMER * 1000);
         });
     }
 
@@ -561,6 +567,16 @@ class teachingGame {
         });
 
         this.state = teachingGame.STATES.ENDED;
+
+        // Cleanup memory
+        this.host.handler = null;
+        this.players.forEach((player) => {player.handler = null});
+        this.players = [];
+        this.questions = [];
+        this.answers.clear();
+        this.points.clear();
+
+        removeSession(this);
     }
 }
 

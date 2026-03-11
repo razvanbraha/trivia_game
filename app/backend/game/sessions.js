@@ -122,9 +122,22 @@ const sessionExists = (code) => {
     return exists;
 }
 
+/**
+ * Removes a session from memory
+ * @author Connor Hekking
+ * @param {teachingGame} session the session to remove
+ */
+const removeSession = (session) => {
+    const idx = sessions.indexOf(session);
+    if(idx > -1) {
+        sessions.splice(idx, 1);
+    }
+}
+
 //--- EXPORTS -----------------------------------------------------------------
 
 exports.sessionExists = sessionExists;
 // Export create/join for websocket-server to use
 exports.createSession = createSession;
 exports.joinSession = joinSession;
+exports.removeSession = removeSession;
