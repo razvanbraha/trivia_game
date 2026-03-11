@@ -75,22 +75,21 @@ class teachingGame {
 
     //--- FUNCTIONS ---------------------------------------------------------------
 
-    constructor(data) {
-        this.initTeachingSession(data);
-    }
-
     /**
      * Entry point for a teaching session thread: initializes data, registers
      * callbacks for all events, start waiting in "Lobby" state
      * @param {} data common session data
      */
-    initTeachingSession(data) {
+    constructor(data) {
         this.code = data.game_code;
         this.type = data.game_type;
         this.state = teachingGame.STATES.LOBBY;
     }
 
-    sendAllPlayers(message) {
+    sendAll(message) {
+        if(this.host) {
+            sendWebSocketMessage(this.host, message);
+        }
         this.players.forEach((player) => {
             sendWebSocketMessage(player, message);
         });
@@ -213,8 +212,8 @@ class teachingGame {
                 return;
             }
         });
-        const duplicates = categories.filter((item, index) => categories.indexOf(item) !== index);
-        if(duplicates.length > 0) {
+        // Check duplicates
+        if(new Set(categories).size !== categories.length) {
             sendError(socket, "Invalid setting: categories.");
             valid = false;
         }
@@ -227,7 +226,7 @@ class teachingGame {
      * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
      * @param {Array} array Array to be shuffled
      */
-    shuffle(array) {
+    static shuffle(array) {
         let currentIndex = array.length;
 
         // While there remain elements to shuffle
@@ -256,17 +255,15 @@ class teachingGame {
             allQuestions.push(...questions); // use "..." spread operator to push array contents instead of array itself
         }
 
-        this.shuffle(allQuestions);
+        teachingGame.shuffle(allQuestions);
 
         this.questions = allQuestions.slice(0, count);
 
         if(this.questions.length < count) {
-            let currentMessage = {
+            this.sendAll({
                 "type": messages.ERROR,
                 "message": "Not enough questions in Database. Expect unstable behavior.",
-            };
-            sendWebSocketMessage(this.host, currentMessage);
-            this.sendAllPlayers(currentMessage);
+            });
         }
     }
 
@@ -336,7 +333,7 @@ class teachingGame {
         this.serveQuestions();
     }
 
-    delay(time) {
+    static delay(time) {
         return new Promise(resolve => setTimeout(resolve, time));
     }
 
@@ -348,54 +345,45 @@ class teachingGame {
         let allRankings = null; // Declare for later use
         while(this.current_question_idx  < this.num_questions) {
             // Send QUESTION to host & players
-            let currentMessage = {
+            this.sendAll({
                 "type": messages.QUESTION,
                 "question_text": this.questions[this.current_question_idx].question,
                 "question_number": this.current_question_idx + 1,
                 "num_questions": this.num_questions,
-            };
-            sendWebSocketMessage(this.host, currentMessage);
-            this.sendAllPlayers(currentMessage);
+            });
 
             this.state = teachingGame.STATES.SHOW_QUESTION;
 
             // Delay 1 - Show question
-            await this.delay(1000 * this.preview_time);
+            await teachingGame.delay(1000 * this.preview_time);
 
             // Send CHOICES to host & players
-            const choices_list = [];
-            const correct_answer = this.questions[this.current_question_idx].corrAnswer
-            choices_list.push(correct_answer);
-            choices_list.push(this.questions[this.current_question_idx].incorrONE);
-            choices_list.push(this.questions[this.current_question_idx].incorrTWO);
-            choices_list.push(this.questions[this.current_question_idx].incorrTHREE);
-            this.shuffle(choices_list);
+            const question = this.questions[this.current_question_idx];
+            const correct_answer = question.corrAnswer;
+            const choices_list = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
+            teachingGame.shuffle(choices_list);
             this.current_correct_answer_number = choices_list.indexOf(correct_answer) + 1;
 
-            currentMessage = {
+            this.sendAll({
                 "type": messages.CHOICES,
                 "answer_choices": choices_list,
-            };
-            sendWebSocketMessage(this.host, currentMessage);
-            this.sendAllPlayers(currentMessage);
+            });
 
             this.state = teachingGame.STATES.SHOW_ANSWERS;
 
             // Delay 2 - Show Answers
-            await this.delay(1000 * this.dead_time);
+            await teachingGame.delay(1000 * this.dead_time);
 
             // Send READY
-            currentMessage = {
+            this.sendAll({
                 "type": messages.READY,
-            };
-            sendWebSocketMessage(this.host, currentMessage);
-            this.sendAllPlayers(currentMessage);
+            });
 
             this.state = teachingGame.STATES.RECEIVE_RESPONSES;
 
             // Delay 3 - Accept Answers
             this.answering_start_time = new Date();
-            await this.delay(1000 * this.live_time);
+            await teachingGame.delay(1000 * this.live_time);
 
             // Fill in incorrect response(-1) for players who didn't answer
             this.players.forEach((player) => {
@@ -463,7 +451,7 @@ class teachingGame {
 
         // Now wait till CONTINUE to end game
 
-        await this.delay(1000 * this.AUTO_CLOSE_TIMER);
+        await teachingGame.delay(1000 * this.AUTO_CLOSE_TIMER);
 
         // If game not closed yet, do it manually
         if(this.state === teachingGame.STATES.FINAL) {
