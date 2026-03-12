@@ -1,3 +1,4 @@
+
 export function studentMenu() {
     globalThis.location.href = "../../templates/student-menu.html";
 }

@@ -2,19 +2,27 @@ const express = require('express')
 const path = require("node:path");
 require('dotenv').config({ path: path.join(__dirname, '../../.env')})
 
+//AI & Scheme Imports
 const { GoogleGenAI } = require("@google/genai");
 const { z } = require('zod');
 const { zodToJsonSchema } = require('zod-to-json-schema');
 
+//Connect to gemini
 const ai = new GoogleGenAI({ GEMINI_KEY: process.env.geminiKey});
 
+//Router setup
 const router = express.Router();
 router.use(express.json());
 router.use(express.static(path.join(__dirname, "../../frontend/public")));
 router.use(express.urlencoded({ extended: true }));
 
+//Templates folder
 const templatesFolder = path.join(__dirname, '../../frontend/templates');
 
+/**
+ * Create question schema to enfore AI output formatting
+ * @author Riley Wickens
+ */
 const questionSchema = z.object({
     question: z.string().describe("The question that answers will relate to, 255 char limit."),
     category: z.int().describe("int 1-6. "),
@@ -25,7 +33,14 @@ const questionSchema = z.object({
     error: z.string().describe("empty unless specified"),
 });
 
-
+/**
+ * Post prompt to gemini AI and return formatted response
+ * @author Riley Wickens
+ * @param {Object} req.body.aiPrompt - prompt for AI
+ * @returns status OK & json question object
+ * @throws Error 200 in question json if question unrelated to environmental science
+ * @throws Error 500 if unable to connect with questions db
+ */
 router.post('/gemini', async (req, res) => {
     //gemini-2.5-flash
     try {

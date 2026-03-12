@@ -15,10 +15,19 @@ popupCloseButton.addEventListener("click", () => {
     clearUsers();
 });
 
+/**
+ * Clear user list
+ * @author Razvan Braha
+ */
 function clearUsers() {
     userList.replaceChildren();
 }
 
+/**
+ * Populate user list from users database
+ * @author Razvan Braha
+ * @throws Error if failed to fetch users from db
+ */
 async function populateUsers() {
     clearUsers();
 
@@ -50,6 +59,12 @@ async function populateUsers() {
     });
 }
 
+/**
+ * Delete user from user database
+ * @author Razvan Braha
+ * @param {Number} id - id of user to delete
+ * @throws Error if failed to delete user from db
+ */
 async function deleteUser(id) {
     const data = {userID: id};
     const res = await fetch("/api/users", {

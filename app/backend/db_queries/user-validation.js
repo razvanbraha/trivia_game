@@ -1,4 +1,9 @@
-
+/**
+ * Validate user data fields
+ * @author Riley Wickens & Razvan Braha
+ * @param {Object} body - user fields to validate
+ * @returns true if valid, false otherwise
+ */
 module.exports = validateUser = (body) => {
     const { unityID } = body;
     let valid = true;

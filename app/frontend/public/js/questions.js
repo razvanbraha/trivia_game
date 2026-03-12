@@ -26,10 +26,19 @@ popupCloseButton.addEventListener("click", () => {
     clearQuestions()
 })
 
+/**
+ * Clear questionList element
+ * @author Riley Wickens
+*/
 const clearQuestions = () => {
     questionList.replaceChildren()
 }
 
+/**
+ * Populate questionList with questions
+ * @author Riley Wickens
+ * @throws Error if failed to retrieve questions
+ */
 async function populateQuestions() {
     const res = await fetch(`/api/questions/populate`);
 
@@ -112,6 +121,12 @@ async function populateQuestions() {
 
 }
 
+/**
+ * Delete question from database
+ * @author Riley Wickens
+ * @param {Number} id - id of question to delete
+ * @throws Error if failed to delete question from db
+ */
 async function deleteQuestion(id) {
     const data = {questionId: id}
     const res = await fetch(`/api/questions/delete`, { 
@@ -129,6 +144,12 @@ async function deleteQuestion(id) {
     populateQuestions();
 }
 
+/**
+ * Load specific question from database into question edit form
+ * @author Riley Wickens
+ * @param {Number} id - id of specific question to load
+ * @throws Error if failed to retrieve question from db
+ */
 async function loadQuestion(id) {
     clearQuestions()
     const res = await fetch(`/api/questions/populate?id=${id}`);
@@ -199,6 +220,11 @@ async function loadQuestion(id) {
     questionList.append(questionEditInstance);
 }
 
+/**
+ * Send Prompt to AI
+ * @author Riley Wickens
+ * @throws Error failure to connect to gemini
+ */
 aiForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const aiPrompt = document.querySelector("#aiPrompt");
@@ -227,6 +253,11 @@ aiForm.addEventListener('submit', async (event) => {
 
 })
 
+/**
+ * Set AI data into question form element
+ * @author Riley Wickens
+ * @param {Object} question - question object to load from
+ */
 const formSetter = (question) => {
     const questionInput = document.querySelector("#question");
     questionInput.value = question.question;
@@ -252,6 +283,7 @@ const formSetter = (question) => {
 
 const questionForm = document.querySelector("#questionForm");
 
+//Handle Question form submission
 if (questionForm) {
     questionForm.addEventListener("submit", async (e) => {
         e.preventDefault();

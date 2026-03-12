@@ -10,13 +10,23 @@ const {
     getByID
 } = require('../db_queries/user-db')
 
+//Router Setup
 const router = express.Router();
 router.use(express.json());
 router.use(express.static(path.join(__dirname, "../../frontend/public")));
 router.use(express.urlencoded({ extended: true }));
 
+//Templates Folder
 const templatesFolder = path.join(__dirname, '../../frontend/templates');
 
+/**
+ * Get users from database, all or by id/unityId if provided
+ * @author Razvan Braha
+ * @param {Object} id - OPTIONAL id of user to retrieve
+ * @param {Object} unityId - OPTIONAL unityID of user to retrieve
+ * @returns status OK & json list of users
+ * @throws Error 500 if unable to connect with users db
+ */
 router.get('/users', async (req, res) => {
     try {
         let qry = structuredClone(req.query)
@@ -37,6 +47,14 @@ router.get('/users', async (req, res) => {
     }
 });
 
+/**
+ * Add user to database
+ * @author Razvan Braha
+ * @param {Object} req.body - request body contains data of new user
+ * @returns status OK & redirect to user page
+ * @throws Error 400 if invalid user data
+ * @throws Error 500 if unable to connect with user db
+ */
 router.post('/users', async (req, res) => {
     try {
         if (validateUser(req.body)) {
@@ -52,6 +70,13 @@ router.post('/users', async (req, res) => {
     }
 });
 
+/**
+ * Delete user from database
+ * @author Razvan Braha
+ * @param {Object} req.body.userID - request body contains id of user to delete
+ * @returns status OK
+ * @throws Error 500 if unable to connect with user db or user doesn't exist
+ */
 router.delete('/users', async (req, res) => {
     try {
         await deleteUser(req.body.userID);
@@ -63,6 +88,14 @@ router.delete('/users', async (req, res) => {
     }
 });
 
+/**
+ * Update existing user
+ * @author Razvan Braha
+ * @param {Object} req.body - request body contains new data for user
+ * @param {Object} req.body.userId - request body contains id of user to update
+ * @returns status OK & redirect to user page
+ * @throws Error 500 if unable to connect with user db or user doesn't exist
+ */
 router.put('/users', async (req, res) => {
     try {
         await updateUser(req.body, req.body.userId);
