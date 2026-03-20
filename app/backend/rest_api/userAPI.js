@@ -27,7 +27,7 @@ const templatesFolder = path.join(__dirname, '../../frontend/templates');
  * @returns status OK & json list of users
  * @throws Error 500 if unable to connect with users db
  */
-router.get('/users', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         let qry = structuredClone(req.query)
         let users;
@@ -55,12 +55,12 @@ router.get('/users', async (req, res) => {
  * @throws Error 400 if invalid user data
  * @throws Error 500 if unable to connect with user db
  */
-router.post('/users', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         if (validateUser(req.body)) {
             await addUser(req.body);
             console.log("Received Data:", req.body);
-            res.redirect('/templates/user-manage.html');
+            res.redirect('/templates/teacher-user-manage.html');
         } else {
             res.status(400).json({error: "Unable to add user"});
         }
@@ -77,7 +77,7 @@ router.post('/users', async (req, res) => {
  * @returns status OK
  * @throws Error 500 if unable to connect with user db or user doesn't exist
  */
-router.delete('/users', async (req, res) => {
+router.delete('/', async (req, res) => {
     try {
         await deleteUser(req.body.userID);
         console.log("Delete confirmed:", req.body.userID);
@@ -96,11 +96,11 @@ router.delete('/users', async (req, res) => {
  * @returns status OK & redirect to user page
  * @throws Error 500 if unable to connect with user db or user doesn't exist
  */
-router.put('/users', async (req, res) => {
+router.put('/', async (req, res) => {
     try {
         await updateUser(req.body, req.body.userId);
         console.log("Update confirmed:", req.body.userId);
-        res.redirect('/templates/user-manage.html');
+        res.redirect('/templates/teacher-user-manage.html');
     } catch (err) {
         console.log(err);
         res.status(500).json({error: "Unable to update user"})
