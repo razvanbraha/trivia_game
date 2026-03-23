@@ -301,8 +301,22 @@ class teachingGame {
         this.dead_time = dead_time;
         this.live_time = live_time;
 
-        // Load questions
-        this.questions = await questionsDB.selectRandQuestions(categories, num_questions);
+        // Load questions & error check
+        try {
+            this.questions = await questionsDB.selectRandQuestions(categories, num_questions);
+        } catch (e) {
+            this.sendAll({
+                "type": messages.ERROR,
+                "message": "Questions could not be loaded succcessfully.",
+            });
+        }
+        
+        if(this.questions.length < count) {
+            this.sendAll({
+                "type": messages.ERROR,
+                "message": "Not enough questions in Database. Expect unstable behavior.",
+            });
+        }
 
         // Start main game flow
         this.serveQuestions();
