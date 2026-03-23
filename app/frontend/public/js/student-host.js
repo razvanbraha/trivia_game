@@ -33,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function saveSettings() {
         const questions = slider.value;
-
         const categories = [...document.querySelectorAll("input[type=checkbox]:checked")]
             .map(c => c.value);
 
@@ -54,5 +53,13 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "/";
     }
 
+    const cancelRoomButton = document.querySelector("#cancelRoomButton")
+    cancelRoomButton.onclick = cancelRoom;
+
+    const startGameButton = document.querySelector("#startGameButton")
+    startGameButton.onclick = startGame;
+
     createRoom();
 });
+
+

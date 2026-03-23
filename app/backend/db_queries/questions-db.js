@@ -62,6 +62,7 @@ const setupQuestions = async () => {
  * Add question to database.
  * @author Riley Wickens & Razvan Braha
  * @param {Array} body - Array with data to be added to db
+ * @returns id of new question
  * @throws {err} if connection/query fails
  */
 const addQuestion = async (body) => {
@@ -79,6 +80,7 @@ const addQuestion = async (body) => {
  * @author Riley Wickens & Razvan Braha
  * @param {Array} body - Array w/ data to be added to db
  * @param {Number} id - Question ID of question to update
+ * @returns updated question
  * @throws {err} if connection/query fails
  */
 const updateQuestion = async (body, id) => {
@@ -97,6 +99,7 @@ const updateQuestion = async (body, id) => {
  * Delete question from database.
  * @author Riley Wickens & Razvan Braha
  * @param {Number} id - Question ID of question to delete
+ * @returns deleted question
  * @throws {err} if connection/query fails
  */
 const deleteQuestion = async (id) => {
@@ -108,6 +111,7 @@ const deleteQuestion = async (id) => {
 /**
  * Retreive all questions from database.
  * @author Riley Wickens & Razvan Braha
+ * @returns All questions in database
  * @throws {err} if connection/query fails
  */
 const getAllQuestion = async () => {
@@ -120,6 +124,7 @@ const getAllQuestion = async () => {
  * Retreive questions from database with matching category.
  * @author Riley Wickens & Razvan Braha
  * @param {Number} category - category of questions to retreive
+ * @returns questions matching given category
  * @throws {err} if connection/query fails
  */
 const getByCategory = async (category) => {
@@ -132,12 +137,31 @@ const getByCategory = async (category) => {
  * Retreive questions from database with matching ID.
  * @author Riley Wickens & Razvan Braha
  * @param {Number} category - ID of question to retreive
+ * @returns questions matching given id
  * @throws {err} if connection/query fails
  */
 const getByID = async (id) => {
     let qry = `SELECT * FROM questions WHERE questionID = ?`;
     const[result] = await con.query(qry, [id]);
     return result[0] || null;
+}
+
+/**
+ * Retrieve n random questions from database
+ * @author Riley Wickens
+ * @param {Number} n - number of questions to retrieve
+ * @param {Int32List} categories - list of categories
+ * @returns random list of questions with matching categories
+ * @throws {err} if connection/query fails
+ */
+const selectRandQuestions = async (n, categories) => {
+    let qry = `SELECT * 
+    FROM questions
+    WHERE category IN ${categories}
+    ORDER BY RAND() 
+    LIMIT ${n};`
+    const [result] = await con.query(qry);
+    return result;
 }
 
 module.exports = {

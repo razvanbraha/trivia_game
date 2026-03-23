@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("node:path");
 const dbAPI = require('./rest_api/dbAPI');
 const userAPI = require('./rest_api/userAPI');
+const geminiAPI = require('./rest_api/geminiAPI');
 const roomAPI = require("./rest_api/roomAPI");
 
 const { setupQuestions } = require("./db_queries/questions-db");
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/questions", dbAPI);
 app.use("/users", userAPI);
 app.use("/room", roomAPI);
+app.use("/ai", geminiAPI);
 
 app.get("/teacher", (req, res) => {
     const user = req.headers["remote-user"];

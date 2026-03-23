@@ -1,4 +1,10 @@
 
+/**
+ * Test question data for valid fields
+ * @author Riley Wickens & Razvan Braha
+ * @param {Object} body - question data to validate
+ * @returns true if valid, false otherwise
+ */
 module.exports = validateQuestion = (body) => {
     const {question, category, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, ai } = body;
     let valid = true;
