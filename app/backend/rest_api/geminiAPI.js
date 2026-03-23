@@ -1,6 +1,6 @@
 const express = require('express')
 const path = require("node:path");
-require('dotenv').config({ path: path.join(__dirname, '../../.env')})
+require('dotenv').config();
 
 //AI & Scheme Imports
 const { GoogleGenAI } = require("@google/genai");
@@ -8,7 +8,7 @@ const { z } = require('zod');
 const { zodToJsonSchema } = require('zod-to-json-schema');
 
 //Connect to gemini
-const ai = new GoogleGenAI({ GEMINI_KEY: process.env.geminiKey});
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_KEY});
 
 //Router setup
 const router = express.Router();
