@@ -3,16 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <title>Lobby</title>
-<link rel="stylesheet" href="../public/css/styles.css">
+<link rel="stylesheet" href="/public/css/styles.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script type="module" src="../public/components/header.js" defer></script>
+<script src="../public/js/student-host.js" defer></script>
 </head>
 
 <body>
 
-<header class="header d-flex align-items-center justify-content-center">
-    <div class="logo"></div>
-    <h1 class="fw-bold m-0">Sustainable Box Trivia</h1>
-</header>
+<header-component></header-component>
 
 <div class="container-fluid main-container">
 <div class="row h-100 text-white">
@@ -26,11 +25,13 @@
     <input type="range" min="10" max="50" value="25" id="questionSlider" class="form-range">
 
     <h5 class="mt-4">Categories</h5>
-
     <div>
-        <input type="checkbox" checked value="Category 1"> Category Poo<br>
-        <input type="checkbox" checked value="Category 2"> Category Tis<br>
-        <input type="checkbox" checked value="Category 3"> Category Pow
+        <input type="checkbox" checked value="1">History & Evolution<br>
+        <input type="checkbox" checked value="2">Technical Aspects & Engineering<br>
+        <input type="checkbox" checked value="3">Sustainability<br>
+        <input type="checkbox" checked value="4">Consumerism & Ethics<br>
+        <input type="checkbox" checked value="5">End-of-Life & Data<br>
+        <input type="checkbox" checked value="6">Logistics & Distribution<br>
     </div>
 
 </div>
@@ -43,15 +44,13 @@
     <div id="players"></div>
 
     <div class="mt-5 d-flex gap-4">
-        <button class="btn btn-danger" onclick="cancelRoom()">Cancel</button>
-        <button class="btn btn-primary" onclick="startGame()">Start</button>
+        <button id="cancelRoomButton" class="btn btn-danger">Cancel</button>
+        <button id="startGameButton" class="btn btn-primary"">Start</button>
     </div>
 
 </div>
 
 </div>
 </div>
-
-<script src="../js/student-host.js"></script>
 </body>
 </html>

@@ -1,9 +1,22 @@
 const path = require('node:path');
 let mysql = require('mysql2/promise');
-require('dotenv').config({ path: path.join(__dirname, '../../.env')})
+require('dotenv').config();
 
  //Setup initial sql connection
 let con; 
+
+async function connectWithRetry(config, retries = 10, delay = 3000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            console.log(`Attempting DB connection (${i + 1}/${retries})...`);
+            return await mysql.createConnection(config);
+        } catch (err) {
+            console.log("Database not ready, retrying...");
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+    throw new Error("Could not connect to MySQL after multiple attempts.");
+}
 
 /**
  * Setup Users database & table if none exists.
@@ -13,21 +26,21 @@ let con;
 const setupUsers = async () => {
 
     // Create database if needed
-    const rootCon = await mysql.createConnection({
-        host: process.env.host, 
-        user: process.env.user,
-        password: process.env.password
+    const rootCon = await connectWithRetry({
+        host: process.env.DB_HOST, 
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD
     });
     await rootCon.query('CREATE DATABASE IF NOT EXISTS trivia');
     await rootCon.end();
 
     //Connect to mySQL (with database)
-    con = await mysql.createConnection({
+    con = await connectWithRetry({
         //Will need user account on vm 
-        host: process.env.host,
-        user: process.env.user, 
-        password: process.env.password,
-        database: process.env.database
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER, 
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
     });
 
     // Create table if it doesn't exist
@@ -46,6 +59,7 @@ const setupUsers = async () => {
  * Add user to database.
  * @author Riley Wickens & Razvan Braha
  * @param {Array} body - Array with data to be added to db
+ * @returns new user id
  * @throws {err} if connection/query fails
  */
 const addUser = async (body) => {
@@ -66,6 +80,7 @@ const addUser = async (body) => {
  * @author Riley Wickens & Razvan Braha
  * @param {Array} body - Array w/ data to be added to db
  * @param {Number} id - User ID of user to update
+ * @returns updated user
  * @throws {err} if connection/query fails
  */
 const updateUser = async (body, id) => {
@@ -87,6 +102,7 @@ const updateUser = async (body, id) => {
  * Delete question from database.
  * @author Riley Wickens & Razvan Braha
  * @param {Number} id - Question ID of question to delete
+ * @returns deleted user
  * @throws {err} if connection/query fails
  */
 const deleteUser = async (id) => {
@@ -98,6 +114,7 @@ const deleteUser = async (id) => {
 /**
  * Retreive all users from database.
  * @author Riley Wickens & Razvan Braha
+ * @returns all users
  * @throws {err} if connection/query fails
  */
 const getAllUser = async () => {
@@ -110,6 +127,7 @@ const getAllUser = async () => {
  * Retreive users from database with matching unityID.
  * @author Riley Wickens & Razvan Braha
  * @param {Number} unityId - unity ID of user to retreive
+ * @returns all users with matching unity id
  * @throws {err} if connection/query fails
  */
 const getByUnityId = async (unityId) => {
@@ -122,6 +140,7 @@ const getByUnityId = async (unityId) => {
  * Retreive user from database with matching id.
  * @author Riley Wickens & Razvan Braha
  * @param {Number} id - ID of user to retreive
+ * @returns all users with matching userID
  * @throws {err} if connection/query fails
  */
 const getByID = async (id) => {

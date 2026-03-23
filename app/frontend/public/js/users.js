@@ -15,10 +15,19 @@ popupCloseButton.addEventListener("click", () => {
     clearUsers();
 });
 
+/**
+ * Clear user list
+ * @author Razvan Braha
+ */
 function clearUsers() {
     userList.replaceChildren();
 }
 
+/**
+ * Populate user list from users database
+ * @author Razvan Braha
+ * @throws Error if failed to fetch users from db
+ */
 async function populateUsers() {
     clearUsers();
 
@@ -33,7 +42,7 @@ async function populateUsers() {
     users.forEach((user) => {
         const userInstance = userTemplate.content.cloneNode("true");
 
-        userInstance.querySelector(".adminID").textContent = `Admin ID: ${user.adminID}`;
+        userInstance.querySelector(".userID").textContent = `User ID: ${user.userID}`;
         userInstance.querySelector(".unityID").textContent = `Unity ID: ${user.unityID}`;
         userInstance.querySelector(".questionPriv").textContent = `Question Privelage: ${user.questionPriv ? "Yes" : "No"}`;
         userInstance.querySelector(".userPriv").textContent = `User Privelage: ${user.userPriv ? "Yes" : "No"}`;
@@ -42,7 +51,7 @@ async function populateUsers() {
         deleteButton.className = "btn btn-danger";
         deleteButton.textContent = "Delete";
         deleteButton.addEventListener("click", () => {
-            deleteUser(user.adminID);
+            deleteUser(user.userID);
         });
 
         userInstance.append(deleteButton);
@@ -50,8 +59,14 @@ async function populateUsers() {
     });
 }
 
+/**
+ * Delete user from user database
+ * @author Razvan Braha
+ * @param {Number} id - id of user to delete
+ * @throws Error if failed to delete user from db
+ */
 async function deleteUser(id) {
-    const data = {userId: id};
+    const data = {userID: id};
     const res = await fetch("/api/users", {
         method: "DELETE",
         headers: {
@@ -66,6 +81,6 @@ async function deleteUser(id) {
         return;
     }
 
+    clearUsers();
     populateUsers();
-    location.reload();
 }

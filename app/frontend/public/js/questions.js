@@ -2,6 +2,8 @@ const questionList = document.querySelector('#question-list');
 const questionTemplate = document.querySelector('#questionDisplayTemplate');
 const questionEditTemplate = document.querySelector('#questionEditTemplate');
 
+const aiForm = document.querySelector('#aiForm');
+
 const popup = document.querySelector('#popup');
 const popupOpenButton = document.querySelector('#open-popup');
 const popupCloseButton = document.querySelector('#close-popup');
@@ -24,12 +26,21 @@ popupCloseButton.addEventListener("click", () => {
     clearQuestions()
 })
 
+/**
+ * Clear questionList element
+ * @author Riley Wickens
+*/
 const clearQuestions = () => {
     questionList.replaceChildren()
 }
 
+/**
+ * Populate questionList with questions
+ * @author Riley Wickens
+ * @throws Error if failed to retrieve questions
+ */
 async function populateQuestions() {
-    const res = await fetch(`/api/questions`);
+    const res = await fetch(`/api/questions/populate`);
 
     if (res.status != 200) {
         const error = res.json();
@@ -62,22 +73,22 @@ async function populateQuestions() {
         let category = "";
         switch(question.category) {
             case 1:
-                category = "Category One"
+                category = "History & Evolution"
                 break;
             case 2:
-                category = "Category Two"
+                category = "Technical Aspects & Engineering"
                 break;
             case 3:
-                category = "Category Three"
+                category = "Sustainability"
                 break;
             case 4:
-                category = "Category Four"
+                category = "Consumerism & Ethics"
                 break;
             case 5:
-                category = "Category Five"
+                category = "End-of-Life & Data"
                 break;
             case 6:
-                category = "Category Six"
+                category = "Logistics & Distribution"
                 break;
         }
 
@@ -110,9 +121,15 @@ async function populateQuestions() {
 
 }
 
+/**
+ * Delete question from database
+ * @author Riley Wickens
+ * @param {Number} id - id of question to delete
+ * @throws Error if failed to delete question from db
+ */
 async function deleteQuestion(id) {
     const data = {questionId: id}
-    const res = await fetch(`/api/questions`, { 
+    const res = await fetch(`/api/questions/delete`, { 
         method: "DELETE",  
         headers: {'Content-Type': 'application/json'},  
         body: JSON.stringify(data)
@@ -127,9 +144,15 @@ async function deleteQuestion(id) {
     populateQuestions();
 }
 
+/**
+ * Load specific question from database into question edit form
+ * @author Riley Wickens
+ * @param {Number} id - id of specific question to load
+ * @throws Error if failed to retrieve question from db
+ */
 async function loadQuestion(id) {
     clearQuestions()
-    const res = await fetch(`/api/questions?id=${id}`);
+    const res = await fetch(`/api/questions/populate?id=${id}`);
 
     if (res.status != 200) {
         const error = res.json();
@@ -159,7 +182,7 @@ async function loadQuestion(id) {
     wrongAnswer3Element.value = question.incorrTHREE;
 
     const categoryElement = questionEditInstance.querySelector('#edit-category');
-    categoryElement.selectedIndex = Number(question.category);
+    categoryElement.value = question.category;
 
     const aiElement = questionEditInstance.querySelector('#edit-ai');
     aiElement.value = question.isAI;
@@ -179,7 +202,7 @@ async function loadQuestion(id) {
             questionId: idElement.value,
             questionData: questionData
         }
-        const res = await fetch(`/api/questions`, { 
+        const res = await fetch(`/api/questions/update`, { 
             method: "PUT",  
             headers: {'Content-Type': 'application/json'},  
             body: JSON.stringify(data)
@@ -195,4 +218,100 @@ async function loadQuestion(id) {
     })
 
     questionList.append(questionEditInstance);
+}
+
+/**
+ * Send Prompt to AI
+ * @author Riley Wickens
+ * @throws Error failure to connect to gemini
+ */
+aiForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const aiPrompt = document.querySelector("#aiPrompt");
+
+    fetch(`/api/ai/gemini`, { 
+        method: "POST",  
+        headers: {'Content-Type': 'application/json'},  
+        body: JSON.stringify({ aiPrompt: aiPrompt.value})
+    }).then(res => {
+        if (!res.ok) {
+            const error = res.json();
+            console.log(error);
+        }
+        return res.json();
+    }).then(question => {
+        if (question.error) {
+            alert(question.error);
+            return;
+        }
+        formSetter(question);
+    }).catch(error => {
+        console.log("Error: Problem connecting with gemini", error);
+    }).finally(() => {
+        aiPrompt.value = "";
+    });
+
+})
+
+/**
+ * Set AI data into question form element
+ * @author Riley Wickens
+ * @param {Object} question - question object to load from
+ */
+const formSetter = (question) => {
+    const questionInput = document.querySelector("#question");
+    questionInput.value = question.question;
+
+    const corrAnswerInput = document.querySelector("#correctAnswer");
+    corrAnswerInput.value = question.corrAnswer;
+
+    const wrongAnswerOneInput = document.querySelector('#wrongAnswer1');
+    wrongAnswerOneInput.value = question.incorrAnswer1;
+
+    const wrongAnswerTwoInput = document.querySelector('#wrongAnswer2');
+    wrongAnswerTwoInput.value = question.incorrAnswer2;
+
+    const wrongAnswerThreeInput = document.querySelector('#wrongAnswer3');
+    wrongAnswerThreeInput.value = question.incorrAnswer3;
+
+    const categoryInput = document.querySelector('#category');
+    categoryInput.selectedIndex = Number(question.category);
+
+    const aiInput = document.querySelector("#ai");
+    aiInput.value = 1;
+}
+
+const questionForm = document.querySelector("#questionForm");
+
+//Handle Question form submission
+if (questionForm) {
+    questionForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(questionForm);
+
+        const questionData = {
+            question: formData.get("question"),
+            correctAnswer: formData.get("correctAnswer"),
+            wrongAnswer1: formData.get("wrongAnswer1"),
+            wrongAnswer2: formData.get("wrongAnswer2"),
+            wrongAnswer3: formData.get("wrongAnswer3"),
+            category: Number(formData.get("category")),
+            ai: Number(formData.get("ai"))
+        };
+
+        const res = await fetch("/api/questions/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(questionData)
+        });
+
+        if (!res.ok) {
+            console.error(await res.text());
+            return;
+        }
+
+        questionForm.reset();
+        alert("Question added successfully!");
+    });
 }

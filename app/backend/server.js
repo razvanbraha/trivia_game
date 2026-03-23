@@ -12,6 +12,8 @@ const game_pages = require("./pages/game-pages");
 const dbAPI = require('./rest_api/dbAPI');
 const userAPI = require('./rest_api/userAPI');
 const gameAPI = require('./rest_api/gameAPI');
+const geminiAPI = require('./rest_api/geminiAPI');
+const roomAPI = require("./rest_api/roomAPI");
 
 // not sure why these are here?
 const { setupQuestions } = require("./db_queries/questions-db");
@@ -25,24 +27,25 @@ const static_dir = path.join(__dirname, "../frontend/public");
 // port to run on 
 const PORT = 8080;
 
-// setup app
 const app = express();
-
-app.use(express.static(static_dir));
+app.use("/public", express.static(path.join(__dirname, "../frontend/public")));
 app.use(express.json());
+app.use("/questions", dbAPI);
+app.use("/users", userAPI);
+app.use("/room", roomAPI);
+app.use("/ai", geminiAPI);
+app.use("/game", gameAPI)
 
-// add page route handlers
-app.use("/teacher", teacher_pages);
-app.use("/student", student_pages);
-app.use("/game", game_pages);
+app.get("/teacher", (req, res) => {
+    const user = req.headers["remote-user"];
 
-// add api route handlers
-app.use("/api", dbAPI);
-app.use("/api", userAPI);
-app.use("/api", gameAPI);
+    if (!user) {
+        return res.status(401).send("Unauthorized");
+    }
 
-app.get("/", (req, res) => {
-    res.sendFile(path.join(templates_dir, "index.html"));
+    res.send(`
+        <h1>Welcome Professor ${user}</h1>
+    `);
 });
 
 // Create http server that can be shared by express router AND websocket

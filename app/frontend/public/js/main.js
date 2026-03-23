@@ -9,22 +9,29 @@ and only served via route handlers.
 Also, this script needs documentation from whoever wrote it
 */
 
-function studentMenu() {
-    window.location.href = "/student/home";
+export function studentMenu() {
+    globalThis.location.href = "../../templates/student-menu.html";
 }
 
-function loginAsProfessor() {
-    window.location.href = "/teacher/login";
+export function loginAsProfessor() {
+    //window.location.href = "../../templates/teacher-login.html";
+    globalThis.location.href = "../../templates/teacher-menu.html";
 }
 
-function questionsManage() {
-    window.location.href = "/teacher/questions";
+export function teacherMenu() {
+    globalThis.location.href = "../../templates/teacher-menu.html";
 }
 
-function usersManage() {
-    window.location.href = "/teacher/users";
+export function questionsManage() {
+    globalThis.location.href = "../../templates/teacher-question-manage.html";
 }
 
-function home() {
-    window.location.href = "/";
+export function usersManage() {
+    globalThis.location.href = "../../templates/teacher-user-manage.html";
 }
+
+export function home() {
+    globalThis.location.href = "../../index.html";
+}
+
+export default {studentMenu, teacherMenu, home, questionsManage, usersManage, loginAsProfessor};

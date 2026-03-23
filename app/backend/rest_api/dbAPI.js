@@ -10,25 +10,31 @@ const {
     getByID
 } = require('../db_queries/questions-db.js');
 
+//Router setup
 const router = express.Router();
 router.use(express.json());
-router.use(express.static(path.join(__dirname, "../../frontend/public")));
 router.use(express.urlencoded({ extended: true }));
 
+//Templates
 const templatesFolder = path.join(__dirname, '../../frontend/templates');
 
-router.get('/questions', async (req, res) => {
+/**
+ * Get questions, all or with matching id/category if provided
+ * @author Riley Wickens & Razvan Braha
+ * @param {Object} req - OPTIONAL request query may contain id/category of question to retrieve
+ * @returns status OK & json list of questions
+ * @throws Error 500 if unable to connect with questions db
+ */
+router.get('/populate', async (req, res) => {
     try {
         let qry = structuredClone(req.query)
         let questions;
         if (Object.keys(qry).length === 0) {
             questions = await getAllQuestion();
-        } else {
-            if (qry.id) {
+        } else if (qry.id) {
                 questions = await getByID(qry.id);
-            } else {
-                questions = await getByCategory(qry.category);
-            }
+        } else {
+            questions = await getByCategory(qry.category);
         }
         res.status(200).json(questions);
     } catch (err) {
@@ -37,20 +43,20 @@ router.get('/questions', async (req, res) => {
     }
 });
 
-router.get('/redirect', async (req, res) => {
-    res.status(200).sendFile(path.join(templatesFolder, 'question-manage.html'));
-});
-
-router.put('/redirect', async (req, res) => {
-    res.status(200).sendFile(path.join(templatesFolder, 'question-manage.html'));
-});
-
-router.post('/questions', async (req, res) => {
+/**
+ * Add new question to database
+ * @author Riley Wickens & Razvan Braha
+ * @param {Object} req.body - request body contains necessary question data
+ * @returns status OK & json message question added 
+ * @throws Error 400 if invalid question data
+ * @throws Error 500 if unable to connect with questions db
+ */
+router.post('/create', async (req, res) => {
     try {
         if (validateQuestion(req.body)) {
             addQuestion(req.body);
             console.log("Received Data:", req.body);
-            res.redirect('/api/redirect');
+            res.status(201).json({ message: "Question added" });
         } else {
             res.status(400).json({error: "Unable to add question"});
         }
@@ -60,7 +66,14 @@ router.post('/questions', async (req, res) => {
     }
 });
 
-router.delete('/questions', async (req, res) => {
+/**
+ * Delete question from database
+ * @author Riley Wickens & Razvan Braha
+ * @param {Object} req.body.questionId - request body contains id of question to delete
+ * @returns status OK
+ * @throws Error 500 if unable to connect with questions db
+ */
+router.delete('/delete', async (req, res) => {
     try {
         deleteQuestion(req.body.questionId);
         console.log("Delete confirmed:", req.body.questionId);
@@ -71,12 +84,20 @@ router.delete('/questions', async (req, res) => {
     }
 });
 
-router.put('/questions', async (req, res) => {
+/**
+ * Update question in database
+ * @author Riley Wickens & Razvan Braha
+ * @param {Object} req.body.questionId - request body contains id of question to update
+ * @param {Object} req.body.questionData - request body contains new question data
+ * @returns status OK & json list of questions
+ * @throws Error 500 if unable to connect with questions db
+ */
+router.put('/update', async (req, res) => {
     try {
         if (validateQuestion(req.body.questionData)) {
             updateQuestion(req.body.questionData, req.body.questionId);
             console.log("Update confirmed:", req.body.questionId);
-            res.redirect('/api/redirect');
+            res.status(200).json({ message: "Question updated" });
         } else {
             res.status(400).json({error: "Unable to add question"});
         }
