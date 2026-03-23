@@ -171,7 +171,8 @@ module.exports = {
     deleteQuestion,
     getAllQuestion,
     getByCategory,
-    getByID
+    getByID,
+    selectRandQuestions
 }
 
 

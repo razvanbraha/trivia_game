@@ -243,31 +243,6 @@ class teachingGame {
     }
 
     /**
-     * Loads questions into the teaching game (this.questions)
-     * @param {Array} categories Array of numbers corresponding to categories included in the game
-     * @param {Number} count Number of questions
-     */
-    async loadQuestions(categories, count) {
-        const allQuestions = [];
-
-        for(const category of categories) {
-            const questions = await questionsDB.getByCategory(category);
-            allQuestions.push(...questions); // use "..." spread operator to push array contents instead of array itself
-        }
-
-        teachingGame.shuffle(allQuestions);
-
-        this.questions = allQuestions.slice(0, count);
-
-        if(this.questions.length < count) {
-            this.sendAll({
-                "type": messages.ERROR,
-                "message": "Not enough questions in Database. Expect unstable behavior.",
-            });
-        }
-    }
-
-    /**
      * Returns rankings of players, including their number rank and points value associated to their websocket.
      * @returns Map{Websocket: {rank: Number, points: Number}} (nested)
      */
