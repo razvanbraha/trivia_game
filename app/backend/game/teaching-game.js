@@ -302,7 +302,7 @@ class teachingGame {
         this.live_time = live_time;
 
         // Load questions
-        await this.loadQuestions(categories, num_questions);
+        this.questions = await questionsDB.selectRandQuestions(categories, num_questions);
 
         // Start main game flow
         this.serveQuestions();
