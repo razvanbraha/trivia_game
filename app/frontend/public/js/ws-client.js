@@ -11,21 +11,26 @@
  */
 //-----------------------------------------------------------------------------
 
-//--- EXPORTS -----------------------------------------------------------------
-
-export const ws_client = {
-    init, 
-    send,
-    uri,
-    types
-};
-
 //--- CONSTANTS ---------------------------------------------------------------
 
 // websocket connection uri
 const uri = "ws://127.0.0.1:8080";
 
-const types = {
+const msg_types = {
+    JOIN: 1,
+    START: 2,
+    QUESTION: 3,
+    CHOICES: 4,
+    READY: 5, 
+    ANSWER: 6,
+    CLOSE: 7, 
+    CONTINUE: 8,
+    RESULTS: 9,
+    DONE: 10,
+    ERROR: 11,
+};
+
+const game_types = {
     TEACHING: "teaching",
     MULTI: "multiplayer",
     STUDY: "study"
@@ -45,7 +50,7 @@ const init = (ws, handler) => {
     // handle open event
     ws.addEventListener("open", () => {
         console.log("CONNECTED");
-        sendWebsocket('hi');
+        send(ws, 'hi');
     });
 
     // handle error events
@@ -61,7 +66,7 @@ const init = (ws, handler) => {
     });
 
     // handle close event
-    websocket.addEventListener("close", () => {
+    w.addEventListener("close", () => {
         console.log("DISCONNECTED");
     });
     console.log("client websocket initialized");
@@ -79,4 +84,12 @@ const send = (ws, message) => {
     console.log("sent " + message);
 }
 
+//--- EXPORTS -----------------------------------------------------------------
 
+export const ws_client = {
+    init, 
+    send,
+    uri,
+    msg_types,
+    game_types
+};

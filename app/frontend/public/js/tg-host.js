@@ -9,7 +9,7 @@
  */
 //--- INCLUDE -----------------------------------------------------------------
 
-import {ws_client} from "../websocket-client.js"
+import {ws_client} from "./ws-client.js"
 
 //--- SETUP -------------------------------------------------------------------
 
@@ -42,17 +42,31 @@ const answer_html =
  */
 function handler(data) {
     switch(data.type) {
-        case "QUESTION":
-
-        case "CHOICES":
-        
-        case "READY":
-
-        case "CLOSE":
-
-        case "RESULTS":
-
-        case "DONE":
+        case ws_client.msg_types.QUESTION:
+            handle_question();
+            break;
+        case ws_client.msg_types.CHOICES:
+            handle_choices();
+            break;
+        case ws_client.msg_types.READY:
+            handle_ready();
+            break;
+        case ws_client.msg_types.CLOSE:
+            handle_close();
+            break;
+        case ws_client.msg_types.RESULTS:
+            handle_results();
+            break;
+        case ws_client.msg_types.DONE:
+            handle_done();
+            break;
+        case ws_client.msg_types.ERROR:
+            handle_error(data.message);
+            break;
+        default:
+            console.log(`Unfamiliar message received:`);
+            console.log(data);
+            break;
     }
 };
 
@@ -62,36 +76,99 @@ function handle_question() {
 
 }
 
-function handle_error() {
+function handle_choices() {
 
 }
 
-//--- SCRIPT ------------------------------------------------------------------
+function handle_ready() {
 
-// first get the code from localStorage
-const code = localStorage.getItem("code");
-if(!code) {
-    // if nothing was stored in localStorage
-    // you have arrived at this page without creating a game
-    console.log("unable to join game; have you created one?");
 }
 
-// initiate websocket connection to this code
-const ws = new WebSocket(ws_client.uri);
+function handle_close() {
 
-// setup handlers
-ws_client.init(ws, handler);
+}
 
-// initiate joining the game as host
-ws.send(JSON.stringify(
-    {
-        type: "JOIN",
+function handle_results() {
+
+}
+
+function handle_done() {
+
+}
+
+function handle_error(msg) {
+    console.log(msg);
+}
+
+//--- SIGNAL SENDERS ----------------------------------------------------------
+
+function send_join(ws, code) {
+    const data = {
+        type: ws_client.msg_types.JOIN,
         body: {
             game_type: ws_client.types.TEACHING,
             game_code: JSON(code)
         }
+    };
+    ws.send(JSON.stringify(data));
+}
+
+function send_start() {
+
+}
+
+function send_continue() {
+
+}
+
+//--- BUTTON CALLBACKS --------------------------------------------------------
+
+//--- BEGIN SCRIPT ------------------------------------------------------------
+
+// first attempt to create a room
+const fetchData = {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({type: "teaching"})
+};
+
+// initiate the game
+fetch("/api/games", fetchData)
+.then((res) => {
+    if(!res.ok) {
+        throw new Error("Failed to create game");
     }
-));
+
+    return res.json();
+})
+.then((data) => {
+    const code = data.code;
+
+    if(!code) {
+        throw new Error("Did not receive code from server");
+    }
+    return fetch(`/api/games/${code}`);
+})
+.then((res) => {
+    if(!res.ok) {
+        throw new Error(`No game exists for ${code}`);
+    }
+
+    console.log(`Game created: ${code}; initiating Websocket connection`)
+    // initiate websocket connection to this code
+    const ws = new WebSocket(ws_client.uri);
+
+    // setup handlers
+    ws_client.init(ws, handler);
+
+    // initiate joining the game as host
+    send_join(ws, code);
+})
+.catch((e) => {
+    console.log(`Error attempting to initiate game: ${e}`);
+});
+
+
 
 
 

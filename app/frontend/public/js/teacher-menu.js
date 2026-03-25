@@ -10,17 +10,5 @@ questionPageButton.onclick = questionsManage;
 userPageButton.onclick = usersManage;
 
 hostGameButton.onclick = () => {
-    const fetchData = {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({type: "teaching"})
-    };
-
-    // initiate the game
-    fetch("/api/games", fetchData)
-    .then((response) => {
-        localStorage.setItem("code", response.body.code);
-        window.location.href = "/games/teacher-host";
-    });
-    
+    window.location.href = "/api/play/teacher-host";
 }

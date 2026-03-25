@@ -35,18 +35,18 @@ game_router.use(express.urlencoded({ extended: true }));
  * route: /api/games/:code 
  * @author Connor Hekking
  */
-game_router.get("/games/:code", (req, res) => {
+game_router.get("/:code", (req, res) => {
     const code = req.params.code;
 
     const exists = session.sessionExists(code);
 
     // if the session exists, respond OK
     if(exists) {
-        res.status(200).send();
+        res.status(200);
     }
     // otherwise, respond not found
     else {
-        res.status(404).send();
+        res.status(404);
     }
 });
 
@@ -57,18 +57,18 @@ game_router.get("/games/:code", (req, res) => {
  * body: JSON {type: string}
  * @author Will Mungas
  */
-game_router.post("/games", (req, res) => {
+game_router.post("/", (req, res) => {
     const type = req.body.type;
     
     const code = session.createSession(type);
 
     // if a session was created, respond OK with the code
     if(code) {
-        res.status(200).json(code);
+        res.status(200).json({code: code});
     }
     // otherwise, respond that an internal server error occured
     else {
-        res.status(500).send();
+        res.status(500);
     }
 });
 
