@@ -1,3 +1,13 @@
+/*
+edited by Will Mungas
+Changes:
+Edited routes to match server routes rather than hardcoded file paths
+The whole point of serving static content from public is that it is the only folder
+that the frontend 'knows' about; everything else about our file structure is hidden
+and only served via route handlers. 
+
+Also, this script needs documentation from whoever wrote it
+*/
 
 export function studentMenu() {
     globalThis.location.href = "../../templates/student-menu.html";
