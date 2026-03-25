@@ -170,9 +170,6 @@ describe("dbAPI / questions routes", () => {
     expect(res.body).toEqual({ error: "Failed to fetch questions" });
   });
 
-  // This is a deliberately strong test.
-  // It is expected to FAIL against the current implementation,
-  // because addQuestion is not awaited in dbAPI.js.
   test("POST /questions/create should return 500 if addQuestion rejects", async () => {
     validateQuestion.mockReturnValue(true);
     questionDb.addQuestion.mockRejectedValue(new Error("insert failed"));
@@ -195,7 +192,6 @@ describe("dbAPI / questions routes", () => {
     expect(res.body).toEqual({ error: "Unable to add question" });
   });
 
-  // This is another deliberately strong test that may fail now.
   test("PUT /questions/update should return 500 if updateQuestion rejects", async () => {
     validateQuestion.mockReturnValue(true);
     questionDb.updateQuestion.mockRejectedValue(new Error("update failed"));
@@ -219,7 +215,7 @@ describe("dbAPI / questions routes", () => {
     expect(res.body).toEqual({ error: "Unable to update question" });
   });
 
-  // Same idea here.
+  
   test("DELETE /questions/delete should return 500 if deleteQuestion rejects", async () => {
     questionDb.deleteQuestion.mockRejectedValue(new Error("delete failed"));
 

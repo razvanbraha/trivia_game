@@ -54,7 +54,7 @@ router.get('/populate', async (req, res) => {
 router.post('/create', async (req, res) => {
     try {
         if (validateQuestion(req.body)) {
-            addQuestion(req.body);
+            await addQuestion(req.body);
             console.log("Received Data:", req.body);
             res.status(201).json({ message: "Question added" });
         } else {
@@ -75,7 +75,7 @@ router.post('/create', async (req, res) => {
  */
 router.delete('/delete', async (req, res) => {
     try {
-        deleteQuestion(req.body.questionId);
+        await deleteQuestion(req.body.questionId);
         console.log("Delete confirmed:", req.body.questionId);
         res.sendStatus(200);
     } catch (err) {
@@ -95,7 +95,7 @@ router.delete('/delete', async (req, res) => {
 router.put('/update', async (req, res) => {
     try {
         if (validateQuestion(req.body.questionData)) {
-            updateQuestion(req.body.questionData, req.body.questionId);
+            await updateQuestion(req.body.questionData, req.body.questionId);
             console.log("Update confirmed:", req.body.questionId);
             res.status(200).json({ message: "Question updated" });
         } else {
