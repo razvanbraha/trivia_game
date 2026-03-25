@@ -23,7 +23,7 @@ async function joinRoom() {
 }
 
 function launchMultiplayer() {
-    window.location.href = "../../templates/student-host.html";
+    window.location.href = "../../templates/mg-host.html";
 }
 
 function launchStudy() {
