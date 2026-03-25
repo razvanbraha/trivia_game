@@ -45,6 +45,11 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "./templates/index.html"));
 });
 
+//TODO remove, just for testing
+app.get("/test-tg-templates", (req, res) => {
+    res.sendFile(path.join(__dirname, "./templates/test-tg-templates.html"));
+});
+
 app.get("/teacher", (req, res) => {
     const user = req.headers["remote-user"];
 
