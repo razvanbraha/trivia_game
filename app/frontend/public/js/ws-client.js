@@ -16,13 +16,20 @@
 export const ws_client = {
     init, 
     send,
-    uri
+    uri,
+    types
 };
 
 //--- CONSTANTS ---------------------------------------------------------------
 
 // websocket connection uri
 const uri = "ws://127.0.0.1:8080";
+
+const types = {
+    TEACHING: "teaching",
+    MULTI: "multiplayer",
+    STUDY: "study"
+};
 
 //--- FUNCTIONS ---------------------------------------------------------------
 

@@ -34,7 +34,7 @@ app.use("/questions", dbAPI);
 app.use("/users", userAPI);
 app.use("/room", roomAPI);
 app.use("/ai", geminiAPI);
-app.use("/game", gameAPI)
+app.use("/game", gameAPI);
 
 app.get("/teacher", (req, res) => {
     const user = req.headers["remote-user"];
