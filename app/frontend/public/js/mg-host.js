@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function cancelRoom() {
         await fetch(`/api/room/${roomCode}`, { method: "DELETE" });
-        window.location.href = "/";
+        window.location.href = "/api/";
     }
 
     const cancelRoomButton = document.querySelector("#cancelRoomButton")

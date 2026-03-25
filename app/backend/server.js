@@ -34,7 +34,16 @@ app.use("/questions", dbAPI);
 app.use("/users", userAPI);
 app.use("/room", roomAPI);
 app.use("/ai", geminiAPI);
-app.use("/game", gameAPI);
+app.use("/games", gameAPI);
+
+// Pages paths
+app.use("/teacher", teacher_pages);
+app.use("/student", student_pages);
+app.use("/play", game_pages);
+
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "./templates/index.html"));
+});
 
 app.get("/teacher", (req, res) => {
     const user = req.headers["remote-user"];
