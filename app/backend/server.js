@@ -9,6 +9,7 @@ const { setupQuestions } = require("./db_queries/questions-db");
 const { setupUsers } = require('./db_queries/user-db')
 
 const app = express();
+module.exports = app;
 const PORT = 8080;
 
 app.use("/public", express.static(path.join(__dirname, "../frontend/public")));
@@ -43,4 +44,6 @@ async function startServer() {
     }
 };
 
-startServer();
+if (require.main === module) {
+    startServer();
+}
