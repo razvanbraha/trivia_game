@@ -10,7 +10,7 @@
 const express = require("express");
 const path = require("path");
 
-const templates_dir = path.join(__dirname, "../../frontend/templates");
+const templates_dir = path.join(__dirname, "../templates");
 
 const game_page_router = express.Router();
 

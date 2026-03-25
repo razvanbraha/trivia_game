@@ -10,7 +10,7 @@
 const express = require("express");
 const path = require("path");
 
-const templates_dir = path.join(__dirname, "../../frontend/templates");
+const templates_dir = path.join(__dirname, "../templates");
 
 const teacher_page_router = express.Router();
 
@@ -20,18 +20,18 @@ const teacher_page_router = express.Router();
 //--- ROUTES ------------------------------------------------------------------
 
 teacher_page_router.get("/questions", (req, res) => {
-    res.sendFile(path.join(templates_dir, "question-manage.html"));
+    res.sendFile(path.join(templates_dir, "teacher-question-manage.html"));
 });
 
 teacher_page_router.get("/users", (req, res) => {
-    res.sendFile(path.join(templates_dir, "user-manage.html"));
+    res.sendFile(path.join(templates_dir, "teacher-user-manage.html"));
 
 });
 
 // TODO implement pages for these routes
 
 teacher_page_router.get("/home", (req, res) => {
-    res.sendFile(path.join(templates_dir, "teacher-home.html"));
+    res.sendFile(path.join(templates_dir, "teacher-menu.html"));
 });
 
 //--- EXPORTS -----------------------------------------------------------------
