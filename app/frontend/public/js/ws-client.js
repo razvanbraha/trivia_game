@@ -88,7 +88,7 @@ const init = (ws, handler, first) => {
  */
 const send = (ws, message) => {
     ws.send(message);
-    console.log("sent " + message);
+    console.log(`SENT: ${message}`);
 }
 
 //--- EXPORTS -----------------------------------------------------------------

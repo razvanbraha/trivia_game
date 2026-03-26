@@ -64,8 +64,7 @@ function handler(data) {
             handle_error(data.message);
             break;
         default:
-            console.log(`Unfamiliar message received:`);
-            console.log(data);
+            console.log(`Unfamiliar message received:`, data);
             break;
     }
 };
@@ -97,7 +96,7 @@ function handle_done() {
 }
 
 function handle_error(msg) {
-    console.log(msg);
+    console.log("ERROR", msg);
 }
 
 //--- SIGNAL SENDERS ----------------------------------------------------------
@@ -106,8 +105,8 @@ function send_join(ws, code) {
     const data = {
         type: ws_client.msg_types.JOIN,
         body: {
-            game_type: ws_client.types.TEACHING,
-            game_code: JSON(code)
+            game_type: ws_client.game_types.TEACHING,
+            game_code: code
         }
     };
     ws.send(JSON.stringify(data));
@@ -152,14 +151,14 @@ fetch("/api/games", fetchData)
         // initiate websocket connection to this code
         const ws = new WebSocket(ws_client.uri);
 
-        // setup handlers
-        ws_client.init(ws, handler);
+        // called once websocket status changes from CONNECTING to OPEN
+        const first = () => send_join(ws, code);
 
-        // initiate joining the game as host
-        send_join(ws, code);
+        // setup handlers
+        ws_client.init(ws, handler, first);
     })
     .catch((e) => {
-        console.log(`Error starting game: ${e}`);
+        console.log(`Error starting game:`, e);
     });
 
 
