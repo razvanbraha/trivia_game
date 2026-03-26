@@ -83,18 +83,21 @@ function onMessage(ws, data) {
             return;
         }
 
-        // defer to handler (game object) if it exists
-        if(ws.handler) {
+        // may want to explicitly handle low-level messages like joining the game first
+        // HERE
+
+        // defer to the game, if the game accepts this type of message
+        if(ws.handler && ws.accepts(data_obj.type)) {
             ws.handler(ws, data_obj);
             return;
         }
     
+        // TODO move up, default just becomes the last in a chain of if-x-y()-return
         // Otherwise handle a few root level messages
         switch(data_obj.type) {
             case messages.JOIN:
-                const res = joinSession(ws, data_obj);
-                if(!res) {
-                    sendError(ws, "Session could not be joined");
+                if(!joinSession(ws, data_obj)) {
+                    sendError(ws, `Failed to join game session with code: ${data_obj.body.game_code}`);
                 }
                 break;
             default:

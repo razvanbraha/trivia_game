@@ -9,9 +9,28 @@
  */ 
 //--- INCLUDE -----------------------------------------------------------------
 
-const {messages, sendWebSocketMessage, closeWebsocket, sendError} = require("../websocket-server");
+const {messages, sendWebSocketMessage, closeWebsocket, sendError} = require("../ws-server");
 const {removeSession} = require("./sessions");
 const questionsDB = require("../db_queries/questions-db");
+
+/**
+ * @author Will Mungas
+ * 
+ * Decides whether the game will accept a given message
+ * 
+ * @param {*} type the type of message
+ * @returns true if the game will handle the message
+ */
+const accepts = (type) => {
+    switch(type) {
+        case messages.START:
+        case messages.ANSWER:
+        case messages.CONTINUE:
+            return true;
+        default: 
+            return false;
+    }
+}
 
 //--- OBJECT ---------------------------------------------------------------
 // Declare this file as an object to be able to use multiple instances of it
@@ -160,10 +179,12 @@ class teachingGame {
         }
 
         socket.handler = this.receiveMessage.bind(this);
+        socket.accepts = accepts;
 
         // First join = host, later joins = player
         if(this.host === null) {
             this.host = socket;
+            console.log(`Session ${this.code}: host joined`);
             return;
         }
 
@@ -171,6 +192,7 @@ class teachingGame {
         this.players.push(socket);
         this.answers.set(socket, []);
         this.points.set(socket, 0);
+        console.log(`Session ${this.code}: player ${this.players.length} joined`);
     }
 
     /**
