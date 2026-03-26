@@ -22,6 +22,9 @@ const sessionTypes = {
 // Possible code range
 const code_range = 10000;
 
+// Time until any session automatically expires, regardless of state
+const SESSION_AUTO_EXPIRE_TIME = 30 * 60 * 1000; // 30mins(ms)
+
 //--- GLOBALS -----------------------------------------------------------------
 
 // list of all open game sessions for the server to keep track of
@@ -48,17 +51,6 @@ function generateRoomCode() {
 }
 
 /**
- * Creates an object with data common to all game sessions
- * @author Connor Hekking
- */
-const createCommonSessionData = (type) => {
-    return {
-        game_code: generateRoomCode(),
-        game_type: type,
-    };
-};
-
-/**
  * Creates a game session of a given type running on a new thread
  * @author Connor Hekking
  * @return The code of the newly created session
@@ -66,14 +58,18 @@ const createCommonSessionData = (type) => {
 const createSession = (type) => {
     //TODO threads not implemented
 
-    let session_data = createCommonSessionData(type);
+    let session_data = {
+        game_code: generateRoomCode(),
+        game_type: type,
+        start_time: Date.now(),
+    };
+
     //TODO multiple game types
     if(type === sessionTypes.TEACHING) {
         sessions.push(new teachingGame(session_data)); 
     } else {
         return null;
     }
-    
 
     return session_data.game_code;
 };
@@ -122,16 +118,39 @@ const sessionExists = (code) => {
 }
 
 /**
- * Removes a session from memory
+ * Removes any sessions from memory which are ended, or have gone on too long.
  * @author Connor Hekking
  * @param {teachingGame} session the session to remove
  */
-const removeSession = (session) => {
-    const idx = sessions.findIndex(s => s.code === session.code);
-    if(idx > -1) {
-        sessions.splice(idx, 1);
-    }
+const removeSessions = () => {
+    const now = Date.now();
+    sessions.forEach((session) => {
+        if(session.state == teachingGame.STATES.ENDED) {
+            // Remove from sessions memory
+            const idx = sessions.findIndex(s => s.code === session.code);
+            if(idx > -1) {
+                sessions.splice(idx, 1);
+            }
+        } else if(now - session.start_time > SESSION_AUTO_EXPIRE_TIME) {
+            try {
+                // Tell game to clear its own memory
+                session.endGame(null, null);
+            } catch (e) {
+                console.log(`Failed to end expired session: ${e}`);
+            }
+            // Remove from sessions memory
+            const idx = sessions.findIndex(s => s.code === session.code);
+            if(idx > -1) {
+                sessions.splice(idx, 1);
+            }
+        }
+    })
+    
 }
+
+//--- ALWAYS RUNNING -----------------------------------------------------------------
+
+
 
 //--- EXPORTS -----------------------------------------------------------------
 
@@ -139,4 +158,3 @@ exports.sessionExists = sessionExists;
 // Export create/join for websocket-server to use
 exports.createSession = createSession;
 exports.joinSession = joinSession;
-exports.removeSession = removeSession;

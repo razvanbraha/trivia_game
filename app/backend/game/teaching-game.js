@@ -10,7 +10,6 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 const {messages, sendWebSocketMessage, closeWebsocket, sendError} = require("../ws-server");
-const {removeSession} = require("./sessions");
 const questionsDB = require("../db_queries/questions-db");
 
 /**
@@ -54,6 +53,7 @@ class teachingGame {
     code = null; // Game join code
     host = null; // the host WebSocket connection
     type = null; // Type of game (should be "teaching")
+    start_time = null; // Start time of the game(for auto-closing)
 
     state = 0; // the current state
     players = []; // list of player WebSocket connections
@@ -103,6 +103,7 @@ class teachingGame {
         this.code = data.game_code;
         this.type = data.game_type;
         this.state = teachingGame.STATES.LOBBY;
+        this.start_time = data.start_time;
     }
 
     sendAll(message) {
@@ -574,8 +575,6 @@ class teachingGame {
         this.questions = [];
         this.answers.clear();
         this.points.clear();
-
-        removeSession(this);
     }
 }
 
