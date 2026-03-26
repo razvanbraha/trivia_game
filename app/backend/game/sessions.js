@@ -8,8 +8,6 @@
  */
 //--- INCLUDE -----------------------------------------------------------------
 
-// TODO require() things
-const {messages} = require("../websocket-server");
 const {teachingGame} = require("./teaching-game");
 
 //--- CONSTANTS ---------------------------------------------------------------
