@@ -121,10 +121,10 @@ function sendWebSocketMessage(ws, message) {
 
 /**
  * Handles sending out an error message with our protocol on a socket
- * @param {WebSocket} socket Client websocket to send to
+ * @param {WebSocket} ws Client websocket to send to
  * @param {String} error_message error message text
  */
-function sendError(socket, error_message) {
+function sendError(ws, error_message) {
     sendWebSocketMessage(socket, {
         "type": messages.ERROR,
         "message": error_message,
@@ -133,7 +133,7 @@ function sendError(socket, error_message) {
 
 /**
  * Handles closing out a websocket connection with a closing code and reason
- * @param {WebSocket} socket Client websocket to close
+ * @param {WebSocket} ws Client websocket to close
  * @param {Number} code closing message code
  * @param {String} reason closing message text
  */

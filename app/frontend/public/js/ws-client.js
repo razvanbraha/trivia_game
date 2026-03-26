@@ -66,9 +66,10 @@ const init = (ws, handler) => {
     });
 
     // handle close event
-    w.addEventListener("close", () => {
+    ws.addEventListener("close", () => {
         console.log("DISCONNECTED");
     });
+
     console.log("client websocket initialized");
 }
 
