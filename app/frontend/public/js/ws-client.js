@@ -44,13 +44,15 @@ const game_types = {
  * Handles setting up event listeners on a new client websocket
  * 
  * @param {*} ws websocket to add event listeners to
- * @param {*} handler 
+ * @param {()} handler function to handle messages sent on the websocket
+ * @param {()} first function to call on the open event 
  */
-const init = (ws, handler) => {
+const init = (ws, handler, first) => {
     // handle open event
     ws.addEventListener("open", () => {
         console.log("CONNECTED");
         send(ws, 'hi');
+        first();
     });
 
     // handle error events
@@ -69,6 +71,10 @@ const init = (ws, handler) => {
     ws.addEventListener("close", () => {
         console.log("DISCONNECTED");
     });
+
+    // ensure the socket will close on page redirection
+    window.addEventListener("pagehide", () => ws.close());
+    window.addEventListener("unload", () => ws.close())
 
     console.log("client websocket initialized");
 }
