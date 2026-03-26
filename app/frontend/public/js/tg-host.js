@@ -132,41 +132,35 @@ const fetchData = {
     body: JSON.stringify({type: "teaching"})
 };
 
-// initiate the game
+// initiate the game:
 fetch("/api/games", fetchData)
-.then((res) => {
-    if(!res.ok) {
-        throw new Error("Failed to create game");
-    }
+    .then((res) => {
+        if(!res.ok) {
+            throw new Error("Failed to create game");
+        }
+        console.log("Received response from server");
+        return res.json();
+    })
+    .then((data) => {
+        const code = data.code;
 
-    return res.json();
-})
-.then((data) => {
-    const code = data.code;
+        if(!code) {
+            throw new Error("Did not receive code from server");
+        }
+        console.log(`Game created with code ${code}; initiating Websocket connection`)
+        
+        // initiate websocket connection to this code
+        const ws = new WebSocket(ws_client.uri);
 
-    if(!code) {
-        throw new Error("Did not receive code from server");
-    }
-    return fetch(`/api/games/${code}`);
-})
-.then((res) => {
-    if(!res.ok) {
-        throw new Error(`No game exists for ${code}`);
-    }
+        // setup handlers
+        ws_client.init(ws, handler);
 
-    console.log(`Game created: ${code}; initiating Websocket connection`)
-    // initiate websocket connection to this code
-    const ws = new WebSocket(ws_client.uri);
-
-    // setup handlers
-    ws_client.init(ws, handler);
-
-    // initiate joining the game as host
-    send_join(ws, code);
-})
-.catch((e) => {
-    console.log(`Error attempting to initiate game: ${e}`);
-});
+        // initiate joining the game as host
+        send_join(ws, code);
+    })
+    .catch((e) => {
+        console.log(`Error starting game: ${e}`);
+    });
 
 
 
