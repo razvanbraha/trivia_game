@@ -80,6 +80,6 @@ async function startServer() {
 
 
 startServer();
-const {startWebSocketServer} = require("./websocket-server");
+const {startWebSocketServer} = require("./ws-server");
 function ws() {startWebSocketServer(server)}
 setTimeout(ws, 500); // small delay so websocket connectes after server start
