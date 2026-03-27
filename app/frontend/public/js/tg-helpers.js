@@ -1,6 +1,5 @@
 const template_str = await fetch('/public/templates/question-template.html').then((res) => {
     return res.text().then((result) => {
-        console.log(result);
         return result;
     });
 });
@@ -136,6 +135,63 @@ function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isTeacher) {
 /**
  * @author Connor Hekking
  * 
+ * Returns the place text ('You are in/finished 1st place')
+ * 
+ * @param {Number} place Current player's rank
+ * @param {Boolean} final If the text is for current position(false) or final position(true)
+ * @returns place text ('You are in/finished 1st place')
+ */
+function getPlaceText(place, final) {
+    let place_text = '';
+    if(final) {
+        place_text += 'You finished ';
+    } else {
+        place_text += 'You are in ';
+    }
+
+    // Get ordinal suffix
+    const lastTwo = place % 100;
+    if (lastTwo >= 11 && lastTwo <= 13) place_text += place + 'th';
+
+    const last = n % 10;
+    if (last === 1) place_text += place + 'st';
+    if (last === 2) place_text += place + 'nd';
+    if (last === 3) place_text += place + 'rd';
+    place_text += place + 'th';
+
+    place_text += ' place!';
+    
+    return place_text;
+}
+
+/**
+ * @author Connor Hekking
+ * 
+ * Returns the encouragement text ('Keep it up!/Good job!')
+ * 
+ * @param {Number} place Current player's rank
+ * @param {Boolean} final If the text is for current position(false) or final position(true)
+ * @returns encouragement text ('Keep it up!/Good job!')
+ */
+function getEncouragementText(place, final) {
+    const encouragement_texts_ongoing = ['On top of the world!', 'Almost perfect!', 'Nearly there!', 'Keep up the lead!', 'Nice work!'];
+    const encouragement_texts_final = ['Gold medal!', 'Silver medal!', 'Bronze medal!', 'You are on the podium!', 'You are on the podium!', 'Good game!'];
+    let encouragement_text;
+    if(place > 5) {
+        // Default is last in array
+        place = 6;
+    }
+    if(final) {
+        encouragement_text = encouragement_texts_final[place - 1];
+    } else {
+        encouragement_text = encouragement_texts_ongoing[place - 1];
+    }
+    return encouragement_text;
+}
+
+/**
+ * @author Connor Hekking
+ * 
  * Returns the leaderboard page object, which can then be cloned
  * 
  * @param {{points: Number, rank: Number}} current_player Current player's points and rank in an object
@@ -143,9 +199,12 @@ function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isTeacher) {
  * @param {Boolean} isTeacher If the page object should be prepared for a teacher instead of a student view
  * @returns cloneable object containing the body of the leaderboard page 
  */
-function createLeaderboard(place, statistics, isTeacher) {
+function createLeaderboard(current_player, other_players, isTeacher) {
     // Copy statistics list and insert player
-    const players_list = other_players.slice().push(current_player);
+    const players_list = other_players.slice();
+    if(!isTeacher) {
+        players_list.push(current_player)
+    }
     // Sort player list
     players_list.sort((a, b) => b.points - a.points);
 
@@ -153,40 +212,9 @@ function createLeaderboard(place, statistics, isTeacher) {
     const question_container = template_question_container.cloneNode(false);
     
     // Clone sub elements
-    const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
     const leaderboard = template_question_container.querySelector(".leaderboard").cloneNode(true);
 
     // Edit sub elements
-    let place_text;
-    let encouragement_text;
-    switch (current_player.rank) {
-        case 1:
-            place_text = '1st place!';
-            encouragement_text = 'On top of the world!';
-            break;
-        case 2:
-            place_text = '2nd place!';
-            encouragement_text = 'Almost perfect!';
-            break;
-        case 3:
-            place_text = '3rd place!';
-            encouragement_text = 'Nearly there!';
-            break;
-        case 4:
-            place_text = '4th place!';
-            encouragement_text = 'Keep up the lead!';
-            break;
-        case 5:
-            place_text = '5th place!';
-            encouragement_text = 'Keep up the lead!';
-            break;
-        default:
-            place_text = `${current_player.rank}th place`;
-            encouragement_text = 'Nice work!';
-            break;
-    }
-    self_ranking.querySelectorAll('p')[0].innerText = `You are in ${place_text}`;
-    self_ranking.querySelectorAll('p')[1].innerText = encouragement_text;
     let idx = 0;
     leaderboard.querySelectorAll('p').forEach((ranking) => {
         ranking.innerText = `Player: ${players_list[idx].points}`;
@@ -194,7 +222,12 @@ function createLeaderboard(place, statistics, isTeacher) {
     });
 
     // Add sub elements
-    question_container.appendChild(self_ranking);
+    if(!isTeacher) {
+        const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
+        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(current_player.rank, false);
+        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(current_player.rank, false);
+        question_container.appendChild(self_ranking);
+    }
     question_container.appendChild(leaderboard);
     if(isTeacher) {
         const next_question_btn = template_question_container.querySelector(".next-question-btn").cloneNode(true);
@@ -213,9 +246,54 @@ function createLeaderboard(place, statistics, isTeacher) {
  * @param {{points: Number, rank: Number}} current_player Current player's points and rank in an object
  * @param {Array({points: Number, rank: Number})} other_players Array of other player's points and rank in an object
  * @param {Boolean} isTeacher If the page object should be prepared for a teacher instead of a student view
+ * @param {*} statistics TODO should have category statistics, not implemented
  * @returns cloneable object containing the body of the leaderboard page 
  */
-function createEndLeaderboard(place, statistics, isTeacher) {
-    //TODO this is a placeholder, need to make distinct end leaderboard
-    return createLeaderboard(place, statistics, isTeacher);
+function createEndLeaderboard(current_player, other_players, isTeacher, statistics) {
+    //TODO not actually showing any statistics
+
+    // Copy statistics list and insert player
+    const players_list = other_players.slice();
+    if(!isTeacher) {
+        players_list.push(current_player)
+    }
+    // Sort player list
+    players_list.sort((a, b) => b.points - a.points);
+
+    // Create new empty instance of question_container
+    const question_container = template_question_container.cloneNode(false);
+    
+    // Clone sub elements
+    const your_learning = template_question_container.querySelector(".your-learning").cloneNode(true);
+    const box = template_question_container.querySelector(".box").cloneNode(true);
+    const leaderboard = template_question_container.querySelector(".leaderboard").cloneNode(true);
+
+    // Edit sub elements
+    //TODO edit box for category statistics
+    if(isTeacher) {
+        your_learning.querySelector('p').innerText = "Class Learning";
+    }
+    let idx = 0;
+    leaderboard.querySelectorAll('p').forEach((ranking) => {
+        ranking.innerText = `Player: ${players_list[idx].points}`;
+        idx += 1;
+    });
+
+    // Add sub elements
+    question_container.appendChild(your_learning);
+    question_container.appendChild(box);
+    if(!isTeacher) {
+        const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
+        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(current_player.rank, false);
+        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(current_player.rank, false);
+        question_container.appendChild(self_ranking);
+    }
+    question_container.appendChild(leaderboard);
+    if(isTeacher) {
+        const new_game_btn = template_question_container.querySelector(".new-game-btn").cloneNode(true);
+        question_container.appendChild(new_game_btn);
+    }
+
+    // Return cloneable obj
+    return question_container;
 }
