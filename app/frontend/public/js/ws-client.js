@@ -64,7 +64,7 @@ const init = (ws, handler, first) => {
     // handle incoming messages - pass to handler function (implemented by each game)
     ws.addEventListener("message", (e) => {
         console.log(`RECEIVED: ${e.data}`);
-        handler(e.data);
+        handler(JSON.parse(e.data));
     });
 
     // handle close event
