@@ -28,6 +28,7 @@ const static_dir = path.join(__dirname, "../frontend/public");
 const PORT = 8080;
 
 const app = express();
+module.exports = app;
 app.use("/public", express.static(path.join(__dirname, "../frontend/public")));
 app.use(express.json());
 app.use("/questions", dbAPI);
@@ -65,7 +66,11 @@ async function startServer() {
 };
 
 
-startServer();
+if (require.main === module) {
+    startServer();
+}
+
 const {startWebSocketServer} = require("./websocket-server");
 function ws() {startWebSocketServer(server)}
 setTimeout(ws, 500); // small delay so websocket connectes after server start
+
