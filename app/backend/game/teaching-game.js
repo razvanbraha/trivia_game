@@ -308,11 +308,11 @@ class teachingGame {
      * @param {Object} message Message object containing the request
      */
     async startGame(socket, message) {
-        const num_questions = message.num_questions;
-        const categories = message.categories;
-        const preview_time = message.preview_time;
-        const dead_time = message.dead_time;
-        const live_time = message.live_time;
+        const num_questions = message.body.num_questions;
+        const categories = message.body.categories;
+        const preview_time = message.body.preview_time;
+        const dead_time = message.body.dead_time;
+        const live_time = message.body.live_time;
 
         const valid = this.validateSettings(socket, num_questions, categories, preview_time, dead_time, live_time);
         if(!valid) {
@@ -477,7 +477,7 @@ class teachingGame {
      * @param {Object} message Message object containing the request
      */
     registerAnswer(socket, message) {
-        const answer_number = message.answer_number;
+        const answer_number = message.body.answer_number;
 
         // Check invalid answer number
         if(answer_number > 4 || answer_number < 1) {

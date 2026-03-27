@@ -12,7 +12,9 @@
 const {WebSocketServer, WebSocket} = require("ws");
 
 // Include sessions.js for starting/joining sessions
-const {joinSession} = require("./game/sessions");
+// const {joinSession} = require("./game/sessions");
+
+// The above import needs to happen later(lazy import) so as not to cause circular dependency at build time.
 
 //--- CONSTANTS ---------------------------------------------------------------
 
@@ -96,6 +98,7 @@ function onMessage(ws, data) {
         // Otherwise handle a few root level messages
         switch(data_obj.type) {
             case messages.JOIN:
+                const {joinSession} = require("./game/sessions");
                 if(!joinSession(ws, data_obj)) {
                     sendError(ws, `Failed to join game session with code: ${data_obj.body.game_code}`);
                 }

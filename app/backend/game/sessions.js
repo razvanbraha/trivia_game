@@ -25,6 +25,9 @@ const code_range = 10000;
 // Time until any session automatically expires, regardless of state
 const SESSION_AUTO_EXPIRE_TIME = 30 * 60 * 1000; // 30mins(ms)
 
+// Time between sessions automatically checking for expired sessions
+const SESSION_EXPIRE_CHECK_TIME = 2 * 60 * 1000; // 2mins(ms)
+
 //--- GLOBALS -----------------------------------------------------------------
 
 // list of all open game sessions for the server to keep track of
@@ -82,8 +85,8 @@ const createSession = (type) => {
  * @return true/false whether the creation was successful
  */
 const joinSession = (ws, data) => {
-    const code = data.game_code;
-    const type = data.game_type;
+    const code = data.body.game_code;
+    const type = data.body.game_type;
 
     switch(type) {
         case sessionTypes.TEACHING:
@@ -150,7 +153,7 @@ const removeSessions = () => {
 
 //--- ALWAYS RUNNING -----------------------------------------------------------------
 
-
+const sessionsRemover = setInterval(removeSessions, SESSION_EXPIRE_CHECK_TIME);
 
 //--- EXPORTS -----------------------------------------------------------------
 
