@@ -557,13 +557,13 @@ class teachingGame {
         sendWebSocketMessage(this.host, {
             "type": messages.DONE,
         });
-        closeWebsocket(this.host, 0, "Game finished.");
+        closeWebsocket(this.host, "Game finished.");
         // Close players
         this.players.forEach((player) => {
             sendWebSocketMessage(player, {
                 "type": messages.DONE,
             });
-            closeWebsocket(player, 0, "Game finished.");
+            closeWebsocket(player, "Game finished.");
         });
 
         this.state = teachingGame.STATES.ENDED;

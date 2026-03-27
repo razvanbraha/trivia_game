@@ -138,13 +138,12 @@ function sendError(ws, error_message) {
 }
 
 /**
- * Handles closing out a websocket connection with a closing code and reason
+ * Handles closing out a websocket connection with a closing reason
  * @param {WebSocket} ws Client websocket to close
- * @param {Number} code closing message code
  * @param {String} reason closing message text
  */
-function closeWebsocket(ws, code, reason) {
-    ws.close(code, reason);
+function closeWebsocket(ws, reason) {
+    ws.close(1000, reason);
 }
 
 //--- EXPORTS -----------------------------------------------------------------
