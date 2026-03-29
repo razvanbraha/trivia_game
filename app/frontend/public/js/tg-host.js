@@ -9,7 +9,7 @@
  */
 //--- INCLUDE -----------------------------------------------------------------
 
-import {ws_api} from "./ws-api.js"
+const ws_api = window.ws_api;
 
 //--- SETUP -------------------------------------------------------------------
 
@@ -25,40 +25,34 @@ const game_states = {
 
 let current_state = game_states.LOBBY;
 
-// signal handler object: lists valid signals as keys
+//--- SIGNAL HANDLERS ---------------------------------------------------------
+
+// signal handler object: maps si
 let handler = {};
-handler[ws_client.signals.QUESTION.name] = handle_question;
-handler[ws_client.signals.CHOICES.name] = handle_choices;
-handler[ws_client.signals.READY.name] = handle_ready;
-handler[ws_client.signals.DONE.name] = handle_done;
-handler[ws_client.signals.RESULTS.name] = handle_results;
-handler[ws_client.signals.GAMEOVER.name] = handle_gameover;
 
-//--- SPECIFIC SIGNALS --------------------------------------------------------
+handler[ws_api.signals.QUESTION.id] = (ws, body) => {
 
-function handle_question(body) {
+};
 
-}
+handler[ws_api.signals.CHOICES.id] = (ws, body) => {
 
-function handle_choices(body) {
+};
 
-}
+handler[ws_api.signals.READY.id] = (ws, body) => {
 
-function handle_ready(body) {
+};
 
-}
+handler[ws_api.signals.DONE.id] = (ws, body) => {
 
-function handle_done(body) {
+};
 
-}
+handler[ws_api.signals.RESULTS.id] = (ws, body) => {
 
-function handle_results(body) {
+};
 
-}
+handler[ws_api.signals.GAMEOVER.id] = (ws, body) => {
 
-function handle_gameover(body) {
-
-}
+};
 
 //--- BUTTON CALLBACKS --------------------------------------------------------
 
@@ -89,19 +83,14 @@ fetch("/api/games", fetchData)
         console.log(`Game created with code ${code}; initiating Websocket connection`)
         
         // initiate websocket connection to this code
-        const ws = new WebSocket(ws_client.uri);
+        const ws = new WebSocket(ws_api.uri);
 
         // JOIN signal contents
-        const msg = { game_code: code, game_type: ws_client.games.TEACHING };
+        const msg = { game_code: code, game_type: ws_api.games.TEACHING };
 
         // setup socket with handler, send JOIN signal upon open
-        ws_client.init(ws, handler, () => ws_client.send(ws, ws_client.signals.JOIN, msg));
+        ws_api.init(ws, ws_api.users.CLIENT, handler, () => ws_api.send(ws, ws_api.signals.JOIN, msg));
     })
     .catch((e) => {
         console.log(`Error starting game:`, e);
     });
-
-
-
-
-

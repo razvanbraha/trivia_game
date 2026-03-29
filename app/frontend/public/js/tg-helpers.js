@@ -1,16 +1,68 @@
-const template_str = await fetch('/public/templates/question-template.html').then((res) => {
-    return res.text().then((result) => {
-        return result;
-    });
-});
+//--- HEADER ------------------------------------------------------------------
+/**
+ * @file tg-helpers.js
+ * 
+ * @description Provides helper functions to manipulate the page content for the 
+ * teaching game.
+ * 
+ * @author Connor Hekking
+ * Initial code
+ * 
+ * @author Will Mungas
+ * Tweaked code for template_div to turn into a function with correct
+ * use of promises
+ */
+//--- HTML TEMPLATE STRINGS ---------------------------------------------------
 
-const template_div = document.createElement('div');
-template_div.innerHTML = template_str;
-const template = template_div.querySelector("#game-ui-template");
-const template_question_container = template.content.querySelector("#question-container").cloneNode(true);
-if(window.location.href.includes("test-tg-templates")) {
-    document.body.appendChild(template_question_container);
+const teacherLobbyHTML = 
+`
+<div id="game-settings">
+
+</div>
+<div id=">
+
+</div>
+`;
+
+
+//--- FUNCTIONS ---------------------------------------------------------------
+
+/**
+ * @author Will Mungas
+ * Sets up the teacher view of the lobby in HTML, including registering new
+ * players
+ * @param {*} content pass in document.querySelector("#content")
+ */
+function teacherLobby(content) {
+    content.innerHTML = 
+    `
+
+    `;
 }
+
+
+
+/**
+ * @author Will Mungas
+ * 
+ * Sets up the page with content from question-template.html
+ */
+function setupPage() {
+    const template_div = document.createElement('div');
+
+    const template_promise = fetch('/public/templates/question-template.html')
+    .then((res) => {
+        const template_str = res.text();
+        
+        template_div.innerHTML = template_str;
+        const template = template_div.querySelector("#game-ui-template");
+        const template_question_container = template.content.querySelector("#question-container").cloneNode(true);
+        if(window.location.href.includes("test-tg-templates")) {
+            document.body.appendChild(template_question_container);
+        }
+    });
+}
+
 
 
 /**

@@ -18,7 +18,7 @@ const roomAPI = require("./rest_api/roomAPI");
 
 // game and websocket functions
 const sessions = require('./game/sessions');
-import ws_api from './ws-api.js'
+const ws_api = require('./ws-api');
 // const ws_server = require('./game/ws-server');
 
 // not sure why these are here?
@@ -78,10 +78,11 @@ app.get("/teacher", (req, res) => {
 // initial connection to the server
 const init_handler = {};
 // add JOIN signal support
-init_handler[ws_server.signals.JOIN.id] = (ws, body) => {
+init_handler[ws_api.signals.JOIN.id] = (ws, body) => {
     if(!sessions.joinSession(ws, body)) {
-        ws_server.sendError(ws, "Failed to join");
+        ws_api.error(ws, "Failed to join");
     }
+    ws_api.send(ws, ws_api.signals.ACK, {msg: `Let you into session ${body.game_code} :)`})
 }
 
 function setupWSS(server) {
@@ -89,9 +90,10 @@ function setupWSS(server) {
 
     wss.on("connection", (ws) => {
         // Establish client connection
-        console.log(`Client connected.`);
+        ws_api.init(ws, ws_api.users.SERVER, null, null);
+        // setup event listeners manually
         ws.on('error', console.error);
-        ws.on("message", (data) => {ws_server.receive(ws, init_handler, data)});
+        ws.on("message", (data) => {ws_api.receive(ws, init_handler, data)});
     });
     console.log(`Websocket server running`);
 }

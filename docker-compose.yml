@@ -8,8 +8,8 @@ services:
     volumes:
     # map source code for live updates with nodemon
       - ./app/backend:/app
-    # map shared protocol.json
-      - ./shared/ws_api.js:/app/ws_api.js
+    # map shared ws-api
+      - ./shared/ws-api.js:/app/ws-api.js
     # anonymous volume to protect containers node_modules (prevents host node_modules from overwriting)
       - /app/node_modules 
     depends_on:
@@ -26,7 +26,7 @@ services:
     container_name: trivia-frontend
     volumes:
       - ./app/frontend:/usr/share/nginx/html
-      - ./shared/ws_api.js:/usr/share/nginx/html/public/js/ws_api.js
+      - ./shared/ws-api.js:/usr/share/nginx/html/public/js/ws-api.js
     expose:
       - "80"
 
