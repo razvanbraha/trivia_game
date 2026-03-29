@@ -9,27 +9,11 @@
  */ 
 //--- INCLUDE -----------------------------------------------------------------
 
-const {messages, sendWebSocketMessage, closeWebsocket, sendError} = require("../ws-server");
+// include ws_api as an ES module
+import ws_api from "../ws-api.js";
+
 const questionsDB = require("../db_queries/questions-db");
 
-/**
- * @author Will Mungas
- * 
- * Decides whether the game will accept a given message
- * 
- * @param {*} type the type of message
- * @returns true if the game will handle the message
- */
-const accepts = (type) => {
-    switch(type) {
-        case messages.START:
-        case messages.ANSWER:
-        case messages.CONTINUE:
-            return true;
-        default: 
-            return false;
-    }
-}
 
 //--- OBJECT ---------------------------------------------------------------
 // Declare this file as an object to be able to use multiple instances of it
@@ -46,6 +30,37 @@ class teachingGame {
         FINAL: 6, // final state: game shows final results & waits for game to end
         ENDED: 7, // After final state, game is closed out
     }
+
+    // setting limits as ranges
+    static RANGES = {
+        QUESTIONS: {
+            MIN: 5,
+            MAX: 50
+        },
+        PREVIEW_TIME: {
+            MIN: 30,
+            MAX: 0,
+        },
+        DEAD_TIME: {
+            MIN: 0,
+            MAX: 30
+        },
+        LIVE_TIME: {
+            MIN: 1,
+            MAX: 30
+        },
+        CATEGORIES: {
+            MIN: 1,
+            MAX: 6
+        }
+    }
+        
+    // other internal settings
+
+    static NO_ANSWER_NUM = -1;
+    static BASE_QUESTION_POINTS = 1000;
+    static AUTO_CONTINUE_TIMER = 120; // 2 mins
+    static AUTO_CLOSE_TIMER = 300; // 5 mins
 
     //--- STATE DATA -----------------------------------------------------------------
 
@@ -69,28 +84,18 @@ class teachingGame {
     signalContinue = null; // Function to resolve the promise making the main game flow(serveQuestions) wait for CONTINUE
     // Effectively, calling signalContinue() allows the main flow to continue with the next question
 
-    // Game settings 
-    MAX_QUESTIONS = 50;
-    MIN_QUESTIONS = 5;
-    NUM_CATEGORIES = 6;
-    MAX_PREVIEW_TIME = 30;
-    MIN_PREVIEW_TIME = 0;
-    MAX_DEAD_TIME = 30;
-    MIN_DEAD_TIME = 0;
-    MAX_LIVE_TIME = 30;
-    MIN_LIVE_TIME = 1;
-    NO_ANSWER_NUM = -1;
-    BASE_QUESTION_POINTS = 1000;
-
-    AUTO_CONTINUE_TIMER = 120; // 2 mins
-    AUTO_CLOSE_TIMER = 300; // 5 mins
-
-    num_questions = 0;
-    categories = [];
-    preview_time = 0;
-    dead_time = 0;
-    live_time = 0;
-
+    // user-visible settings
+    settings = {
+        num_questions: 0,
+        categories: [],
+        preview_time: 0,
+        dead_time: 0,
+        live_time: 0,
+    };
+    
+    // signal handler: map of signal names to functions with the signature
+    // (ws, body) => void to handle the signal
+    handler = {};
 
     //--- FUNCTIONS ---------------------------------------------------------------
 
@@ -104,101 +109,88 @@ class teachingGame {
         this.type = data.game_type;
         this.state = teachingGame.STATES.LOBBY;
         this.start_time = data.start_time;
+
+        // set up handler
+        this.handler[ws_server.signals.START.id] = (ws, body) => {
+            if (this.state === teachingGame.STATES.LOBBY && ws === this.host) {
+                this.startGame(ws, body);
+            } else if(ws !== this.host) {
+                ws_server.sendError(ws, "Only host can contiinue.");
+            } else {
+                ws_server.sendError(ws, "Game has already started.");
+            }
+        }
+
+        this.handler[ws_server.signals.ANSWER.id] = (ws, body) => {
+            if (this.state === teachingGame.STATES.RECEIVE_RESPONSES && ws !== this.host) {
+                this.registerAnswer(ws, body);
+            } else if(ws === this.host) {
+                sendError(ws, "Host cannot submit an answer.");
+            } else {
+                sendError(ws, "Game is not accepting answers.");
+            }
+        }
+
+        this.handler[ws_server.signals.CONTINUE.id] = (ws, body) => {
+            if (this.state === teachingGame.STATES.AWAIT_NEXT && ws === this.host) {
+                this.advanceQuestion(ws, body);
+            } else if (this.state === teachingGame.STATES.FINAL && ws === this.host) {
+                this.endGame(ws, body);
+            } else if(ws !== this.host) {
+                sendError(ws, "Only host can continue.");
+            } else if(this.state === teachingGame.STATES.ENDED) {
+                sendError(ws, "Game has already ended.");
+            }
+            else {
+                sendError(ws, "Game has already started.");
+            }
+        }
     }
 
-    sendAll(message) {
+    /**
+     * @author Connor Hekking, Will Mungas
+     * @description sends a signal to all connected websockets
+     * @param sig signal type (must be from ws_server.signals)
+     * @param msg body of the signal (must be an object with valid fields)
+     */
+    sendAll(sig, msg) {
         if(this.host) {
-            sendWebSocketMessage(this.host, message);
+            ws_server.send(this.host, sig, msg);
         }
         this.players.forEach((player) => {
-            sendWebSocketMessage(player, message);
+            ws_server.send(player, sig, msg);
         });
     }
 
     /**
-     * Handles processing an incoming WebSocket message from a user, validates
-     * message format on our protocol
-     * @param {WebSocket} socket Websocket which sent the request
-     * @param {Object} message Message object containing the request
-     */
-    receiveMessage(socket, message) {
-        try {
-            const type = message.type;
-
-            // Handle all messages
-            switch(type) {
-                case (messages.START):
-                    if (this.state === teachingGame.STATES.LOBBY && socket === this.host) {
-                        this.startGame(socket, message);
-                    } else if(socket !== this.host) {
-                        sendError(socket, "Only host can contiinue.");
-                    } else {
-                        sendError(socket, "Game has already started.");
-                    }
-                    break;
-                case (messages.ANSWER):
-                    if (this.state === teachingGame.STATES.RECEIVE_RESPONSES && socket !== this.host) {
-                        this.registerAnswer(socket, message);
-                    } else if(socket === this.host) {
-                        sendError(socket, "Host cannot submit an answer.");
-                    } else {
-                        sendError(socket, "Game is not accepting answers.");
-                    }
-                    break;
-                case (messages.CONTINUE):
-                    if (this.state === teachingGame.STATES.AWAIT_NEXT && socket === this.host) {
-                        this.advanceQuestion(socket, message);
-                    } else if (this.state === teachingGame.STATES.FINAL && socket === this.host) {
-                        this.endGame(socket, message);
-                    } else if(socket !== this.host) {
-                        sendError(socket, "Only host can continue.");
-                    } else if(this.state === teachingGame.STATES.ENDED) {
-                        sendError(socket, "Game has already ended.");
-                    }
-                    else {
-                        sendError(socket, "Game has already started.");
-                    }
-                    break;
-                default:
-                    sendError(socket, "Message type is invalid.");
-                    break;
-            }
-        } catch (error) {
-            sendError(socket, "Message format is invalid.");
-        }
-        
-    }
-
-    /**
      * Handles user joining the game through a websocket connection
-     * @param {WebSocket} socket
+     * @param {WebSocket} ws
      */
-    join(socket) {
+    join(ws) {
         if (this.state !== teachingGame.STATES.LOBBY) {
-            sendError(socket, "Game already started.");
+            ws_server.sendError(ws, "Game already started.");
             return;
         }
 
-        socket.handler = this.receiveMessage.bind(this);
-        socket.accepts = accepts;
+        ws.on("message", (data) => {ws_server.receive(ws, this.handler, data)})
 
         // First join = host, later joins = player
         if(this.host === null) {
-            this.host = socket;
+            this.host = ws;
             console.log(`Session ${this.code}: host joined`);
             return;
         }
 
         // Add player entries to data
-        this.players.push(socket);
-        this.answers.set(socket, []);
-        this.points.set(socket, 0);
+        this.players.push(ws);
+        this.answers.set(ws, []);
+        this.points.set(ws, 0);
         console.log(`Session ${this.code}: player ${this.players.length} joined`);
     }
 
     /**
      * Checks if the game settings
-     * @param {WebSocket} socket Websocket making the request. Used for sending errors
+     * @param {WebSocket} ws Websocket making the request. Used for sending errors
      * @param {Number} num_questions Number of questions in the game
      * @param {Array} categories Array of numbers corresponding to categories included in the game
      * @param {Number} preview_time Time the question text is shown but not answers
@@ -206,38 +198,35 @@ class teachingGame {
      * @param {Number} live_time Time the question is live for answers
      * @returns true/false if the settings are valid
      */
-    validateSettings(socket, num_questions, categories, preview_time, dead_time, live_time) {
+    validateSettings(ws, num_questions, categories, preview_time, dead_time, live_time) {
+        const inRange = (a, range) => {
+            return a <= range.MAX && a >= range.MIN;
+        }
+
         let valid = true;
-        if(num_questions > this.MAX_QUESTIONS || num_questions < this.MIN_QUESTIONS) {
-            sendError(socket, "Invalid setting: number of questions.");
+        if(!inRange(num_questions, RANGES.QUESTIONS)) {
+            ws_server.sendError(ws, "Invalid setting: number of questions.");
             valid = false;
         }
-        if(preview_time > this.MAX_PREVIEW_TIME || preview_time < this.MIN_PREVIEW_TIME) {
-            sendError(socket, "Invalid setting: preview time.");
+        if(!inRange(preview_time, RANGES.PREVIEW_TIME)) {
+            ws_server.sendError(ws, "Invalid setting: preview time.");
             valid = false;
         }
-        if(dead_time > this.MAX_DEAD_TIME || dead_time < this.MIN_DEAD_TIME) {
-            sendError(socket, "Invalid setting: dead time.");
+        if(!inRange(dead_time, RANGES.DEAD_TIME)) {
+            ws_server.sendError(ws, "Invalid setting: dead time.");
             valid = false;
         }
-        if(live_time > this.MAX_LIVE_TIME || live_time < this.MIN_LIVE_TIME) {
-            sendError(socket, "Invalid setting: live time.");
+        if(!inRange(live_time, RANGES.LIVE_TIME)) {
+            ws_server.sendError(ws, "Invalid setting: live time.");
             valid = false;
         }
-        if(categories.length > this.NUM_CATEGORIES || categories.length < 1){
-            sendError(socket, "Invalid setting: categories.");
+        if(!inRange(categories.length, RANGES.CATEGORIES)) {
+            ws_server.sendError(ws, "Invalid setting: categories.");
             valid = false;
         }
-        categories.forEach((categoryNum) => {
-            if(categoryNum > this.NUM_CATEGORIES || categoryNum < 1){
-                sendError(socket, "Invalid setting: categories.");
-                valid = false;
-                return;
-            }
-        });
         // Check duplicates
         if(new Set(categories).size !== categories.length) {
-            sendError(socket, "Invalid setting: categories.");
+            ws_server.sendError(ws, "Invalid setting: categories.");
             valid = false;
         }
 
@@ -304,17 +293,17 @@ class teachingGame {
     /**
      * Configures settings from message, gets list of questions from database,
      * and sends out the first question.
-     * @param {WebSocket} socket Host websocket which initiated the request
-     * @param {Object} message Message object containing the request
+     * @param {WebSocket} ws Host websocket which initiated the request
+     * @param {Object} body Message object containing the request
      */
-    async startGame(socket, message) {
+    async startGame(ws, body) {
         const num_questions = message.body.num_questions;
         const categories = message.body.categories;
         const preview_time = message.body.preview_time;
         const dead_time = message.body.dead_time;
         const live_time = message.body.live_time;
 
-        const valid = this.validateSettings(socket, num_questions, categories, preview_time, dead_time, live_time);
+        const valid = this.validateSettings(ws, num_questions, categories, preview_time, dead_time, live_time);
         if(!valid) {
             return; // Do nothing
         }
@@ -405,26 +394,18 @@ class teachingGame {
                 // Don't need to add any points
             });
 
-
-            // Send CLOSE
+            // Send DONE
             allRankings = this.getRankings();
-            sendWebSocketMessage(this.host, {
-                "type": messages.CLOSE,
-                "correct_answer_number": this.current_correct_answer_number,
-                "current_player": null,
-                "other_players": Array.from(allRankings.values()),
+            ws_server.send(this.host, ws_server.signals.DONE, {
+                correct_answer_num: this.current_correct_answer_number,
+                player_you: null,
+                player_data: Array.from(allRankings.values())
             });
             this.players.forEach((player) => {
-                // Get other players
-                const other_players = Array.from(allRankings) // Convert to array [[Websocket, {rank: Number, points: Number}], ...]
-                                    .filter((entry) => entry[0] !== player) // Filter out this player
-                                    .map(([ws, stats]) => stats); // Then map to a new array with just the data
-
-                sendWebSocketMessage(player, {
-                    "type": messages.CLOSE,
-                    "correct_answer_number": this.current_correct_answer_number,
-                    "current_player": allRankings.get(player),
-                    "other_players": other_players,
+                ws_server.send(player, ws_server.signals.DONE, {
+                    correct_answer_num: this.current_correct_answer_number,
+                    player_you: allRankings.get(player),
+                    player_data: null
                 });
             });
 
@@ -439,25 +420,19 @@ class teachingGame {
 
         // Send RESULTS
         allRankings = this.getRankings();
-            sendWebSocketMessage(this.host, {
-                "type": messages.RESULTS,
-                "correct_answer_number": this.current_correct_answer_number,
-                "current_player": null,
-                "other_players": Array.from(allRankings.values()),
-            });
-            this.players.forEach((player) => {
-                // Get other players
-                const other_players = Array.from(allRankings) // Convert to array [[Websocket, {rank: Number, points: Number}], ...]
-                                    .filter((entry) => entry[0] !== player) // Filter out this player
-                                    .map(([ws, stats]) => stats); // Then map to a new array with just the data
 
-                sendWebSocketMessage(player, {
-                    "type": messages.RESULTS,
-                    "correct_answer_number": this.current_correct_answer_number,
-                    "current_player": allRankings.get(player),
-                    "other_players": other_players,
-                });
+        ws_server.send(this.host, ws_server.signals.RESULTS, {
+            correct_answer_num: this.current_correct_answer_number,
+            data_you: null,
+            data_all: Array.from(allRankings.values()),
+        });
+        this.players.forEach((player) => {
+            ws_server.send(player, ws_server.signals.RESULTS, {
+                correct_answer_num: this.current_correct_answer_number,
+                data_you: allRankings.get(player),
+                data_all: null
             });
+        });
 
         this.state = teachingGame.STATES.FINAL;
 
@@ -473,25 +448,25 @@ class teachingGame {
 
     /**
      * Registers a player's answer in the game state.
-     * @param {WebSocket} socket Player websocket which initiated the request
+     * @param {WebSocket} ws Player websocket which initiated the request
      * @param {Object} message Message object containing the request
      */
-    registerAnswer(socket, message) {
+    registerAnswer(ws, message) {
         const answer_number = message.body.answer_number;
 
         // Check invalid answer number
         if(answer_number > 4 || answer_number < 1) {
-            sendError(socket, "Invalid answer number.");
+            ws_server.sendError(ws, "Invalid answer number.");
             return;
         }
 
         // Stop duplicate answers
-        if (this.answers.get(socket)[this.current_question_idx] !== undefined) {
+        if (this.answers.get(ws)[this.current_question_idx] !== undefined) {
             return;
         } 
 
         // Register answer
-        this.answers.get(socket)[this.current_question_idx] = answer_number;
+        this.answers.get(ws)[this.current_question_idx] = answer_number;
         // Add points
         if (answer_number === this.current_correct_answer_number) {
             const elapsed_time = new Date() - this.answering_start_time;
@@ -505,10 +480,10 @@ class teachingGame {
                 // Timed out, no points
                 points = 0;
                 // Set no answer because answer did not come in time
-                this.answers.get(socket)[this.current_question_idx] = this.NO_ANSWER_NUM;
+                this.answers.get(ws)[this.current_question_idx] = this.NO_ANSWER_NUM;
             }
 
-            this.points.set(socket, this.points.get(socket) + points);
+            this.points.set(ws, this.points.get(ws) + points);
         }
     }
 
@@ -533,15 +508,15 @@ class teachingGame {
 
     /**
      * Signals main game flow to send out next question.
-     * @param {WebSocket} socket Host websocket which initiated the request
+     * @param {WebSocket} ws Host websocket which initiated the request
      * @param {Object} message Message object containing the request
      */
-    advanceQuestion(socket, message) {
+    advanceQuestion(ws, message) {
         if (this.signalContinue) {
             this.signalContinue();
-            this.signalContinue = null; // Reset
+            this.signalContinue = null; // Reset // this is interesting but probably a better way to do this is with a flag?
         } else {
-            sendError(socket, "Cannot send next question");
+            ws_server.sendError(ws, "Cannot send next question");
         }
     }
 
@@ -549,21 +524,17 @@ class teachingGame {
 
     /**
      * Sends out DONE signal then closes all connections
-     * @param {WebSocket} socket Host websocket which initiated the request
+     * @param {WebSocket} ws Host websocket which initiated the request
      * @param {Object} message Message object containing the request
      */
-    endGame(socket, message) {
+    endGame(ws, message) {
         // Close host
-        sendWebSocketMessage(this.host, {
-            "type": messages.DONE,
-        });
-        closeWebsocket(this.host, "Game finished.");
+        ws_server.send(this.host, ws_server.signals.GAMEOVER, {});
+        ws_server.close(this.host, "Game finished.");
         // Close players
         this.players.forEach((player) => {
-            sendWebSocketMessage(player, {
-                "type": messages.DONE,
-            });
-            closeWebsocket(player, "Game finished.");
+            ws_server.send(player, ws_server.signals.GAMEOVER, {});
+            ws_server.close(player, "Game finished.");
         });
 
         this.state = teachingGame.STATES.ENDED;
