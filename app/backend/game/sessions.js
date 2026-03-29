@@ -85,8 +85,8 @@ const createSession = (type) => {
  * @return true/false whether the creation was successful
  */
 const joinSession = (ws, data) => {
-    const code = data.body.game_code;
-    const type = data.body.game_type;
+    const code = data.game_code;
+    const type = data.game_type;
 
     switch(type) {
         case sessionTypes.TEACHING:
