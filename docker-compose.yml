@@ -2,21 +2,31 @@ services:
 
   api:
     build:
-      context: ./app/backend
+      context: .
+      dockerfile: ./app/backend/Dockerfile
     container_name: trivia-api
+    volumes:
+    # map source code for live updates with nodemon
+      - ./app/backend:/app
+    # map shared protocol.json
+      - ./shared/ws_api.js:/app/ws_api.js
+    # anonymous volume to protect containers node_modules (prevents host node_modules from overwriting)
+      - /app/node_modules 
     depends_on:
       - db
     env_file:
       - .env
     ports:
       - "8080:8080"
-    command: node server.js
+    # use nodemon for live updates
+    command: nodemon server.js
 
   frontend:
     image: nginx:alpine
     container_name: trivia-frontend
     volumes:
       - ./app/frontend:/usr/share/nginx/html
+      - ./shared/ws_api.js:/usr/share/nginx/html/public/js/ws_api.js
     expose:
       - "80"
 
