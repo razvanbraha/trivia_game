@@ -11,12 +11,53 @@
  */
 //-----------------------------------------------------------------------------
 
-import protocol from './signals.json' with {type: 'json'}
+import protocol from '../config/protocol.json' with {type: 'json'};
+console.log("Read protocol", protocol);
 
 //--- CONSTANTS ---------------------------------------------------------------
 
 // websocket connection uri
 const uri = "ws://127.0.0.1:8080";
+
+//--- HELPER ------------------------------------------------------------------
+
+/**
+ * @author Will Mungas
+ * @description Helper (not exported) to verify the body format for a signal
+ * @param {*} type 
+ * @param {*} body 
+ * @returns true if the body is valid for the signal of the given type
+ */
+function verifyBody(signal, body) {
+    let ret = true;
+    const has = Object.keys(body); // keys in the body
+    const needed = signal.fields;
+
+    for(const key of needed) {
+        if(!has.includes(key)) { // this is absolutely an error
+            console.log(`Field ${key} missing`);
+            console.log(`(required for signal ${signal.id})`);
+            ret = false;
+        }
+        else {
+            const idx = has.indexOf(key);
+            has.splice(idx, 1);
+        }
+    }
+
+    if(has.length !== 0) {
+        // this is not necessarily an error, but should be logged
+        console.log(`Extraneous fields (not required for signal ${signal.id}):`);
+        for(const key of has) {
+            console.log(key);
+        }
+    }
+    if(!ret) {
+        console.log(`Errors for body:`, body);
+    }
+
+    return ret;
+}
 
 //--- FUNCTIONS ---------------------------------------------------------------
 
@@ -33,7 +74,7 @@ const init = (ws, handler, first) => {
     // handle open event
     ws.addEventListener("open", () => {
         console.log("CONNECTED");
-        send(ws, 'hi');
+        send(ws, protocol.signals.ACK, {msg: "hi"});
         first();
     });
 
@@ -44,34 +85,7 @@ const init = (ws, handler, first) => {
     });
 
     // handle incoming messages - pass to handler function (implemented by each game)
-    ws.addEventListener("message", (e) => {
-        if(!(type && type in signals)) {
-            console.log(`Message type invalid: ${type}`);
-            return;
-        }
-    
-        if(!verifyBody(type, body)) {
-            console.log(`Received signal ${type} with invalid body format`);
-            return;
-        }
-
-        if(type === protocol.signals.ERROR.name) {
-            console.log(`Client reports error: ${data_obj.message}`);
-            return;
-        }
-
-        if(!(ws.handler && type in handler)) { // check that the handler can support this message type
-            sendError(`Unsupported message type: ${type}`);
-            return;
-        }
-
-        try {
-            handler[type](body);
-        }
-        catch(e){
-            sendError(ws, e);
-        }
-    });
+    ws.addEventListener("message", (data) => receive(ws, handler, data));
 
     // handle close event
     ws.addEventListener("close", () => {
@@ -85,70 +99,88 @@ const init = (ws, handler, first) => {
     console.log("client websocket initialized");
 }
 
+function receive(ws, handler, data) {
+    const data_obj = JSON.parse(data.toString());
+    const type = data_obj.type;
+    const body = data_obj.body;
+
+    if(!(type && type in protocol.signals)) {
+        console.log(`Received signal with missing/invalid type:`, data_obj);
+        return;
+    }
+
+    console.log(`Received signal ${type} with body`, body);
+    const signal = protocol.signals[type];
+
+    if(!verifyBody(signal, body)) {
+        console.log(`Error: invalid body format for ${type}`);
+        sendError(ws, `Invalid format for ${type}`);
+        return;
+    }
+
+    if(signal === protocol.signals.ERROR) {
+        console.log(`Server reports error: ${body.message}`);
+        return;
+    }
+ 
+    if(signal === protocol.signals.ACK) {
+        console.log(`Server sends ACK: ${body.msg}`);
+        return;
+    }
+
+    if(!(handler && type in handler)) { // check that the handler can support this message type
+        sendError(`Error: handler does not support ${type}`);
+        return;
+    }
+    
+    handler[type](body);
+}
+
 /**
  * @author Connor Hekking, Will Mungas
- * Logs messages before sending on a websocket 
  * 
- * @param {*} ws 
- * @param {*} type
- * @param {*} body
+ * @description Logs messages and performs verification, then sends them over 
+ * a websocket.
+ * 
+ * @param {*} ws websocket connection to send via
+ * @param {String} type type of message (must be valid for a client)
+ * @param {*} body body of message (must be in correct format)
  */
-const send = (ws, type, body) => {
-    if(!type in protocol.signals) {
-        console.log(`Tried to send signal of invalid type ${type}`);
-        return;
+const send = (ws, signal, body) => {
+    if(!signal) {
+        console.log("Tried to send null signal");
+        return false;
     }
-    if(protocol.signals[type].sender !== "client") {
-        console.log(`Tried to send unauthorized signal of type ${type}`);
-        console.log(`(must be sent by ${protocol.signals[type].sender})`);
-        return;
+    if(!(signal.id in protocol.signals)) {
+        console.log(`Tried to send signal of invalid type ${signal.id}`);
+        return false;
     }
-    if(!verifyBody(type, body)) {
-        console.log(`Tried to send signal ${type} with invalid body format`);
-        return;
+    const sender = signal.sender;
+    if(!(sender === "client" || sender === "all")) {
+        console.log(`Tried to send unauthorized signal of type ${signal.id}`);
+        console.log(`(must be sent by ${signal.sender})`);
+        return false;
+    }
+    if(!verifyBody(signal, body)) {
+        console.log(`Tried to send signal ${signal.id} with invalid body format`);
+        return false;
     }
     if(ws.readyState === WebSocket.OPEN){
-        console.log(`Sent signal ${type} with ${body}`);
-        ws.send(JSON.stringify({type, body}));
+        ws.send(JSON.stringify({type: signal.id, body}));
+        console.log(`Sent signal ${signal.id} with body`, body);
+        return true;
     }
+    return false;
 }
 
 /**
  * @author Will Mungas
+ * @description send an error message on a websocket
  * @param {*} ws 
- * @param {*} msg 
+ * @param {*} err
  */
-const sendError = (ws, msg) => {
-    send(ws, protocol.signals.ERROR.name, {message: msg});
-}
-
-/**
- * @author Will Mungas
- * @param {*} type 
- * @param {*} body 
- * @returns true if the body is valid for the signal of the given type
- */
-function verifyBody(type, body) {
-    let ret;
-    const has = Object.keys(body);
-    const needed = [...protocol.signals[type].fields]; // performs a shallow copy
-    for(const key of needed) {
-        if(!has.includes(needed)) { // this is absolutely an error
-            console.log(`Field ${key} missing`);
-            console.log(`(required for signal ${type})`);
-            ret = false;
-        }
-    }
-
-    if(has.length !== 0) {
-        // this is not necessarily an error, but should be logged
-        console.log(`Extraneous fields (not required for signal ${type}):`);
-        for(const key of has) {
-            console.log(key);
-        }
-    }
-
-    return ret;
+const sendError = (ws, err) => {
+    send(ws, protocol.signals.ERROR, {err});
 }
 
 //--- EXPORTS -----------------------------------------------------------------
@@ -157,5 +189,6 @@ export const ws_client = {
     init, 
     send,
     uri,
-    signals: protocol.signals
+    signals: protocol.signals,
+    games: protocol.games
 };
