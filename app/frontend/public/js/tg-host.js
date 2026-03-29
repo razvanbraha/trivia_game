@@ -9,7 +9,7 @@
  */
 //--- INCLUDE -----------------------------------------------------------------
 
-import {ws_client} from "./ws-client.js"
+import {ws_api} from "./ws-api.js"
 
 //--- SETUP -------------------------------------------------------------------
 
@@ -25,98 +25,38 @@ const game_states = {
 
 let current_state = game_states.LOBBY;
 
-const question_html = 
-`
-`;
-
-const answer_html = 
-`
-`;
-
-//--- MAIN SIGNAL HANDLER -----------------------------------------------------
-/**
- * @author Will Mungas
- * Handles all incoming (server) websocket signals
- * 
- * @param {*} data data received from the websocket
- */
-function handler(data) {
-    switch(data.type) {
-        case ws_client.msg_types.QUESTION:
-            handle_question();
-            break;
-        case ws_client.msg_types.CHOICES:
-            handle_choices();
-            break;
-        case ws_client.msg_types.READY:
-            handle_ready();
-            break;
-        case ws_client.msg_types.CLOSE:
-            handle_close();
-            break;
-        case ws_client.msg_types.RESULTS:
-            handle_results();
-            break;
-        case ws_client.msg_types.DONE:
-            handle_done();
-            break;
-        case ws_client.msg_types.ERROR:
-            handle_error(data.message);
-            break;
-        default:
-            console.log(`Unfamiliar message received:`, data);
-            break;
-    }
-};
+// signal handler object: lists valid signals as keys
+let handler = {};
+handler[ws_client.signals.QUESTION.name] = handle_question;
+handler[ws_client.signals.CHOICES.name] = handle_choices;
+handler[ws_client.signals.READY.name] = handle_ready;
+handler[ws_client.signals.DONE.name] = handle_done;
+handler[ws_client.signals.RESULTS.name] = handle_results;
+handler[ws_client.signals.GAMEOVER.name] = handle_gameover;
 
 //--- SPECIFIC SIGNALS --------------------------------------------------------
 
-function handle_question() {
+function handle_question(body) {
 
 }
 
-function handle_choices() {
+function handle_choices(body) {
 
 }
 
-function handle_ready() {
+function handle_ready(body) {
 
 }
 
-function handle_close() {
+function handle_done(body) {
 
 }
 
-function handle_results() {
+function handle_results(body) {
 
 }
 
-function handle_done() {
-
-}
-
-function handle_error(msg) {
-    console.log("ERROR", msg);
-}
-
-//--- SIGNAL SENDERS ----------------------------------------------------------
-
-function send_join(ws, code) {
-    const data = {
-        type: ws_client.msg_types.JOIN,
-        body: {
-            game_type: ws_client.game_types.TEACHING,
-            game_code: code
-        }
-    };
-    ws.send(JSON.stringify(data));
-}
-
-function send_start() {
-
-}
-
-function send_continue() {
+function handle_gameover(body) {
 
 }
 
@@ -151,11 +91,11 @@ fetch("/api/games", fetchData)
         // initiate websocket connection to this code
         const ws = new WebSocket(ws_client.uri);
 
-        // called once websocket status changes from CONNECTING to OPEN
-        const first = () => send_join(ws, code);
+        // JOIN signal contents
+        const msg = { game_code: code, game_type: ws_client.games.TEACHING };
 
-        // setup handlers
-        ws_client.init(ws, handler, first);
+        // setup socket with handler, send JOIN signal upon open
+        ws_client.init(ws, handler, () => ws_client.send(ws, ws_client.signals.JOIN, msg));
     })
     .catch((e) => {
         console.log(`Error starting game:`, e);
