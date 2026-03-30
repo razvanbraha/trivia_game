@@ -25,47 +25,69 @@ const users = {
 }
 
 const signals = {
-    ACK: {
+    // initially sent by the client as an connection test
+    ACK: { 
         id: "ACK",
         sender: "all",
         fields: [
             "msg"
         ]
     },
-    JOIN: {
+    // sent by a client wishing to join a game session
+    JOIN: { 
         id: "JOIN",
         sender: "client",
         fields: [
-            "as",
             "code",
             "name"
         ]
     },
-    JOINEE: {
+    // sent by the server when a client successfully joins a game session - confirms the joined session code
+    JOINED: { 
+        id: "JOINED",
+        sender: "server",
+        fields: [
+            "code"
+        ]
+    },
+    // sent by the server when a client fails to join a game session - confirms the code for the attempted join
+    REJECTED: { 
+        id: "REJECTED",
+        sender: "server",
+        fields: [
+            "code"
+        ]
+    },
+    // sent by the server to a host when a new player joins a session, with the player's name
+    JOINEE: { 
         id: "JOINEE",
         sender: "server",
         fields: [
             "name"
         ]
     },
-    KICK: {
+    // sent by a host client to kick a player of a given name from a game 
+    // (causes the server to close that player's WebSocket connection)
+    KICK: { 
         id: "KICK",
         sender: "client",
         fields: [
             "name"
         ]
     },
+    // sent by a host client to tell the server to start the game
     START: {
         id: "START",
         sender: "client",
         fields: [
-            "num_questions",
+            "rounds",
             "categories",
-            "preview_time",
-            "dead_time",
-            "live_time"
+            "preview",
+            "dead",
+            "live"
         ]
     },
+    // sent by the server to give clients the text of a question
     QUESTION: {
         id:"QUESTION",
         sender: "server",
@@ -74,6 +96,7 @@ const signals = {
             "num"
         ]
     },
+    // sent by the server to give clients the answer choices available for a question
     CHOICES: {
         id:"CHOICES",
         sender: "server",
@@ -81,18 +104,21 @@ const signals = {
             "choices"
         ]
     },
+    // sent by the server to tell the player clients that it is now accepting ANSWER signals
     READY: {
         id: "READY",
         sender: "server",
         fields: []
     },
+    // sent by a player client to give the server its selection of an answer choice
     ANSWER: {
         id: "ANSWER",
         sender: "client",
         fields: [
-            "answer_num"
+            "num"
         ]
     },
+    // sent by the server to tell player clients that it is no longer accepting ANSWER signals
     DONE: {
         id: "DONE",
         sender: "server",
@@ -102,21 +128,40 @@ const signals = {
             "data_all"
         ]
     },
+    // sent by a host client to tell the server to continue to the next part of a game
     CONTINUE: {
         id: "CONTINUE",
         sender: "client",
         fields: []
     },
+    // sent by the server to give clients the results of a round of gameplay
+    // you is used by player clients to report individual results
+    // all is used by the host client to report overall results/leaderboards
     RESULTS: {
         id: "RESULTS",
         sender: "server",
-        fields: []
+        fields: [
+            "you",
+            "all"
+        ]
     },
+    // sent by the server to tell clients that the game has ended and report the final results
+    FINAL: {
+        id: "FINAL",
+        sender: "server",
+        fields: [
+            "you",
+            "all"
+        ]
+    },
+    // sent by a host client to tell the server to end a game
+    // (terminates all WebSocket connections to that game session)
     GAMEOVER: {
         id: "GAMEOVER",
-        sender: "client",
+        sender: "server",
         fields: []
     },
+    // sent by either to report an error
     ERROR: {
         id: "ERROR",
         sender: "all",
@@ -145,7 +190,7 @@ function validate(signal, body) {
 
     for(const key of needed) {
         if(!has.includes(key)) { // this is absolutely an error
-            console.log(`Field ${key} missing`);
+            console.log(`field ${key} missing`);
             console.log(`(required for signal ${signal.id})`);
             ret = false;
         }
@@ -157,13 +202,13 @@ function validate(signal, body) {
 
     if(has.length !== 0) {
         // this is not necessarily an error, but should be logged
-        console.log(`Extraneous fields (not required for signal ${signal.id}):`);
+        console.log(`extraneous fields (not required for signal ${signal.id}):`);
         for(const key of has) {
             console.log(key);
         }
     }
     if(!ret) {
-        console.log(`Errors for body:`, body);
+        console.log(`errors for body:`, body);
     }
 
     return ret;
@@ -184,7 +229,7 @@ function validate(signal, body) {
  */
 const init = (ws, user, handler, first) => {
     if(!(user === users.SERVER || user === users.CLIENT) ) {
-        console.log(`Invalid user: ${user}`);
+        console.log(`invalid user: ${user}`);
         return;
     }
 
@@ -208,8 +253,7 @@ const init = (ws, user, handler, first) => {
 
     // handle error events
     ws.addEventListener("error", (e) => {
-        console.log(`WS Error`);
-        console.log(e);
+        console.log(`WS ERROR`, e);
     });
 
     // handle incoming messages - pass to handler function (implemented by each game)
@@ -244,15 +288,15 @@ function receive(ws, handler, data) {
         data_obj = JSON.parse(data_str);
     }
     catch(e) {
-        console.log(`Error parsing data:`, data_str, e);
+        console.log(`error parsing data:`, data_str, e);
     }
 
     if(!(data_obj.type)) {
-        console.log(`Received signal without type:`, data_obj);
+        console.log(`received signal without type:`, data_obj);
         return;
     }
     if(!(data_obj.body)) {
-        console.log(`Received signal without body:`, data_obj);
+        console.log(`received signal without body:`, data_obj);
         return;
     }
 
@@ -260,16 +304,16 @@ function receive(ws, handler, data) {
     const body = data_obj.body;
 
     if(!(type in signals)) {
-        console.log(`Received signal with invalid type ${type}`);
+        console.log(`received signal with invalid type ${type}`);
         return;
     }
 
-    console.log(`Received signal ${type} with body`, body);
+    console.log(`received signal ${type} with body`, body);
     const signal = signals[type];
 
     if(!validate(signal, body)) {
-        console.log(`Error: invalid body format for ${type}`);
-        sendError(ws, `Invalid format for ${type}`);
+        console.log(`error: invalid body format for ${type}`);
+        error(ws, `invalid format for ${type}`);
         return;
     }
 
@@ -284,8 +328,8 @@ function receive(ws, handler, data) {
     }
 
     if(!(handler && type in handler)) { // check that the handler can support this message type
-        console.log(`Error:`)
-        sendError(`${ws.user} handler does not support ${type}`);
+        console.log(`error:`)
+        error(ws, `${ws.user} handler does not support ${type}`);
         return;
     }
     
@@ -305,25 +349,26 @@ function receive(ws, handler, data) {
  */
 const send = (ws, signal, body) => {
     if(!signal) {
-        console.log("Tried to send null signal");
+        console.log("tried to send null signal");
         return false;
     }
     if(!(signal.id in signals)) {
-        console.log(`Tried to send signal of invalid type ${signal.id}`);
+        console.log(`tried to send signal of invalid type ${signal.id}`);
         return false;
     }
+    // verify that we are allowed to send this signal
     const sender = signal.sender;
-    if(!(sender === "client" || sender === "all")) {
-        console.log(`Tried to send unauthorized signal of type ${signal.id}`);
+    if(!(sender === ws.user || sender === "all")) {
+        console.log(`tried to send unauthorized signal of type ${signal.id}`);
         console.log(`(must be sent by ${signal.sender})`);
         return false;
     }
     if(!validate(signal, body)) {
-        console.log(`Tried to send signal ${signal.id} with invalid body format`);
+        console.log(`tried to send signal ${signal.id} with invalid body format`);
         return false;
     }
     ws.send(JSON.stringify({type: signal.id, body}));
-    console.log(`Sent signal ${signal.id} with body`, body);
+    console.log(`sent signal ${signal.id} with body`, body);
     return true;
 }
 
