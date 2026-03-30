@@ -92,7 +92,8 @@ class teachingGame {
 
     // client-related
     host = null; // the host WebSocket connection
-    // list of players, each storing: name, websocket, points, and last answer
+    // list of players, each storing: name, websocket, points, and last answer(latest)
+    // {ws, name, points, latest_answer}
     // order of list is implicitly the player ranks
     players = []; 
     
@@ -215,9 +216,9 @@ class teachingGame {
             this.host.respond(ws_api.signals.JOIN, true);
             return;
         }
-
         ws.handler = this.handlers.player;
         this.players.push({name, ws, latest: this.NO_ANSWER_NUM, points: 0});
+
         this.log(`player ${this.players.length} (${name}) joined`);
         ws.respond(ws_api.signals.JOIN, true);
         this.host.signal(ws_api.signals.JOINEE, {name});
@@ -285,11 +286,14 @@ class teachingGame {
     }
 
     /**
-     * Sorts players by points earned
+     * Sorts players by points earned, then returns players without the websocket
      * @author Will Mungas
+     * @returns 
      */
     getRankings() {
         this.players.sort((a, b) => {a.points - b.points});
+
+        return this.players.map(({ws, ...rest}) => rest);
     }
 
     /**
@@ -383,24 +387,24 @@ class teachingGame {
 
             // Fill in incorrect response(-1) for players who didn't answer
             this.players.forEach((player) => {
-                if(this.answers.get(player)[this.current_question_idx] === undefined) {
-                    this.answers.get(player)[this.current_question_idx] = this.NO_ANSWER_NUM;
+                if(this.answers.get(player[ws])[this.current_question_idx] === undefined) {
+                    this.answers.get(player[ws])[this.current_question_idx] = this.NO_ANSWER_NUM;
                 }
                 // Don't need to add any points
             });
 
             // Send DONE
-            allRankings = this.getRankings();
+            const allRankings = this.getRankings();
             ws_api.send(this.host, ws_api.signals.DONE, {
                 correct_answer_num: this.current_correct_answer_number,
-                player_you: null,
-                player_data: Array.from(allRankings.values())
+                data_you: null,
+                data_all: allRankings
             });
             this.players.forEach((player) => {
-                ws_api.send(player, ws_api.signals.DONE, {
+                ws_api.send(player[ws], ws_api.signals.DONE, {
                     correct_answer_num: this.current_correct_answer_number,
-                    player_you: allRankings.get(player),
-                    player_data: null
+                    data_you: player,
+                    data_all: allRankings
                 });
             });
 
@@ -414,18 +418,18 @@ class teachingGame {
         }
 
         // Send RESULTS
-        allRankings = this.getRankings();
+        const allRankings = this.getRankings();
 
         this.host.api.send(ws_api.signals.RESULTS, {
             correct_answer_num: this.current_correct_answer_number,
             data_you: null,
-            data_all: Array.from(allRankings.values()),
+            data_all: allRankings,
         });
         this.players.forEach((player) => {
-            player.ws.api.send(ws_api.signals.RESULTS, {
+            player.ws.signal(ws_api.signals.RESULTS, {
                 correct_answer_num: this.current_correct_answer_number,
-                data_you: allRankings.get(player),
-                data_all: null
+                data_you: player,
+                data_all: allRankings
             });
         });
 
@@ -516,6 +520,8 @@ class teachingGame {
      * @param {Object} message Message object containing the request
      */
     endGame(ws, message) {
+        //TODO this needs to be adjusted once rest of file done
+
         // Close host
         ws_api.send(this.host, ws_api.signals.GAMEOVER, {});
         ws_api.close(this.host, "Game finished.");
@@ -529,11 +535,9 @@ class teachingGame {
 
         // Cleanup memory
         this.host.handler = null;
-        this.players.forEach((player) => {player.handler = null});
         this.players = [];
         this.questions = [];
         this.answers.clear();
-        this.points.clear();
     }
 }
 

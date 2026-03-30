@@ -24,6 +24,10 @@ const teacherLobbyHTML =
 </div>
 `;
 
+//--- GLOBALS ---------------------------------------------------------------
+
+// Reference for template(from test-tg-templates.html) once it is loaded into DOM
+let template_question_container;
 
 //--- FUNCTIONS ---------------------------------------------------------------
 
@@ -50,88 +54,141 @@ function teacherLobby(content) {
 function setupPage() {
     const template_div = document.createElement('div');
 
-    const template_promise = fetch('/public/templates/question-template.html')
+    fetch('/public/templates/question-template.html')
     .then((res) => {
-        const template_str = res.text();
-        
-        template_div.innerHTML = template_str;
-        const template = template_div.querySelector("#game-ui-template");
-        const template_question_container = template.content.querySelector("#question-container").cloneNode(true);
-        if(window.location.href.includes("test-tg-templates")) {
-            document.body.appendChild(template_question_container);
-        }
+        res.text().then((template_str) => {
+            template_div.innerHTML = template_str;
+            const template = template_div.querySelector("#game-ui-template");
+            template_question_container = template.content.querySelector("#question-container").cloneNode(true);
+            if(window.location.href.includes("test-tg-templates")) {
+                document.body.appendChild(template_question_container);
+                // Tell script in interactive-box.js that the cube exists
+                document.dispatchEvent(new Event('boxAdded'));
+            }
+        });
     });
 }
 
+/**
+ * @author Connor Hekking
+ * 
+ * Helper to clear page
+ */
+function clearPage() {
+    document.getElementById("content").innerHTML = "";
+}
+
 
 
 /**
  * @author Connor Hekking
  * 
- * Returns the initial show question page object, which can then be cloned
+ * Fills content with the question preview page
  * 
  * @param {String} questionText Text of the question
- * @returns cloneable object containing the body of the show question page 
+ * @param {Number} timerStart Start time of timer (preview time)
  */
-function createShowQuestion(questionText) {
+function showQuestion(questionText, timerStart) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call setupPage.");
+    }
+
+    const content_container = document.getElementById("content");
+    
+    // Empty page
+    clearPage();
+
     // Create new empty instance of question_container
     const question_container = template_question_container.cloneNode(false);
 
-    // Clone sub elements
+    // Clone new elements
     const next_question = template_question_container.querySelector(".next-question").cloneNode(true);
     const question_text = template_question_container.querySelector(".question-text").cloneNode(true);
+    const countdown = template_question_container.querySelector(".countdown").cloneNode(true);
 
-    // Edit sub elements
+    // Edit elements
     question_text.querySelector('p').innerText = questionText;
+    countdown.querySelector('p').innerText = timerStart; // TODO
 
-    // Add sub elements
+    // Add new elements
     question_container.appendChild(next_question);
     question_container.appendChild(question_text);
+    question_container.appendChild(countdown);
 
-    // Return cloneable obj
-    return question_container;
+    // Add obj to content_container
+    content_container.appendChild(question_container);
 }
 
 /**
  * @author Connor Hekking
  * 
- * Returns the initial show answer choices page object, which can then be cloned
+ * Shows answer choices which start greyed out (dead time)
  * 
- * @param {String} questionText Text of the question
  * @param {Array} answers List of the four answers in the order to be displayed
- * @param {Number} timerStart Starting time on the timer
- * @returns cloneable object containing the body of the show answers page 
+ * @param {Number} timerStart Starting time on the timer(dead time)
  */
-function createShowAnswers(questionText, answers, timerStart) {
+function showAnswers(answers, timerStart) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call setupPage.");
+    }
+
     // Check length of answers array
     if(answers.length != 4) {
         throw new Error("answers array must be of length 4");
     }
 
-    // Create new empty instance of question_container
-    const question_container = template_question_container.cloneNode(false);
-    
-    // Clone sub elements
-    const question_text = template_question_container.querySelector(".question-text").cloneNode(true);
-    const question_choices = template_question_container.querySelector(".question-choices").cloneNode(true);
-    const countdown = template_question_container.querySelector(".countdown").cloneNode(true);
+    const content_container = document.getElementById("content");
+    const question_container = content_container.querySelector("#question-container");
 
-    // Edit sub elements
-    question_text.querySelector('p').innerText = questionText;
+    // Get current elements
+    const next_question = question_container.querySelector(".next-question");
+    const question_text = question_container.querySelector(".question-text");
+    const countdown = question_container.querySelector(".countdown");
+
+    // Remove unwanted elements
+    question_container.removeChild(next_question);
+    
+    // Clone new elements
+    const answer_choices = template_question_container.querySelector(".answer-choices").cloneNode(true);
+
+    // Edit elements
+    countdown.innerText = timerStart; // TODO
     let idx = 0;
-    question_choices.querySelectorAll('p').forEach((question_choice) => {
-        question_choice.innerText = answers[idx];
+    answer_choices.querySelectorAll('p').forEach((answer_choice) => {
+        answer_choice.innerText = answers[idx];
+        answer_choice.classList.add("preview");
         idx += 1;
     });
-    countdown.querySelector('p').innerText = `Time remaining: ${timerStart} seconds`;
 
-    // Add sub elements
-    question_container.appendChild(question_text);
-    question_container.appendChild(question_choices);
-    question_container.appendChild(countdown);
+    // Add new elements
+    question_container.insertBefore(answer_choices, countdown)
+}
 
-    // Return cloneable obj
-    return question_container;
+/**
+ * @author Connor Hekking
+ * 
+ * Makes answer choices clickable and attaches given handler (live time)
+ * 
+ * @param {*} handler Text of the question
+ * @param {Number} timerStart Starting time on the timer(Live time)
+ */
+function answersClickable(handler, timerStart) {
+    const content_container = document.getElementById("content");
+    const question_container = content_container.querySelector("#question-container");
+
+    // Get current elements
+    const question_text = question_container.querySelector(".question-text");
+    const answer_choices = question_container.querySelector(".answer-choices");
+    const countdown = question_container.querySelector(".countdown");
+
+    // Edit elements
+    let idx = 0
+    answer_choices.querySelectorAll('p').forEach((answer_choice) => {
+        answer_choice.addEventListener('click', () => {handler(idx + 1)}); // TODO this ok?
+        answer_choice.classList.remove("preview");
+        idx += 1;
+    });
+    countdown.innerText = timerStart; // TODO
 }
 
 /**
@@ -144,14 +201,22 @@ function createShowAnswers(questionText, answers, timerStart) {
  * @param {Boolean} isTeacher If the page object should be prepared for a teacher instead of a student view
  */
 function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isTeacher) {
-    // Get body instance of question_container
-    const question_container = document.body.querySelector('#question-container');
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call setupPage.");
+    }
 
-    // Get sub elements
-    const question_choices = question_container.querySelector(".question-choices")
+    const content_container = document.getElementById("content");
+    const question_container = content_container.querySelector("#question-container");
+
+    // Get current elements
+    const question_text = question_container.querySelector(".question-text");
+    const answer_choices = question_container.querySelector(".answer-choices");
     const countdown = question_container.querySelector(".countdown");
 
-    // Add sub elements
+    // Remove unwanted elements
+    question_container.removeChild(countdown);
+
+    // Add new elements
     if(!isTeacher) {
         if(chosenAnswerNum == correctAnswerNum) {
             // Add correct element
@@ -163,25 +228,24 @@ function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isTeacher) {
             question_container.appendChild(incorrect_prompt);
         }
     } else {
-        // Teacher view won't have any correct/incorrect prompt
+        const next_question_btn = template_question_container.querySelector(".next-question-btn").cloneNode(true);
+        // TODO connect handler here??
+        question_container.appendChild(next_question_btn);
     }
 
-    // Edit sub elements
+    // Edit elements
     let currentAnswerNum = 1;
-    question_choices.querySelectorAll('p').forEach((question_choice) => {
+    answer_choices.querySelectorAll('p').forEach((answer_choice) => {
         if(currentAnswerNum == correctAnswerNum) {
-            question_choice.classList.add("correct");
-        } else if(currentAnswerNum == chosenAnswerNum) {
+            answer_choice.classList.add("correct");
+        } else if(currentAnswerNum != chosenAnswerNum) {
             // Add incorrect styling only if NOT correct
-            question_choice.classList.add("incorrect");
+            answer_choice.classList.add("incorrect");
         } else {
-            question_choice.classList.add("unpicked");
+            answer_choice.classList.add("unpicked");
         }
         currentAnswerNum += 1;
     });
-
-    // Remove sub elements
-    question_container.removeChild(countdown);
 }
 
 /**
@@ -244,40 +308,41 @@ function getEncouragementText(place, final) {
 /**
  * @author Connor Hekking
  * 
- * Returns the leaderboard page object, which can then be cloned
+ * Populates the page with the leaderboard
  * 
- * @param {{points: Number, rank: Number}} current_player Current player's points and rank in an object
- * @param {Array({points: Number, rank: Number})} other_players Array of other player's points and rank in an object
+ * @param {{name: String, points: Number, latest_answer: Number}} current_player Current player's points, name, and latest answer in an object
+ * @param {Array({name: String, points: Number, latest_answer: Number})} all_players Array of all player's points, name, and latest answer in an object
  * @param {Boolean} isTeacher If the page object should be prepared for a teacher instead of a student view
- * @returns cloneable object containing the body of the leaderboard page 
  */
-function createLeaderboard(current_player, other_players, isTeacher) {
-    // Copy statistics list and insert player
-    const players_list = other_players.slice();
-    if(!isTeacher) {
-        players_list.push(current_player)
+function showLeaderboard(current_player, all_players, isTeacher) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call setupPage.");
     }
-    // Sort player list
-    players_list.sort((a, b) => b.points - a.points);
 
-    // Create new empty instance of question_container
-    const question_container = template_question_container.cloneNode(false);
+    const content_container = document.getElementById("content");
+    const question_container = content_container.querySelector("#question-container");
+
+    // Remove unwanted elements
+    question_container.innerHTML = '';
     
-    // Clone sub elements
+    // Clone new elements
     const leaderboard = template_question_container.querySelector(".leaderboard").cloneNode(true);
 
-    // Edit sub elements
+    // Edit elements
     let idx = 0;
     leaderboard.querySelectorAll('p').forEach((ranking) => {
-        ranking.innerText = `Player: ${players_list[idx].points}`;
+        ranking.innerText = `${all_players[idx].name}: ${all_players[idx].points}`;
         idx += 1;
     });
 
-    // Add sub elements
+    // Add new elements
     if(!isTeacher) {
+        // Get current player's rank
+        const rank = 1 + all_players.findIndex((player) => player.name == current_player.name);
+
         const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
-        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(current_player.rank, false);
-        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(current_player.rank, false);
+        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(rank, false);
+        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, false);
         question_container.appendChild(self_ranking);
     }
     question_container.appendChild(leaderboard);
@@ -285,59 +350,59 @@ function createLeaderboard(current_player, other_players, isTeacher) {
         const next_question_btn = template_question_container.querySelector(".next-question-btn").cloneNode(true);
         question_container.appendChild(next_question_btn);
     }
-
-    // Return cloneable obj
-    return question_container;
 }
 
 /**
  * @author Connor Hekking
  * 
- * Returns the ENDING leaderboard page object, which can then be cloned
+ * Populates the page with the ENDING leaderboard
  * 
- * @param {{points: Number, rank: Number}} current_player Current player's points and rank in an object
- * @param {Array({points: Number, rank: Number})} other_players Array of other player's points and rank in an object
+ * @param {{name: String, points: Number, latest_answer: Number}} current_player Current player's points, name, and latest answer in an object
+ * @param {Array({name: String, points: Number, latest_answer: Number})} all_players Array of all player's points, name, and latest answer in an object
  * @param {Boolean} isTeacher If the page object should be prepared for a teacher instead of a student view
  * @param {*} statistics TODO should have category statistics, not implemented
  * @returns cloneable object containing the body of the leaderboard page 
  */
-function createEndLeaderboard(current_player, other_players, isTeacher, statistics) {
-    //TODO not actually showing any statistics
-
-    // Copy statistics list and insert player
-    const players_list = other_players.slice();
-    if(!isTeacher) {
-        players_list.push(current_player)
+function showEndLeaderboard(current_player, all_players, isTeacher, statistics) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call setupPage.");
     }
-    // Sort player list
-    players_list.sort((a, b) => b.points - a.points);
+    // TODO not actually showing any statistics(on box)
+    // TODO different rankings display?
 
-    // Create new empty instance of question_container
-    const question_container = template_question_container.cloneNode(false);
+    const content_container = document.getElementById("content");
+    const question_container = content_container.querySelector("#question-container");
+
+    // Remove unwanted elements
+    question_container.innerHTML = '';
     
-    // Clone sub elements
+    // Clone new elements
     const your_learning = template_question_container.querySelector(".your-learning").cloneNode(true);
-    const box = template_question_container.querySelector(".box").cloneNode(true);
     const leaderboard = template_question_container.querySelector(".leaderboard").cloneNode(true);
+    const box = template_question_container.querySelector(".box").cloneNode(true);
 
-    // Edit sub elements
-    //TODO edit box for category statistics
-    if(isTeacher) {
-        your_learning.querySelector('p').innerText = "Class Learning";
-    }
+    // Edit elements
     let idx = 0;
     leaderboard.querySelectorAll('p').forEach((ranking) => {
-        ranking.innerText = `Player: ${players_list[idx].points}`;
+        ranking.innerText = `${all_players[idx].name}: ${all_players[idx].points}`;
         idx += 1;
     });
+    if(isTeacher) {
+        your_learning.innerText = "Class Learning";
+    }
 
-    // Add sub elements
+    // Add new elements
     question_container.appendChild(your_learning);
     question_container.appendChild(box);
+    // Tell script in interactive-box.js that the box exists
+    document.dispatchEvent(new Event('boxAdded'));
     if(!isTeacher) {
+        // Get current player's rank
+        const rank = 1 + all_players.findIndex((player) => player.name == current_player.name);
+
         const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
-        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(current_player.rank, false);
-        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(current_player.rank, false);
+        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(rank, false);
+        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, false);
         question_container.appendChild(self_ranking);
     }
     question_container.appendChild(leaderboard);
@@ -345,7 +410,16 @@ function createEndLeaderboard(current_player, other_players, isTeacher, statisti
         const new_game_btn = template_question_container.querySelector(".new-game-btn").cloneNode(true);
         question_container.appendChild(new_game_btn);
     }
+}
 
-    // Return cloneable obj
-    return question_container;
+
+export default {
+    setupPage,
+    clearPage,
+    showQuestion,
+    showAnswers,
+    answersClickable,
+    showCorrectAnswer,
+    showLeaderboard,
+    showEndLeaderboard
 }

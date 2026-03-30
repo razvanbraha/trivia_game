@@ -1,13 +1,15 @@
 // ------------------------------Box STUFF------------------------------
-const box = document.querySelector('.cube');
+document.addEventListener('boxAdded', () => {
+    const box = document.querySelector('.cube');
 
-const faces = ['front', 'right', 'back', 'left', 'top', 'bottom'];
-let current = 0;
+    const faces = ['front', 'right', 'back', 'left', 'top', 'bottom'];
+    let current = 0;
 
-box.addEventListener('click', () => {
-  current = (current + 1) % faces.length;
-  box.className = 'cube show-' + faces[current];
-});
+    box.addEventListener('click', () => {
+    current = (current + 1) % faces.length;
+    box.className = 'cube show-' + faces[current];
+    });
+})
 
 // ------------------------------Cube STUFF------------------------------
 import * as THREE from 'three';

@@ -111,7 +111,10 @@ const signals = {
         sender: "server",
         fields: [
             "text",
-            "num"
+            "num",
+            "preview",
+            "dead",
+            "live"
         ]
     },
     // sent by the server to give clients the answer choices available for a question
@@ -142,8 +145,8 @@ const signals = {
         sender: "server",
         fields: [
             "correct_answer_num",
-            "data_you",
-            "data_all"
+            "data_you", // {ws, name, points, latest}
+            "data_all" // List({ws, name, points, latest})
         ]
     },
     // sent by a host client to tell the server to continue to the next part of a game
@@ -159,8 +162,8 @@ const signals = {
         id: "RESULTS",
         sender: "server",
         fields: [
-            "you",
-            "all"
+            "data_you", // {ws, name, points, latest_answer}
+            "data_all" // List({ws, name, points, latest_answer})
         ]
     },
     // sent by the server to tell clients that the game has ended and report the final results
