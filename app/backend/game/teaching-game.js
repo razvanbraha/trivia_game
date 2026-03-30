@@ -382,7 +382,7 @@ class teachingGame {
             });
 
             // Send DONE
-            allRankings = this.getRankings();
+            const allRankings = this.getRankings();
             ws_api.send(this.host, ws_api.signals.DONE, {
                 correct_answer_num: this.current_correct_answer_number,
                 data_you: null,
@@ -406,7 +406,7 @@ class teachingGame {
         }
 
         // Send RESULTS
-        allRankings = this.getRankings();
+        const allRankings = this.getRankings();
 
         ws_api.send(this.host, ws_api.signals.RESULTS, {
             correct_answer_num: this.current_correct_answer_number,
