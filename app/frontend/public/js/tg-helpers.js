@@ -24,6 +24,10 @@ const teacherLobbyHTML =
 </div>
 `;
 
+//--- GLOBALS ---------------------------------------------------------------
+
+// Reference for template(from test-tg-templates.html) once it is loaded into DOM
+let template_question_container;
 
 //--- FUNCTIONS ---------------------------------------------------------------
 
@@ -50,12 +54,12 @@ function teacherLobby(content) {
 function setupPage() {
     const template_div = document.createElement('div');
 
-    const template_promise = fetch('/public/templates/question-template.html')
+    fetch('/public/templates/question-template.html')
     .then((res) => {
         res.text().then((template_str) => {
             template_div.innerHTML = template_str;
             const template = template_div.querySelector("#game-ui-template");
-            const template_question_container = template.content.querySelector("#question-container").cloneNode(true);
+            template_question_container = template.content.querySelector("#question-container").cloneNode(true);
             if(window.location.href.includes("test-tg-templates")) {
                 document.body.appendChild(template_question_container);
             }
@@ -74,6 +78,9 @@ function setupPage() {
  * @returns cloneable object containing the body of the show question page 
  */
 function createShowQuestion(questionText) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call setupPage.");
+    }
     // Create new empty instance of question_container
     const question_container = template_question_container.cloneNode(false);
 
@@ -103,6 +110,9 @@ function createShowQuestion(questionText) {
  * @returns cloneable object containing the body of the show answers page 
  */
 function createShowAnswers(questionText, answers, timerStart) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call setupPage.");
+    }
     // Check length of answers array
     if(answers.length != 4) {
         throw new Error("answers array must be of length 4");
@@ -144,6 +154,9 @@ function createShowAnswers(questionText, answers, timerStart) {
  * @param {Boolean} isTeacher If the page object should be prepared for a teacher instead of a student view
  */
 function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isTeacher) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call setupPage.");
+    }
     // Get body instance of question_container
     const question_container = document.body.querySelector('#question-container');
 
@@ -252,6 +265,9 @@ function getEncouragementText(place, final) {
  * @returns cloneable object containing the body of the leaderboard page 
  */
 function createLeaderboard(current_player, other_players, isTeacher) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call setupPage.");
+    }
     // Copy statistics list and insert player
     const players_list = other_players.slice();
     if(!isTeacher) {
@@ -302,6 +318,9 @@ function createLeaderboard(current_player, other_players, isTeacher) {
  * @returns cloneable object containing the body of the leaderboard page 
  */
 function createEndLeaderboard(current_player, other_players, isTeacher, statistics) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call setupPage.");
+    }
     //TODO not actually showing any statistics
 
     // Copy statistics list and insert player
