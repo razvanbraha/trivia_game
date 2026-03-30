@@ -36,8 +36,23 @@ const signals = {
         id: "JOIN",
         sender: "client",
         fields: [
-            "game_type", 
-            "game_code"
+            "as",
+            "code",
+            "name"
+        ]
+    },
+    JOINEE: {
+        id: "JOINEE",
+        sender: "server",
+        fields: [
+            "name"
+        ]
+    },
+    KICK: {
+        id: "KICK",
+        sender: "client",
+        fields: [
+            "name"
         ]
     },
     START: {
