@@ -25,12 +25,30 @@ const users = {
 }
 
 const signals = {
+    // sent by either to report an error
+    ERR: {
+        id: "ERR",
+        sender: "all",
+        fields: [
+            "err"
+        ]
+    },
     // initially sent by the client as an connection test
     ACK: { 
         id: "ACK",
         sender: "all",
         fields: [
             "msg"
+        ]
+    },
+    // response message type, indicating what it is responding to,
+    // and whether the result of that signal was success or not
+    RES: {
+        id: "RES",
+        sender: "all",
+        fields: [
+            "to",
+            "success"
         ]
     },
     // sent by a client wishing to join a game session
@@ -161,14 +179,6 @@ const signals = {
         sender: "server",
         fields: []
     },
-    // sent by either to report an error
-    ERROR: {
-        id: "ERROR",
-        sender: "all",
-        fields: [
-            "err"
-        ]
-    }
 }
 
 // websocket connection uri
@@ -214,63 +224,6 @@ function validate(signal, body) {
     return ret;
 }
 
-
-
-//--- FUNCTIONS ---------------------------------------------------------------
-
-/**
- * @author Connor Hekking, Will Mungas
- * 
- * Handles setting up event listeners on a new client websocket
- * 
- * @param {*} ws websocket to add event listeners to
- * @param {()} handler function to handle messages sent on the websocket
- * @param {()} first function to call on the open event 
- */
-const init = (ws, user, handler, first) => {
-    if(!(user === users.SERVER || user === users.CLIENT) ) {
-        console.log(`invalid user: ${user}`);
-        return;
-    }
-
-    ws.user = user;
-    ws.other = user === users.SERVER ? users.CLIENT : users.SERVER;
-
-    // only add event listeners if this is the frontend: backend uses
-    // Node on() function
-    if(is_backend) {
-        return;
-    }
-
-    // handle open event
-    ws.addEventListener("open", () => {
-        console.log(is_backend ? "client connected" : "connected!");
-        send(ws, signals.ACK, {msg: "hi"});
-        if(first) {
-            first();
-        }
-    });
-
-    // handle error events
-    ws.addEventListener("error", (e) => {
-        console.log(`WS ERROR`, e);
-    });
-
-    // handle incoming messages - pass to handler function (implemented by each game)
-    ws.addEventListener("message", (data) => receive(ws, handler, data));
-
-    // handle close event
-    ws.addEventListener("close", () => {
-        console.log("DISCONNECTED");
-    });
-
-    // ensure the socket will close on page redirection
-    window.addEventListener("pagehide", () => ws.close());
-    window.addEventListener("unload", () => ws.close())
-
-    console.log("client websocket initialized");
-}
-
 /**
  * @author Will Mungas, Connor Hekking
  * @description Function to process incoming messages: performs
@@ -281,8 +234,8 @@ const init = (ws, user, handler, first) => {
  * @param {*} data 
  * @returns 
  */
-function receive(ws, handler, data) {
-    const data_str = is_backend ? data.toString() : data.data.toString();
+function receive(ws, data) {
+    const data_str = data.toString();
     let data_obj;
     try {
         data_obj = JSON.parse(data_str);
@@ -313,29 +266,43 @@ function receive(ws, handler, data) {
 
     if(!validate(signal, body)) {
         console.log(`error: invalid body format for ${type}`);
-        error(ws, `invalid format for ${type}`);
+        ws.err(`invalid format for ${type}`);
         return;
     }
 
-    if(signal === signals.ERROR) {
-        console.log(`${ws.other} reports error: ${body.message}`);
+    if(signal === signals.ERR) {
+        console.log(`${ws.other} reports error: ${body.err}`);
         return;
     }
  
     if(signal === signals.ACK) {
-        console.log(`${ws.other} sends ACK: ${body.msg}`);
+        console.log(`${ws.other} acknowledges with: ${body.msg}`);
         return;
     }
 
-    if(!(handler && type in handler)) { // check that the handler can support this message type
-        console.log(`error:`)
-        error(ws, `${ws.user} handler does not support ${type}`);
+    if(signal === signals.RES) {
+        if(!ws.expecting) {
+            return;
+        }
+        if(ws.expecting.to !== body.to) {
+            console.log(`error: expected resfor ${ws.expecting.of}, but received ${body.of} result first`);
+            return;
+        }
+        const success_str = body.success ? "SUCCESS" : "FAILURE";
+        console.log(`${ws.other} responds to ${body.to} with ${success_str}`)
+        const act = ws.expecting.act;
+        ws.expecting = null;
+        act(body.success);
         return;
     }
-    
-    handler[type](ws, body);
+
+    // check whether the signal is in the general handler
+    if(ws.handler && type in ws.handler) { // check that the handler can support this message type
+        ws.handler[type](ws, body);
+        return;
+    }
+    ws.err(`${ws.user} handler does not support ${type}`);
 }
-
 
 /**
  * @author Connor Hekking, Will Mungas
@@ -347,7 +314,7 @@ function receive(ws, handler, data) {
  * @param {String} type type of message (must be valid for a client)
  * @param {*} body body of message (must be in correct format)
  */
-const send = (ws, signal, body) => {
+const signal = (ws, signal, body) => {
     if(!signal) {
         console.log("tried to send null signal");
         return false;
@@ -372,33 +339,92 @@ const send = (ws, signal, body) => {
     return true;
 }
 
+//--- FUNCTIONS ---------------------------------------------------------------
+
 /**
- * @author Will Mungas
- * @description send an error message on a websocket
- * @param {*} ws 
- * @param {*} err
+ * @author Connor Hekking, Will Mungas
+ * 
+ * Handles setting up event listeners on a new client websocket
+ * 
+ * @param {*} ws websocket to add event listeners to
+ * @param {()} handler function to handle messages sent on the websocket
+ * @param {()} first function to call on the open event 
  */
-const error = (ws, err) => {
-    send(ws, signals.ERROR, {err});
+const init = (ws, user, handler, first) => {
+    if(!(user === users.SERVER || user === users.CLIENT) ) {
+        console.log(`invalid user: ${user}`);
+        return;
+    }
+
+    ws.user = user;
+    ws.other = user === users.SERVER ? users.CLIENT : users.SERVER;
+    ws.expecting = null;
+
+    ws.handler = handler;
+
+    // attach api functions (mostly variations of signal() )
+    ws.signal = (sig, body) => signal(ws, sig, body); 
+    ws.respond = (sig, success) => signal(ws, signals.RES, {to: sig.id, success});
+    ws.expect = (sig, action) => ws.expecting = {to: sig.id, act: action};
+    ws.err = (err) => signal(ws, signals.ERR, {err});
+    ws.kill = (reason) => ws.close(1000, reason);
+
+    const add = is_backend ? "on" : "addEventListener";
+
+    // handle open event
+    ws[add]("open", () => {
+        console.log(is_backend ? "user connected" : "connected!");
+        signal(ws, signals.ACK, {msg: "hi"});
+        if(first) {
+            first();
+        }
+    });
+
+    // handle error events
+    ws[add]("error", (e) => {
+        console.log(`WS ERROR`, e);
+    });
+
+    // handle incoming messages
+    ws[add]("message", (data) => receive(ws, is_backend ? data : data.data));
+
+    // handle close event
+    ws[add]("close", () => {
+        console.log("DISCONNECTED");
+    });
+
+    ws.expecting = null;
+
+    if(!is_backend) {
+        // ensure the socket will close on page redirection
+        window.addEventListener("pagehide", () => ws.close());
+        window.addEventListener("unload", () => ws.close());
+    }
+
+    console.log(`${ws.user} websocket initialized`);
 }
 
 /**
  * @author Will Mungas
- * @param {*} ws 
- * @param {*} reason 
+ * @description cleaner syntax for adding support to a handler object
+ * @param {*} handler handler object 
+ * @param {*} signal 
+ * @param {(ws, body)} action callback to handle the signal 
  */
-const close = (ws, reason) => {
-    ws.close(1000, reason);
+const support = (handler, signal, action) => {
+    if(!(signal.id in signals)) {
+        console.log(`Cannot support invalid signal ${signal.id}`);
+    }
+    handler[signal.id] = action;
 }
+
+
 
 //--- EXPORTS -----------------------------------------------------------------
 
 const ws_api = {
     init, 
-    send,
-    receive,
-    error,
-    close,
+    support,
     uri,
     signals,
     games,
