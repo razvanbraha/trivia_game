@@ -93,7 +93,10 @@ const signals = {
         sender: "server",
         fields: [
             "text",
-            "num"
+            "num",
+            "preview",
+            "dead",
+            "live"
         ]
     },
     // sent by the server to give clients the answer choices available for a question
