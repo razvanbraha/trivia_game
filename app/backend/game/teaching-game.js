@@ -93,7 +93,8 @@ class teachingGame {
 
     // client-related
     host = null; // the host WebSocket connection
-    // list of players, each storing: name, websocket, points, and last answer
+    // list of players, each storing: name, websocket, points, and last answer(latest)
+    // {ws, name, points, latest}
     // order of list is implicitly the player ranks
     players = []; 
     
