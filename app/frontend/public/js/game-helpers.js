@@ -87,3 +87,11 @@ function createPlayers(players) {
 }
 
 // TODO add functions to create question text, create answer choices, etc
+
+//--- EXPORTS -----------------------------------------------------------------
+
+export default {
+    getContent,
+    clearContent,
+    createLobby
+}
