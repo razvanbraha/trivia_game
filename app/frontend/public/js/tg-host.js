@@ -10,7 +10,8 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 const ws_api = window.ws_api;
-import helpers from "./game-helpers.js";
+import bootstrap_helpers from "./game-helpers.js";
+import helpers from "./tg-helpers.js";
 
 //--- SETUP -------------------------------------------------------------------
 
@@ -37,7 +38,7 @@ let handler = {};
 ws_api.support(handler, ws_api.signals.JOINEE, (ws, body) => {
     players.push(body.name);
     console.log(`Player ${body.name} joined; players:`, players);
-    helpers.updatePlayers(players, (name) => {
+    bootstrap_helpers.updatePlayers(players, (name) => {
         ws.expect(ws_api.signals.KICK, (success) => {
             console.log(success ? `Kicked ${name}` : `Failed to kick ${name}`);
         });
@@ -109,7 +110,7 @@ fetch("/api/games", fetchData)
             ws.expect(ws_api.signals.JOIN, (success) => {
                 if(success) {
                     console.log(`Successfully joined ${code}`);
-                    helpers.createLobby(code);
+                    bootstrap_helpers.createLobby(code);
                     return;
                 }
                 console.log(`Rejected from ${code}`, "Ouch! Rejection hurts")

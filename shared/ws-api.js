@@ -264,7 +264,7 @@ function receive(ws, data) {
         return;
     }
 
-    console.log(`received signal ${type} with body`, body);
+    // console.log(`received signal ${type} with body`, body);
     const signal = signals[type];
 
     if(!validate(signal, body)) {

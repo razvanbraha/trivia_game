@@ -10,6 +10,7 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 const ws_api = window.ws_api;
+import tg_helpers from './tg-helpers.js';
 
 //--- SIGNAL HANDLERS ---------------------------------------------------------
 
@@ -35,7 +36,13 @@ const ws = new WebSocket(ws_api.uri);
 
 const body = { code, name: "player 1" };
 ws_api.init(ws, ws_api.users.CLIENT, handler, () => {
-    ws.expect()
+    ws.expect(ws_api.signals.JOIN, (success) => {
+        if(success) {
+            console.log(`Successfully joined ${code}`);
+            return;
+        }
+        console.log(`Rejected from ${code}`, "Ouch! Rejection hurts")
+    });
     ws.signal(ws_api.signals.JOIN, body)
 });
 
