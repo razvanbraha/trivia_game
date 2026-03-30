@@ -17,14 +17,12 @@
 
 const express = require('express');
 const path = require("node:path");
-const session = require("../game/sessions");
+const sessions = require("../game/sessions");
 
 //--- EXPORTS -----------------------------------------------------------------
 
 const game_router = express.Router();
 game_router.use(express.json());
-game_router.use(express.static(path.join(__dirname, "../../frontend/public")));
-game_router.use(express.urlencoded({ extended: true }));
 
 
 // --- FUNCTIONS --------------------------------------------------------------
@@ -36,18 +34,17 @@ game_router.use(express.urlencoded({ extended: true }));
  * @author Connor Hekking
  */
 game_router.get("/:code", (req, res) => {
-    const code = req.params.code;
-
-    const exists = session.sessionExists(code);
+    const code = req.params.code.toUpperCase();
 
     // if the session exists, respond OK
-    if(exists) {
+    if(sessions.exists(code)) {
         res.status(200);
     }
     // otherwise, respond not found
     else {
         res.status(404);
     }
+    res.send();
 });
 
 /**
@@ -60,7 +57,7 @@ game_router.get("/:code", (req, res) => {
 game_router.post("/", (req, res) => {
     const type = req.body.type;
     
-    const code = session.createSession(type);
+    const code = sessions.create(type);
 
     // if a session was created, respond OK with the code
     if(code) {
@@ -68,7 +65,7 @@ game_router.post("/", (req, res) => {
     }
     // otherwise, respond that an internal server error occured
     else {
-        res.status(500);
+        res.status(500).send();
     }
 });
 
