@@ -4,7 +4,8 @@ const launchMultiplayerButton = document.querySelector('#launchMultiplayerButton
 const launchStudyButton = document.querySelector('#launchStudyButton');
 
 async function joinRoom() {
-    const code = document.getElementById("roomCode").value;
+    const code = document.getElementById("roomCode").value.toUpperCase();
+
     // check that room is valid
 
     fetch(`/api/games/${code}`)
