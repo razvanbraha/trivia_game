@@ -36,20 +36,30 @@ const sessions = {};
 //--- FUNCTIONS ---------------------------------------------------------------
 
 /**
- * Generates a unique room code
- * @author Connor Hekking
+ * Generates a unique 4-character alphanumeric room code
+ * @author Will Mungas
  */
 function generateRoomCode() {
-    const randomCode = () => Math.floor(Math.random() * code_range);
-    let code = -1;
-    let duplicate = true;
-
-    // Generate random codes until one found which isn't taken
-    while(duplicate) {
-        code = randomCode();
-        duplicate = sessions.some((session) => session.code === code);
+    const str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    // get a single random character from the above string
+    const randomCharacter = () => {
+        return str.charAt(Math.floor(Math.random() * str.length));
     }
 
+    // generate a 4-character unique code string
+    const randomCode = () => {
+        return "" +
+        randomCharacter() + 
+        randomCharacter() + 
+        randomCharacter() +
+        randomCharacter();
+    }
+
+    let code = randomCode();
+    while(code in sessions) {
+        code = randomCode();
+    }
+    
     return code;
 }
 
@@ -61,21 +71,24 @@ function generateRoomCode() {
 const createSession = (type) => {
     //TODO threads not implemented
 
-    let session_data = {
-        code: generateRoomCode(),
+    const code = generateRoomCode();
+    console.log(`Generated code ${code}`);
+
+    const data = {
+        code,
         type,
         start_time: Date.now(),
     };
 
     //TODO multiple game types
     if(type === sessionTypes.TEACHING) {
-        sessions[type] = new teachingGame(session_data);
+        sessions[code] = new teachingGame(data);
         console.log(`[Sessions]: added new session ${code}`);
     } else {
         return null;
     }
 
-    return session_data.game_code;
+    return code;
 };
 
 /**
