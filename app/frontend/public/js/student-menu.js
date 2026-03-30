@@ -5,21 +5,19 @@ const launchStudyButton = document.querySelector('#launchStudyButton');
 
 async function joinRoom() {
     const code = document.getElementById("roomCode").value;
-    const name = prompt("Enter your name");
+    // check that room is valid
 
-    if (!code || !name) return;
-
-    const res = await fetch("/api/room/join", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ code, name })
-    });
-
-    if (res.ok) {
-        alert("Joined room!");
-    } else {
-        alert("Room not found");
-    }
+    fetch(`/api/games/${code}`)
+        .then((res) => {
+            if(res.ok) {
+                localStorage.setItem("room code", code);
+                window.location.href = "/api/play/teaching/player";
+            }
+            else {
+                console.log(res);
+                console.error(`Session does not exist for ${code}`);
+            }
+        });
 }
 
 function launchMultiplayer() {
