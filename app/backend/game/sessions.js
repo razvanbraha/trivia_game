@@ -30,8 +30,8 @@ const SESSION_EXPIRE_CHECK_TIME = 2 * 60 * 1000; // 2mins(ms)
 
 //--- GLOBALS -----------------------------------------------------------------
 
-// list of all open game sessions for the server to keep track of
-const sessions = [];
+// contains all sessions, keyed by code
+const sessions = {};
 
 //--- FUNCTIONS ---------------------------------------------------------------
 
@@ -62,14 +62,15 @@ const createSession = (type) => {
     //TODO threads not implemented
 
     let session_data = {
-        game_code: generateRoomCode(),
-        game_type: type,
+        code: generateRoomCode(),
+        type,
         start_time: Date.now(),
     };
 
     //TODO multiple game types
     if(type === sessionTypes.TEACHING) {
-        sessions.push(new teachingGame(session_data)); 
+        sessions[type] = new teachingGame(session_data);
+        console.log(`[Sessions]: added new session ${code}`);
     } else {
         return null;
     }
@@ -86,31 +87,22 @@ const createSession = (type) => {
  */
 const joinSession = (ws, data) => {
     const code = data.code;
-    const as = data.as;
     const name = data.name;
     
     // game-type agnostic: only matters to the code that runs the game
     // similarly, the code that runs the game doesn't care what session code
     // the game is hosted at
     if(code in sessions) {
-        sessions[code].join(ws, as, name);
+        sessions[code].join(ws, name);
         return true;
     }
     return false;
 }
 
-/**
- * Checks if a game session exists with a given code
- * @author Connor Hekking
- * @param {Number} code the code to check
- * @return true/false whether the game session exists
- */
 const sessionExists = (code) => {
-    const exists = sessions.some((session) => 
-        (session.code === code && session.state === teachingGame.STATES.LOBBY)
-    );
-    return exists;
+    return code && code in sessions;
 }
+
 
 /**
  * Removes any sessions from memory which are ended, or have gone on too long.
@@ -119,7 +111,8 @@ const sessionExists = (code) => {
  */
 const removeSessions = () => {
     const now = Date.now();
-    sessions.forEach((session) => {
+
+    for(const session in sessions) {
         if(session.state == teachingGame.STATES.ENDED) {
             // Remove from sessions memory
             const idx = sessions.findIndex(s => s.code === session.code);
@@ -139,8 +132,7 @@ const removeSessions = () => {
                 sessions.splice(idx, 1);
             }
         }
-    })
-    
+    }
 }
 
 //--- ALWAYS RUNNING -----------------------------------------------------------------
