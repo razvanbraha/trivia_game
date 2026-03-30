@@ -34,7 +34,10 @@ console.log(`Code: ${code}`);
 const ws = new WebSocket(ws_api.uri);
 
 const body = { code, name: "player 1" };
-ws_api.init(ws, ws_api.users.CLIENT, handler, () => ws_api.send(ws, ws_api.signals.JOIN, body));
+ws_api.init(ws, ws_api.users.CLIENT, handler, () => {
+    ws.expect()
+    ws.signal(ws_api.signals.JOIN, body)
+});
 
 // callback for 
 

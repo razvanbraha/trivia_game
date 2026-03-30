@@ -10,7 +10,7 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 const ws_api = window.ws_api;
-import game_helpers from "./game-helpers.js";
+import helpers from "./game-helpers.js";
 
 //--- SETUP -------------------------------------------------------------------
 
@@ -27,26 +27,23 @@ const game_states = {
 let current_state = game_states.LOBBY;
 
 let code;
+let players = [];
 
 //--- SIGNAL HANDLERS ---------------------------------------------------------
 
-// signal handler object: maps si
+// signal handler object: maps signal ids to a handler function
 let handler = {};
 
-handler[ws_api.signals.JOINED.id] = (ws, body) => {
-    if(code !== body.code) {
-        console.log(`Joined the wrong room!! In ${body.code}, should be in ${code}`);
-    }
-    console.log("Successfully joined!");
-}
-
-handler[ws_api.signals.REJECTED.id] = (ws, body) => {
-    console.log(`Failed to join room ${body.code}; ouch, rejection hurts`);
-}
-
-handler[ws_api.signals.JOINEE.id] = (ws, body) => {
-
-}  
+ws_api.support(handler, ws_api.signals.JOINEE, (ws, body) => {
+    players.push(body.name);
+    console.log(`Player ${body.name} joined; players:`, players);
+    helpers.updatePlayers(players, (name) => {
+        ws.expect(ws_api.signals.KICK, (success) => {
+            console.log(success ? `Kicked ${name}` : `Failed to kick ${name}`);
+        });
+        ws.signal(ws_api.signals.KICK, {name});
+    });
+});
 
 handler[ws_api.signals.QUESTION.id] = (ws, body) => {
 
@@ -103,11 +100,22 @@ fetch("/api/games", fetchData)
         // initiate websocket connection to this code
         const ws = new WebSocket(ws_api.uri);
 
-        // JOIN signal contents
-        const body = { code, name: "host" };
+        // setup socket with handler
+        ws_api.init(ws, ws_api.users.CLIENT, handler, () => {
+            // JOIN signal contents
+            const body = { code, name: "host" };
 
-        // setup socket with handler, send JOIN signal upon open
-        ws_api.init(ws, ws_api.users.CLIENT, handler, () => ws_api.send(ws, ws_api.signals.JOIN, body));
+            // expect a RES to the JOIN
+            ws.expect(ws_api.signals.JOIN, (success) => {
+                if(success) {
+                    console.log(`Successfully joined ${code}`);
+                    helpers.createLobby(code);
+                    return;
+                }
+                console.log(`Rejected from ${code}`, "Ouch! Rejection hurts")
+            });
+            ws.signal(ws_api.signals.JOIN, body);
+        });
     })
     .catch((e) => {
         console.log(`Error starting game:`, e);
