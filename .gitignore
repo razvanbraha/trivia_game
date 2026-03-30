@@ -1,4 +1,4 @@
 node_modules
 *.env
 
-./app*ws-api.js
+app/**/ws-api.js
