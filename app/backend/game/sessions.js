@@ -85,26 +85,18 @@ const createSession = (type) => {
  * @return true/false whether the creation was successful
  */
 const joinSession = (ws, data) => {
-    const code = data.game_code;
-    const type = data.game_type;
-
-    switch(type) {
-        case sessionTypes.TEACHING:
-            let found_session = false;
-            for(const session of sessions) {
-                if(session.code === code && session.state === teachingGame.STATES.LOBBY) {
-                    session.join(ws);
-                    found_session = true;
-                    break;
-                }
-            }
-            return found_session;
-        case sessionTypes.MULTIPLAYER:
-            // TODO implement
-            return false;
-        default:
-            return false;
+    const code = data.code;
+    const as = data.as;
+    const name = data.name;
+    
+    // game-type agnostic: only matters to the code that runs the game
+    // similarly, the code that runs the game doesn't care what session code
+    // the game is hosted at
+    if(code in sessions) {
+        sessions[code].join(ws, as, name);
+        return true;
     }
+    return false;
 }
 
 /**
