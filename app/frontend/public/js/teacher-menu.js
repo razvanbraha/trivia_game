@@ -10,5 +10,5 @@ questionPageButton.onclick = questionsManage;
 userPageButton.onclick = usersManage;
 
 hostGameButton.onclick = () => {
-    window.location.href = "/api/play/teacher-host";
+    window.location.href = "/api/play/teaching/host";
 }
