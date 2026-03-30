@@ -52,14 +52,14 @@ function setupPage() {
 
     const template_promise = fetch('/public/templates/question-template.html')
     .then((res) => {
-        const template_str = res.text();
-        
-        template_div.innerHTML = template_str;
-        const template = template_div.querySelector("#game-ui-template");
-        const template_question_container = template.content.querySelector("#question-container").cloneNode(true);
-        if(window.location.href.includes("test-tg-templates")) {
-            document.body.appendChild(template_question_container);
-        }
+        res.text().then((template_str) => {
+            template_div.innerHTML = template_str;
+            const template = template_div.querySelector("#game-ui-template");
+            const template_question_container = template.content.querySelector("#question-container").cloneNode(true);
+            if(window.location.href.includes("test-tg-templates")) {
+                document.body.appendChild(template_question_container);
+            }
+        });
     });
 }
 
@@ -348,4 +348,15 @@ function createEndLeaderboard(current_player, other_players, isTeacher, statisti
 
     // Return cloneable obj
     return question_container;
+}
+
+
+export default {
+    teacherLobby,
+    setupPage,
+    createShowQuestion,
+    createShowAnswers,
+    showCorrectAnswer,
+    createLeaderboard,
+    createEndLeaderboard
 }
