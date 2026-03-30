@@ -33,7 +33,7 @@ class teachingGame {
 
     // setting limits as ranges
     static RANGES = {
-        QUESTIONS: {
+        ROUNDS: {
             MIN: 5,
             MAX: 50
         },
@@ -66,17 +66,14 @@ class teachingGame {
 
     // Given by sessions
     code = null; // Game join code
-    host = null; // the host WebSocket connection
+    
     type = null; // Type of game (should be "teaching")
     start_time = null; // Start time of the game(for auto-closing)
 
     state = 0; // the current state
-    players = []; // list of player WebSocket connections
     questions = []; // List of questions to be used by the game
     current_question_idx = 0; // Index of current question in game(increment on "CONTINUE")
     answers = new Map(); // Map{socket(player): List(answer #)} - list indicies correspond to questions list
-    // -1 = no answer
-    points = new Map(); // Map{socket(player): Number}
     current_correct_answer_number = -1; // Correct answer number (1/2/3/4)
     
     answering_start_time = null; // Date() of the time when the answering period/"live time" started
@@ -86,16 +83,25 @@ class teachingGame {
 
     // user-visible settings
     settings = {
-        num_questions: 0,
-        categories: [],
-        preview_time: 0,
-        dead_time: 0,
-        live_time: 0,
+        rounds: 0, // how many questions to send 
+        categories: [], // which categories to pull from
+        preview: 0, // question preview time
+        dead: 0, // question dead time
+        live: 0, // question live time
     };
+
+    // client-related
+    host = null; // the host WebSocket connection
+    // list of players, each storing: name, websocket, points, and last answer
+    // order of list is implicitly the player ranks
+    players = []; 
     
     // signal handler: map of signal names to functions with the signature
     // (ws, body) => void to handle the signal
-    handler = {};
+    handlers = {
+        host: {},
+        player: {}
+    };
 
     //--- FUNCTIONS ---------------------------------------------------------------
 
@@ -105,34 +111,30 @@ class teachingGame {
      * @param {} data common session data
      */
     constructor(data) {
-        this.code = data.game_code;
-        this.type = data.game_type;
+        this.code = data.code;
+        this.type = data.type;
         this.state = teachingGame.STATES.LOBBY;
         this.start_time = data.start_time;
 
-        // set up handler
-        this.handler[ws_api.signals.START.id] = (ws, body) => {
-            if (this.state === teachingGame.STATES.LOBBY && ws === this.host) {
+        // teacher (host) - can send START, KICK and CONTINUE
+        this.handlers.host[ws_api.signals.START.id] = (ws, body) => {
+            if (this.state === teachingGame.STATES.LOBBY) {
                 this.startGame(ws, body);
-            } else if(ws !== this.host) {
-                ws_api.error(ws, "Only host can contiinue.");
-            } else {
+            } 
+            else {
                 ws_api.error(ws, "Game has already started.");
             }
         }
-
-        this.handler[ws_api.signals.ANSWER.id] = (ws, body) => {
-            if (this.state === teachingGame.STATES.RECEIVE_RESPONSES && ws !== this.host) {
-                this.registerAnswer(ws, body);
-            } else if(ws === this.host) {
-                ws_api.error(ws, "Host cannot submit an answer.");
-            } else {
-                error(ws, "Game is not accepting answers.");
+        this.handlers.host[ws_api.signals.KICK.id] = (ws, body) => {
+            const player = this.players.find((p) => p.name === body.name);
+            
+            if(player) {
+                this.players.splice(indexOf(player), 1);
+                ws_api.close(player.ws, "Kicked by host");
             }
         }
-
-        this.handler[ws_api.signals.CONTINUE.id] = (ws, body) => {
-            if (this.state === teachingGame.STATES.AWAIT_NEXT && ws === this.host) {
+        this.handlers.host[ws_api.signals.CONTINUE.id] = (ws, body) => {
+            if (this.state === teachingGame.STATES.AWAIT_NEXT) {
                 this.advanceQuestion(ws, body);
             } else if (this.state === teachingGame.STATES.FINAL && ws === this.host) {
                 this.endGame(ws, body);
@@ -141,91 +143,112 @@ class teachingGame {
             } else if(this.state === teachingGame.STATES.ENDED) {
                 ws_api.error(ws, "Game has already ended.");
             }
-            else {
-                ws_api.error(ws, "Game has already started.");
-            }
         }
+
+        // students (players) - only signal needed is answer
+        this.handlers.player[ws_api.signals.ANSWER.id] = (ws, body) => {
+            console.log("Haven't implemented handling answers yet");
+            ws_api.send(ws, ws_api.signals.ACK, { msg: `received your answer (${body.num}); answer handling not implemented yet`});
+        }
+    }
+
+    /**
+     * Logs an error for the session
+     * @param {*} err 
+     */
+    error(err) {
+        this.log(`ERROR: ${err}`);
+    }
+
+    /**
+     * Logs a message for the session
+     * @param {*} msg 
+     */
+    log(msg) {
+        console.log(`[Session ${this.code}]: ${msg}`);
     }
 
     /**
      * @author Connor Hekking, Will Mungas
      * @description sends a signal to all connected websockets
      * @param sig signal type (must be from ws_api.signals)
-     * @param msg body of the signal (must be an object with valid fields)
+     * @param body body of the signal (must be an object with valid fields)
      */
-    sendAll(sig, msg) {
+    sendAll(sig, body) {
         if(this.host) {
-            ws_api.send(this.host, sig, msg);
+            ws_api.send(this.host, sig, body);
         }
-        this.players.forEach((player) => {
-            ws_api.send(player, sig, msg);
-        });
+        for(const player of players) {
+            ws_api.send(player.ws, sig, body);
+        }
     }
 
     /**
      * Handles user joining the game through a websocket connection
-     * @param {WebSocket} ws
+     * @param {WebSocket} ws websocket attempting to join this game
      */
-    join(ws) {
+    join(ws, name) {
         if (this.state !== teachingGame.STATES.LOBBY) {
             ws_api.error(ws, "Game already started.");
             return;
         }
 
-        ws.on("message", (data) => {ws_api.receive(ws, this.handler, data)})
-
-        // First join = host, later joins = player
+        // First joinee is host, all others are players
         if(this.host === null) {
             this.host = ws;
-            console.log(`Session ${this.code}: host joined`);
+            // handle signals a host can send
+            ws.on("messsage", (data) => {ws_api.receive(ws, this.handlers.host, data)});
+            this.log("host joined");
+            
             return;
         }
 
         // Add player entries to data
-        this.players.push(ws);
+        this.players.push({name, ws});
         this.answers.set(ws, []);
         this.points.set(ws, 0);
-        console.log(`Session ${this.code}: player ${this.players.length} joined`);
+
+        // handle signals a player can send
+        ws.on("message", (data) => {ws_api.receive(ws, this.handlers.player, data)});
+        this.log(`player ${this.players.length} (${name}) joined`);
+
+        // let the host know a new player joined
+        ws_api.send(this.host, ws_api.signals.JOINEE, { name });
     }
 
     /**
-     * Checks if the game settings
-     * @param {WebSocket} ws Websocket making the request. Used for sending errors
-     * @param {Number} num_questions Number of questions in the game
-     * @param {Array} categories Array of numbers corresponding to categories included in the game
-     * @param {Number} preview_time Time the question text is shown but not answers
-     * @param {Number} dead_time Time the answers are shown but not answerable
-     * @param {Number} live_time Time the question is live for answers
+     * Checks if the game settings are in valid ranges
+     * @param {*} settings grouping of settings to validate
      * @returns true/false if the settings are valid
      */
-    validateSettings(ws, num_questions, categories, preview_time, dead_time, live_time) {
+    validateSettings(settings) {
         const inRange = (a, range) => {
             return a <= range.MAX && a >= range.MIN;
         }
 
         let valid = true;
-        if(!inRange(num_questions, RANGES.QUESTIONS)) {
+        if(!inRange(settings.rounds, RANGES.ROUNDS)) {
             ws_api.error(ws, "Invalid setting: number of questions.");
             valid = false;
         }
-        if(!inRange(preview_time, RANGES.PREVIEW_TIME)) {
+        if(!inRange(settings.preview, RANGES.PREVIEW_TIME)) {
             ws_api.error(ws, "Invalid setting: preview time.");
             valid = false;
         }
-        if(!inRange(dead_time, RANGES.DEAD_TIME)) {
+        if(!inRange(settings.dead, RANGES.DEAD_TIME)) {
             ws_api.error(ws, "Invalid setting: dead time.");
             valid = false;
         }
-        if(!inRange(live_time, RANGES.LIVE_TIME)) {
+        if(!inRange(settings.live, RANGES.LIVE_TIME)) {
             ws_api.error(ws, "Invalid setting: live time.");
             valid = false;
         }
-        if(!inRange(categories.length, RANGES.CATEGORIES)) {
+        if(!inRange(settings.categories.length, RANGES.CATEGORIES)) {
             ws_api.error(ws, "Invalid setting: categories.");
             valid = false;
         }
         // Check duplicates
-        if(new Set(categories).size !== categories.length) {
+        if(new Set(settings.categories).size !== settingscategories.length) {
             ws_api.error(ws, "Invalid setting: categories.");
             valid = false;
         }
@@ -255,108 +278,70 @@ class teachingGame {
     }
 
     /**
-     * Returns rankings of players, including their number rank and points value associated to their websocket.
-     * @returns Map{Websocket: {rank: Number, points: Number}} (nested)
+     * Sorts players by points earned
+     * @author Will Mungas
      */
     getRankings() {
-       const rankings = new Map();
-       const rankings_list = [];
-
-       this.players.forEach((player) => {
-            rankings_list.push({
-                "player": player,
-                "points": this.points.get(player),
-            });
-       });
-
-       // Sort list in descending order of points
-       rankings_list.sort((a, b) => {
-            return b.points - a.points;
-       });
-
-       // Add the rankings value
-       rankings_list.forEach((entry, index) => {
-            entry.rank = index + 1;
-        });
-
-       // Reformat
-       rankings_list.forEach((ranking) => {
-            rankings.set(ranking.player, {
-                "rank": ranking.rank,
-                "points": ranking.points,
-            });
-       });
-
-       return rankings;
+        this.players.sort((a, b) => {a.points - b.points});
     }
 
     /**
      * Configures settings from message, gets list of questions from database,
      * and sends out the first question.
-     * @param {WebSocket} ws Host websocket which initiated the request
-     * @param {Object} body Message object containing the request
+     * @param {Object} settings settings passed in by host
      */
-    async startGame(ws, body) {
-        const num_questions = message.body.num_questions;
-        const categories = message.body.categories;
-        const preview_time = message.body.preview_time;
-        const dead_time = message.body.dead_time;
-        const live_time = message.body.live_time;
-
-        const valid = this.validateSettings(ws, num_questions, categories, preview_time, dead_time, live_time);
-        if(!valid) {
-            return; // Do nothing
+    async startGame(settings) {
+        if(!this.validateSettings(settings)) {
+            ws_api.error(this.host, "Invalid settings")
+            return;
         }
-        this.num_questions = num_questions;
-        this.categories = categories;
-        this.preview_time = preview_time;
-        this.dead_time = dead_time;
-        this.live_time = live_time;
+        this.settings = settings;
 
         // Load questions & error check
         try {
             this.questions = await questionsDB.selectRandQuestions(categories, num_questions);
         } catch (e) {
-            this.sendAll({
-                "type": messages.ERROR,
-                "message": "Questions could not be loaded succcessfully.",
-            });
+            this.sendAll(
+                ws_api.signals.ERROR, 
+                { err: "Questions could not be loaded succcessfully." }
+            );
         }
         
         if(this.questions.length < count) {
-            this.sendAll({
-                "type": messages.ERROR,
-                "message": "Not enough questions in Database. Expect unstable behavior.",
-            });
+            this.sendAll(
+                ws_api.signals.ERROR, 
+                { err: "Not enough questions in Database. Expect unstable behavior." }
+            );
         }
 
         // Start main game flow
         this.serveQuestions();
     }
 
-    static delay(time) {
-        return new Promise(resolve => setTimeout(resolve, time));
-    }
 
     /**
      * Contains the main game flow of serving questions and answers, and managing delays.
      * See "Teaching Game Flow" https://drive.google.com/file/d/1Ot5iEwynpoNxzL3qfV24YOHXDSmfGL-P/view?usp=sharing
      */
     async serveQuestions() {
-        let allRankings = null; // Declare for later use
-        while(this.current_question_idx  < this.num_questions) {
+        // used only in here: set a delay of a given number of milliseconds
+        const delay = (ms) => { return new Promise(() => setTimeout(null, ms)) };
+
+
+        while(this.questions_sent < this.settings.questions) {
             // Send QUESTION to host & players
-            this.sendAll({
-                "type": messages.QUESTION,
-                "question_text": this.questions[this.current_question_idx].question,
-                "question_number": this.current_question_idx + 1,
-                "num_questions": this.num_questions,
-            });
+            this.sendAll(
+                ws_api.signals.QUESTION, 
+                {
+                    text: this.questions[this.current_question_idx].question,
+                    num: this.questions_sent
+                }
+            );
 
             this.state = teachingGame.STATES.SHOW_QUESTION;
 
             // Delay 1 - Show question
-            await teachingGame.delay(1000 * this.preview_time);
+            delay(1000 * this.preview_time);
 
             // Send CHOICES to host & players
             const question = this.questions[this.current_question_idx];
@@ -373,7 +358,7 @@ class teachingGame {
             this.state = teachingGame.STATES.SHOW_ANSWERS;
 
             // Delay 2 - Show Answers
-            await teachingGame.delay(1000 * this.dead_time);
+            delay(1000 * this.dead_time);
 
             // Send READY
             this.sendAll({
@@ -507,17 +492,10 @@ class teachingGame {
     }
 
     /**
-     * Signals main game flow to send out next question.
-     * @param {WebSocket} ws Host websocket which initiated the request
-     * @param {Object} message Message object containing the request
+     * Advances game to the next question
      */
-    advanceQuestion(ws, message) {
-        if (this.signalContinue) {
-            this.signalContinue();
-            this.signalContinue = null; // Reset // this is interesting but probably a better way to do this is with a flag?
-        } else {
-            ws_api.error(ws, "Cannot send next question");
-        }
+    advanceQuestion() {
+        // TODO implement
     }
 
     
