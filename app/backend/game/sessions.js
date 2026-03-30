@@ -8,7 +8,7 @@
  */
 //--- INCLUDE -----------------------------------------------------------------
 
-const ws_api = require("../../../shared/ws-api");
+const ws_api = require("../ws-api");
 const {teachingGame} = require("./teaching-game");
 
 //--- CONSTANTS ---------------------------------------------------------------
@@ -19,9 +19,6 @@ const sessionTypes = {
     MULTIPLAYER: "multiplayer",
     STUDY: "study"
 };
-
-// Possible code range
-const code_range = 10000;
 
 // Time until any session automatically expires, regardless of state
 const SESSION_AUTO_EXPIRE_TIME = 30 * 60 * 1000; // 30mins(ms)
@@ -107,10 +104,10 @@ const join = (ws, data) => {
     // the game is hosted at
     if(code in sessions) {
         sessions[code].join(ws, name);
-        ws_api.send(ws, ws_api.signals.JOINED, {});
+        ws_api.send(ws, ws_api.signals.JOINED, {code});
         return;
     }
-    ws_api.send(ws, ws_api.signals.REJECTED, {});
+    ws_api.send(ws, ws_api.signals.REJECTED, {code});
     
 }
 
@@ -124,16 +121,13 @@ const exists = (code) => {
  * @author Connor Hekking
  * @param {teachingGame} session the session to remove
  */
-const removeSessions = () => {
+const remove = () => {
     const now = Date.now();
 
-    for(const session in sessions) {
+    for(const code in sessions) {
+        const session = sessions[code];
         if(session.state == teachingGame.STATES.ENDED) {
-            // Remove from sessions memory
-            const idx = sessions.findIndex(s => s.code === session.code);
-            if(idx > -1) {
-                sessions.splice(idx, 1);
-            }
+            delete sessions[code];
         } else if(now - session.start_time > SESSION_AUTO_EXPIRE_TIME) {
             try {
                 // Tell game to clear its own memory
@@ -141,18 +135,14 @@ const removeSessions = () => {
             } catch (e) {
                 console.log(`Failed to end expired session: ${e}`);
             }
-            // Remove from sessions memory
-            const idx = sessions.findIndex(s => s.code === session.code);
-            if(idx > -1) {
-                sessions.splice(idx, 1);
-            }
+            delete sessions[code];
         }
     }
 }
 
 //--- ALWAYS RUNNING -----------------------------------------------------------------
 
-const sessionsRemover = setInterval(removeSessions, SESSION_EXPIRE_CHECK_TIME);
+const remover = setInterval(remove, SESSION_EXPIRE_CHECK_TIME);
 
 //--- EXPORTS -----------------------------------------------------------------
 
