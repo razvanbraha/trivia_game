@@ -78,12 +78,7 @@ app.get("/teacher", (req, res) => {
 // initial connection to the server
 const init_handler = {};
 // add JOIN signal support
-init_handler[ws_api.signals.JOIN.id] = (ws, body) => {
-    if(!sessions.joinSession(ws, body)) {
-        ws_api.error(ws, "Failed to join");
-    }
-    ws_api.send(ws, ws_api.signals.ACK, {msg: `Let you into session ${body.game_code} :)`})
-}
+init_handler[ws_api.signals.JOIN.id] = (ws, body) => sessions.join(ws, body);
 
 function setupWSS(server) {
     const wss = new WebSocketServer({ server: server });

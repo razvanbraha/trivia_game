@@ -8,6 +8,7 @@
  */
 //--- INCLUDE -----------------------------------------------------------------
 
+const ws_api = require("../../../shared/ws-api");
 const {teachingGame} = require("./teaching-game");
 
 //--- CONSTANTS ---------------------------------------------------------------
@@ -68,11 +69,10 @@ function generateRoomCode() {
  * @author Connor Hekking
  * @return The code of the newly created session
  */
-const createSession = (type) => {
+const create = (type) => {
     //TODO threads not implemented
 
     const code = generateRoomCode();
-    console.log(`Generated code ${code}`);
 
     const data = {
         code,
@@ -98,7 +98,7 @@ const createSession = (type) => {
  * @param {Object} data the data of the request to create the new session
  * @return true/false whether the creation was successful
  */
-const joinSession = (ws, data) => {
+const join = (ws, data) => {
     const code = data.code;
     const name = data.name;
     
@@ -107,12 +107,14 @@ const joinSession = (ws, data) => {
     // the game is hosted at
     if(code in sessions) {
         sessions[code].join(ws, name);
-        return true;
+        ws_api.send(ws, ws_api.signals.JOINED, {});
+        return;
     }
-    return false;
+    ws_api.send(ws, ws_api.signals.REJECTED, {});
+    
 }
 
-const sessionExists = (code) => {
+const exists = (code) => {
     return code && code in sessions;
 }
 
@@ -154,7 +156,7 @@ const sessionsRemover = setInterval(removeSessions, SESSION_EXPIRE_CHECK_TIME);
 
 //--- EXPORTS -----------------------------------------------------------------
 
-exports.sessionExists = sessionExists;
+exports.exists = exists;
 // Export create/join for websocket-server to use
-exports.createSession = createSession;
-exports.joinSession = joinSession;
+exports.create = create;
+exports.join = join;
