@@ -10,6 +10,7 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 const ws_api = window.ws_api;
+import game_helpers from "./game-helpers.js";
 
 //--- SETUP -------------------------------------------------------------------
 
@@ -25,10 +26,27 @@ const game_states = {
 
 let current_state = game_states.LOBBY;
 
+let code;
+
 //--- SIGNAL HANDLERS ---------------------------------------------------------
 
 // signal handler object: maps si
 let handler = {};
+
+handler[ws_api.signals.JOINED.id] = (ws, body) => {
+    if(code !== body.code) {
+        console.log(`Joined the wrong room!! In ${body.code}, should be in ${code}`);
+    }
+    console.log("Successfully joined!");
+}
+
+handler[ws_api.signals.REJECTED.id] = (ws, body) => {
+    console.log(`Failed to join room ${body.code}; ouch, rejection hurts`);
+}
+
+handler[ws_api.signals.JOINEE.id] = (ws, body) => {
+
+}  
 
 handler[ws_api.signals.QUESTION.id] = (ws, body) => {
 
@@ -75,7 +93,7 @@ fetch("/api/games", fetchData)
         return res.json();
     })
     .then((data) => {
-        const code = data.code;
+        code = data.code;
 
         if(!code) {
             throw new Error("Did not receive code from server");
@@ -86,10 +104,10 @@ fetch("/api/games", fetchData)
         const ws = new WebSocket(ws_api.uri);
 
         // JOIN signal contents
-        const msg = { game_code: code, game_type: ws_api.games.TEACHING };
+        const body = { code, name: "host" };
 
         // setup socket with handler, send JOIN signal upon open
-        ws_api.init(ws, ws_api.users.CLIENT, handler, () => ws_api.send(ws, ws_api.signals.JOIN, msg));
+        ws_api.init(ws, ws_api.users.CLIENT, handler, () => ws_api.send(ws, ws_api.signals.JOIN, body));
     })
     .catch((e) => {
         console.log(`Error starting game:`, e);

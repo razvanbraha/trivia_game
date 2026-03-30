@@ -204,9 +204,7 @@ class teachingGame {
         }
 
         // Add player entries to data
-        this.players.push({name, ws});
-        this.answers.set(ws, []);
-        this.points.set(ws, 0);
+        this.players.push({name, ws, latest: this.NO_ANSWER_NUM, points: 0});
 
         // handle signals a player can send
         ws.on("message", (data) => {ws_api.receive(ws, this.handlers.player, data)});
