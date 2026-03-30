@@ -117,39 +117,53 @@ class teachingGame {
         this.start_time = data.start_time;
 
         // teacher (host) - can send START, KICK and CONTINUE
-        this.handlers.host[ws_api.signals.START.id] = (ws, body) => {
+        ws_api.support(this.handlers.host, ws_api.signals.START, (ws, body) => {
             if (this.state === teachingGame.STATES.LOBBY) {
                 this.startGame(ws, body);
             } 
             else {
-                ws_api.error(ws, "Game has already started.");
+                ws.err("Game has already started.");
             }
-        }
-        this.handlers.host[ws_api.signals.KICK.id] = (ws, body) => {
+        });
+
+        ws_api.support(this.handlers.host, ws_api.signals.KICK, (ws, body) => {
             const player = this.players.find((p) => p.name === body.name);
             
+            let success = false;
             if(player) {
-                this.players.splice(indexOf(player), 1);
-                ws_api.close(player.ws, "Kicked by host");
+                this.players.splice(this.players.indexOf(player), 1);
+
+                player.ws.kill("Kicked by host");
+                this.log(`kicked player '${body.name}'`);
+
+                success = true;
             }
-        }
-        this.handlers.host[ws_api.signals.CONTINUE.id] = (ws, body) => {
+
+            ws.respond(ws_api.signals.KICK, success);
+            if(!success) {
+                const err = `Could not find player '${body.name}'`;
+                this.error(err);
+                ws.err(err);
+            }
+        });
+
+        ws_api.support(this.handlers.host, ws_api.signals.CONTINUE, (ws, body) => {
             if (this.state === teachingGame.STATES.AWAIT_NEXT) {
                 this.advanceQuestion(ws, body);
             } else if (this.state === teachingGame.STATES.FINAL && ws === this.host) {
                 this.endGame(ws, body);
             } else if(ws !== this.host) {
-                ws_api.error(ws, "Only host can continue.");
+                ws.err("Only host can continue.");
             } else if(this.state === teachingGame.STATES.ENDED) {
-                ws_api.error(ws, "Game has already ended.");
+                ws.err("Game has already ended.");
             }
-        }
+        });
 
         // students (players) - only signal needed is answer
-        this.handlers.player[ws_api.signals.ANSWER.id] = (ws, body) => {
+        ws_api.support(this.handlers.player, ws_api.signals.ANSWER, (ws, body) => {
             console.log("Haven't implemented handling answers yet");
-            ws_api.send(ws, ws_api.signals.ACK, { msg: `received your answer (${body.num}); answer handling not implemented yet`});
-        }
+            ws.send(ws_api.signals.ACK, { msg: `received your answer (${body.num}); answer handling not implemented yet`});
+        });
     }
 
     /**
@@ -176,10 +190,10 @@ class teachingGame {
      */
     sendAll(sig, body) {
         if(this.host) {
-            ws_api.send(this.host, sig, body);
+            this.host.send(sig, body);
         }
         for(const player of players) {
-            ws_api.send(player.ws, sig, body);
+            player.ws.send(sig, body);
         }
     }
 
@@ -189,29 +203,24 @@ class teachingGame {
      */
     join(ws, name) {
         if (this.state !== teachingGame.STATES.LOBBY) {
-            ws_api.error(ws, "Game already started.");
+            ws.err("Game already started.");
             return;
         }
 
         // First joinee is host, all others are players
         if(this.host === null) {
+            ws.handler = this.handlers.host;
             this.host = ws;
-            // handle signals a host can send
-            ws.on("messsage", (data) => {ws_api.receive(ws, this.handlers.host, data)});
             this.log("host joined");
-            
+            this.host.respond(ws_api.signals.JOIN, true);
             return;
         }
 
-        // Add player entries to data
+        ws.handler = this.handlers.player;
         this.players.push({name, ws, latest: this.NO_ANSWER_NUM, points: 0});
-
-        // handle signals a player can send
-        ws.on("message", (data) => {ws_api.receive(ws, this.handlers.player, data)});
         this.log(`player ${this.players.length} (${name}) joined`);
-
-        // let the host know a new player joined
-        ws_api.send(this.host, ws_api.signals.JOINEE, { name });
+        ws.respond(ws_api.signals.JOIN, true);
+        this.host.signal(ws_api.signals.JOINEE, {name});
     }
 
     /**
@@ -226,28 +235,28 @@ class teachingGame {
 
         let valid = true;
         if(!inRange(settings.rounds, RANGES.ROUNDS)) {
-            ws_api.error(ws, "Invalid setting: number of questions.");
+            this.host.err( "Invalid setting: number of questions.");
             valid = false;
         }
         if(!inRange(settings.preview, RANGES.PREVIEW_TIME)) {
-            ws_api.error(ws, "Invalid setting: preview time.");
+            this.host.err( "Invalid setting: preview time.");
             valid = false;
         }
         if(!inRange(settings.dead, RANGES.DEAD_TIME)) {
-            ws_api.error(ws, "Invalid setting: dead time.");
+            this.host.err( "Invalid setting: dead time.");
             valid = false;
         }
         if(!inRange(settings.live, RANGES.LIVE_TIME)) {
-            ws_api.error(ws, "Invalid setting: live time.");
+            this.host.err( "Invalid setting: live time.");
             valid = false;
         }
         if(!inRange(settings.categories.length, RANGES.CATEGORIES)) {
-            ws_api.error(ws, "Invalid setting: categories.");
+            this.host.err( "Invalid setting: categories.");
             valid = false;
         }
         // Check duplicates
         if(new Set(settings.categories).size !== settingscategories.length) {
-            ws_api.error(ws, "Invalid setting: categories.");
+            this.host.err( "Invalid setting: categories.");
             valid = false;
         }
 
@@ -332,7 +341,10 @@ class teachingGame {
                 ws_api.signals.QUESTION, 
                 {
                     text: this.questions[this.current_question_idx].question,
-                    num: this.questions_sent
+                    num: this.questions_sent,
+                    preview: this.settings.preview,
+                    dead: this.settings.dead,
+                    live: this.settings.live
                 }
             );
 
@@ -404,13 +416,13 @@ class teachingGame {
         // Send RESULTS
         allRankings = this.getRankings();
 
-        ws_api.send(this.host, ws_api.signals.RESULTS, {
+        this.host.api.send(ws_api.signals.RESULTS, {
             correct_answer_num: this.current_correct_answer_number,
             data_you: null,
             data_all: Array.from(allRankings.values()),
         });
         this.players.forEach((player) => {
-            ws_api.send(player, ws_api.signals.RESULTS, {
+            player.ws.api.send(ws_api.signals.RESULTS, {
                 correct_answer_num: this.current_correct_answer_number,
                 data_you: allRankings.get(player),
                 data_all: null
@@ -439,7 +451,7 @@ class teachingGame {
 
         // Check invalid answer number
         if(answer_number > 4 || answer_number < 1) {
-            ws_api.error(ws, "Invalid answer number.");
+            ws.err( "Invalid answer number.");
             return;
         }
 

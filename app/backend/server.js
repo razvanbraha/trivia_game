@@ -78,17 +78,13 @@ app.get("/teacher", (req, res) => {
 // initial connection to the server
 const init_handler = {};
 // add JOIN signal support
-init_handler[ws_api.signals.JOIN.id] = (ws, body) => sessions.join(ws, body);
+ws_api.support(init_handler, ws_api.signals.JOIN, (ws, body) => sessions.join(ws, body));
 
 function setupWSS(server) {
     const wss = new WebSocketServer({ server: server });
 
     wss.on("connection", (ws) => {
-        // Establish client connection
-        ws_api.init(ws, ws_api.users.SERVER, null, null);
-        // setup event listeners manually
-        ws.on('error', console.error);
-        ws.on("message", (data) => {ws_api.receive(ws, init_handler, data)});
+        ws_api.init(ws, ws_api.users.SERVER, init_handler, null);
     });
     console.log(`Websocket server running`);
 }

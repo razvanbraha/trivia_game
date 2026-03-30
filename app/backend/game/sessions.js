@@ -95,20 +95,22 @@ const create = (type) => {
  * @param {Object} data the data of the request to create the new session
  * @return true/false whether the creation was successful
  */
-const join = (ws, data) => {
-    const code = data.code;
-    const name = data.name;
+const join = (ws, body) => {
+    const code = body.code;
+    const name = body.name;
     
     // game-type agnostic: only matters to the code that runs the game
     // similarly, the code that runs the game doesn't care what session code
     // the game is hosted at
+    let result = false;
     if(code in sessions) {
         sessions[code].join(ws, name);
-        ws_api.send(ws, ws_api.signals.JOINED, {code});
-        return;
+        result = true;
     }
-    ws_api.send(ws, ws_api.signals.REJECTED, {code});
-    
+    else {
+        ws.err(`could not find session ${code}`);
+    }
+    ws.respond(ws_api.signals.JOIN, result);
 }
 
 const exists = (code) => {
