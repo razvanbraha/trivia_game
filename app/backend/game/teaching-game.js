@@ -94,7 +94,7 @@ class teachingGame {
     // client-related
     host = null; // the host WebSocket connection
     // list of players, each storing: name, websocket, points, and last answer(latest)
-    // {ws, name, points, latest}
+    // {ws, name, points, latest_answer}
     // order of list is implicitly the player ranks
     players = []; 
     
@@ -206,7 +206,7 @@ class teachingGame {
         }
 
         // Add player entries to data
-        this.players.push({name, ws, latest: this.NO_ANSWER_NUM, points: 0});
+        this.players.push({name, ws, latest_answer: this.NO_ANSWER_NUM, points: 0});
 
         // handle signals a player can send
         ws.on("message", (data) => {ws_api.receive(ws, this.handlers.player, data)});

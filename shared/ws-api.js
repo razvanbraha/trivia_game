@@ -144,8 +144,8 @@ const signals = {
         id: "RESULTS",
         sender: "server",
         fields: [
-            "data_you", // {ws, name, points, latest}
-            "data_all" // List({ws, name, points, latest})
+            "data_you", // {ws, name, points, latest_answer}
+            "data_all" // List({ws, name, points, latest_answer})
         ]
     },
     // sent by the server to tell clients that the game has ended and report the final results
