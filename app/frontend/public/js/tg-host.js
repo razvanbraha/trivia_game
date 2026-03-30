@@ -29,46 +29,57 @@ let current_state = game_states.LOBBY;
 
 let code;
 let players = [];
+let ws;
 
 //--- SIGNAL HANDLERS ---------------------------------------------------------
 
 // signal handler object: maps signal ids to a handler function
 let handler = {};
 
+function kick(name) {
+    ws.expect(ws_api.signals.KICK, (success) => {
+        console.log(success ? `Kicked ${name}` : `Failed to kick ${name}`);
+        if(success) {
+            players.splice(players.indexOf(name), 1);
+            bootstrap_helpers.updatePlayers(players, kick);
+        }
+    });
+    ws.signal(ws_api.signals.KICK, {name});
+}
+
 ws_api.support(handler, ws_api.signals.JOINEE, (ws, body) => {
     players.push(body.name);
     console.log(`Player ${body.name} joined; players:`, players);
-    bootstrap_helpers.updatePlayers(players, (name) => {
-        ws.expect(ws_api.signals.KICK, (success) => {
-            console.log(success ? `Kicked ${name}` : `Failed to kick ${name}`);
-        });
-        ws.signal(ws_api.signals.KICK, {name});
-    });
+    bootstrap_helpers.updatePlayers(players, kick);
 });
 
-handler[ws_api.signals.QUESTION.id] = (ws, body) => {
+ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
 
-};
+});
 
-handler[ws_api.signals.CHOICES.id] = (ws, body) => {
+ws_api.support(handler, ws_api.signals.QUESTION,  (ws, body) => {
 
-};
+});
 
-handler[ws_api.signals.READY.id] = (ws, body) => {
+ws_api.support(handler, ws_api.signals.CHOICES,  (ws, body) => {
 
-};
+});
 
-handler[ws_api.signals.DONE.id] = (ws, body) => {
+ws_api.support(handler, ws_api.signals.READY,  (ws, body) => {
 
-};
+});
 
-handler[ws_api.signals.RESULTS.id] = (ws, body) => {
+ws_api.support(handler, ws_api.signals.DONE,  (ws, body) => {
 
-};
+});
 
-handler[ws_api.signals.GAMEOVER.id] = (ws, body) => {
+ws_api.support(handler, ws_api.signals.RESULTS,  (ws, body) => {
 
-};
+});
+
+ws_api.support(handler, ws_api.signals.GAMEOVER,  (ws, body) => {
+
+});
 
 //--- BUTTON CALLBACKS --------------------------------------------------------
 
@@ -99,7 +110,7 @@ fetch("/api/games", fetchData)
         console.log(`Game created with code ${code}; initiating Websocket connection`)
         
         // initiate websocket connection to this code
-        const ws = new WebSocket(ws_api.uri);
+        ws = new WebSocket(ws_api.uri);
 
         // setup socket with handler
         ws_api.init(ws, ws_api.users.CLIENT, handler, () => {

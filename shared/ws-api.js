@@ -392,7 +392,8 @@ const init = (ws, user, handler, first) => {
     ws[add]("message", (data) => receive(ws, is_backend ? data : data.data));
 
     // handle close event
-    ws[add]("close", () => {
+    ws[add]("close", (reason) => {
+        console.log(`Connection closed:`, reason);
         console.log("DISCONNECTED");
     });
 

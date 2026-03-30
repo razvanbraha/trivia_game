@@ -523,12 +523,12 @@ class teachingGame {
         //TODO this needs to be adjusted once rest of file done
 
         // Close host
-        ws_api.send(this.host, ws_api.signals.GAMEOVER, {});
-        ws_api.close(this.host, "Game finished.");
+        this.host.signal(ws_api.signals.GAMEOVER, {});
+        this.host.kill("Game finished");
         // Close players
         this.players.forEach((player) => {
-            ws_api.send(player, ws_api.signals.GAMEOVER, {});
-            ws_api.close(player, "Game finished.");
+            player.ws.signal(ws_api.signals.GAMEOVER, {});
+            player.ws.kill("Game finished.");
         });
 
         this.state = teachingGame.STATES.ENDED;
