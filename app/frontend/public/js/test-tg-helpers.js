@@ -1,3 +1,3 @@
-import helpers from "./tg-helpers.js"
+import helpers from "./game-helpers.js"
 
-helpers.setupPage();
+helpers.loadTemplateContent();

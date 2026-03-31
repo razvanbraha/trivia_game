@@ -9,7 +9,7 @@
  * Creation, initial contents for teaching game
  * 
  * @author Connor Hekking
- * updatePlayers, setupPage, showQuestion, showAnswers, 
+ * updatePlayers, loadTemplateContent, showQuestion, showAnswers, 
  * answersClickable, showCorrectAnswer, showLeaderboard, showEndLeaderboard
  */
 //--- GLOBALS ---------------------------------------------------------------
@@ -45,10 +45,10 @@ function clearContent() {
  * @author Will Mungas
  * @description Creates a lobby page within the content element, listing the
  * settings and the currently joined players
- * @param {*} players list of player names
- * @param {(name: String)} kick function to call to kick a player by name (called when button is clicked)
+ * @param {String} code game code
+ * @param {Function} start function to start the game
  */
-function createLobby(code) {
+function createLobby(code, start) {
     const content = getContent();
 
     clearContent();
@@ -71,10 +71,19 @@ function createLobby(code) {
     </section>
     `;
 
+    content.querySelector("#start-game").addEventListener("click", () => {
+        start();
+    });
+
     content.classList.add("lobby-ctnr")
 }
 
-
+/**
+ * @author Will Mungas
+ * @description Updates the list of players & attaches their kick buttons
+ * @param {*} players list of player names
+ * @param {(name: String)} kick function to call to kick a player by name (called when button is clicked)
+ */
 function updatePlayers(players, kick) {
     const player_section = document.getElementById("players-list");
     player_section.innerHTML = "";
@@ -98,10 +107,28 @@ function updatePlayers(players, kick) {
     }
 }
 
-
-function startGame() {
-    
+/**
+ * @author Connor Hekking
+ * @description Loads settings from page elements
+ * @return object {
+ *  rounds: Number,
+ *  categories: Array,
+ *  preview: Number,
+ *  Dead: Number, 
+ *  Live: Number
+ * }
+ */
+function getSettings() {
+    //TODO
+    return {
+        rounds: 5,
+        categories: [3,],
+        preview: 10,
+        dead: 10,
+        live: 10
+    }
 }
+
 
 // Imported from tg-helpers
 /**
@@ -109,7 +136,7 @@ function startGame() {
  * 
  * Sets up the page with content from question-template.html
  */
-function setupPage() {
+function loadTemplateContent() {
     const template_div = document.createElement('div');
 
     fetch('/public/templates/question-template.html')
@@ -139,7 +166,7 @@ function setupPage() {
  */
 function showQuestion(questionText, timerStart) {
     if(!template_question_container) {
-        throw new Error("Template content not yet loaded, please call setupPage.");
+        throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
 
     const content_container = getContent();
@@ -178,7 +205,7 @@ function showQuestion(questionText, timerStart) {
  */
 function showAnswers(answers, timerStart) {
     if(!template_question_container) {
-        throw new Error("Template content not yet loaded, please call setupPage.");
+        throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
 
     // Check length of answers array
@@ -255,7 +282,7 @@ function answersClickable(timerStart, isHost, answerHandler) {
  */
 function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isHost, continueBtnHandler) {
     if(!template_question_container) {
-        throw new Error("Template content not yet loaded, please call setupPage.");
+        throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
 
     const content_container = getContent();
@@ -373,7 +400,7 @@ function getEncouragementText(place, final) {
  */
 function showLeaderboard(current_player, all_players, isHost, nextQuestionBtnHandler) {
     if(!template_question_container) {
-        throw new Error("Template content not yet loaded, please call setupPage.");
+        throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
 
     const content_container = getContent();
@@ -426,7 +453,7 @@ function showLeaderboard(current_player, all_players, isHost, nextQuestionBtnHan
  */
 function showEndLeaderboard(current_player, all_players, isHost, statistics) {
     if(!template_question_container) {
-        throw new Error("Template content not yet loaded, please call setupPage.");
+        throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
     // TODO not actually showing any statistics(on box)
     // TODO different rankings display?
@@ -482,7 +509,8 @@ export default {
     clearContent,
     createLobby,
     updatePlayers,
-    setupPage,
+    getSettings,
+    loadTemplateContent,
     showQuestion,
     showAnswers,
     answersClickable,

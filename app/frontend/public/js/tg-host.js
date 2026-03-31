@@ -31,7 +31,7 @@ let players = [];
 let ws;
 
 // user-visible settings
-const settings = {
+let settings = {
     rounds: 0, // how many questions to send 
     categories: [], // which categories to pull from
     preview: 0, // question preview time
@@ -115,7 +115,7 @@ const fetchData = {
 };
 
 // Load html for questions pages
-game_helpers.setupPage();
+game_helpers.loadTemplateContent();
 
 // initiate the game:
 fetch("/api/games", fetchData)
@@ -146,7 +146,17 @@ fetch("/api/games", fetchData)
             ws.expect(ws_api.signals.JOIN, (success) => {
                 if(success) {
                     console.log(`Successfully joined ${code}`);
-                    game_helpers.createLobby(code);
+                    game_helpers.createLobby(code, () => {
+                        settings = game_helpers.getSettings();
+
+                        ws.signal(ws_api.signals.START, {
+                            rounds: settings.rounds,
+                            categories: settings.categories,
+                            preview: settings.preview,
+                            dead: settings.dead,
+                            live: settings.live
+                        });
+                    });
                     return;
                 }
                 console.log(`Rejected from ${code}`, "Ouch! Rejection hurts")
