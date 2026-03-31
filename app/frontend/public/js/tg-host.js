@@ -21,7 +21,9 @@ const game_states = {
     ANSWERS_SERVED: 3,
     RESPONSE_LIVE: 4,
     RESPONSE_SENT: 5,
-    RESPONSE_CLOSED: 6
+    RESPONSE_CLOSED: 6,
+    RESULTS_SERVED: 7,
+    FINAL_RESULTS_SERVED: 8
 };
 
 let current_state = game_states.LOBBY;
@@ -64,21 +66,41 @@ ws_api.support(handler, ws_api.signals.JOINEE, (ws, body) => {
 
 ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
     if(current_state != game_states.WAITING) {
-        console.log("Player desync detected");
-        ws.signal(ws_api.signals.ERR, {err: "Player desync detected."});
+        console.log("Host desync detected");
+        ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
     }
+    current_state = game_states.QUESTION_SERVED;
+
     game_helpers.showQuestion(body.text, body.preview);
 });
 
 ws_api.support(handler, ws_api.signals.CHOICES,  (ws, body) => {
+    if(current_state != game_states.QUESTION_SERVED) {
+        console.log("Host desync detected");
+        ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
+    }
+    current_state = game_states.ANSWERS_SERVED;
+
     game_helpers.showAnswers(body.choices, settings.dead);
 });
 
 ws_api.support(handler, ws_api.signals.READY,  (ws, body) => {
+    if(current_state != game_states.ANSWERS_SERVED) {
+        console.log("Host desync detected");
+        ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
+    }
+    current_state = game_states.RESPONSE_LIVE;
+
     game_helpers.answersClickable(settings.live, true, null);
 });
 
 ws_api.support(handler, ws_api.signals.DONE,  (ws, body) => {
+    if(current_state != game_states.RESPONSE_LIVE) {
+        console.log("Host desync detected");
+        ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
+    }
+    current_state = game_states.RESPONSE_CLOSED;
+
     // TODO put function in button callbacks? may need to reorder the file
     game_helpers.showCorrectAnswer(-1, body.correct_answer_num, true, () => {
         ws.signal(ws_api.signals.CONTINUE, {});
@@ -86,18 +108,37 @@ ws_api.support(handler, ws_api.signals.DONE,  (ws, body) => {
 });
 
 ws_api.support(handler, ws_api.signals.RESULTS,  (ws, body) => {
+    if(current_state != game_states.RESPONSE_CLOSED) {
+        console.log("Host desync detected");
+        ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
+    }
+    current_state = game_states.RESULTS_SERVED;
+
     game_helpers.showLeaderboard(body.data_you, body.data_all, true, () => {
         ws.signal(ws_api.signals.NEXTROUND, {});
     });
+    
 });
 
 ws_api.support(handler, ws_api.signals.FINAL,  (ws, body) => {
     // TODO endgame statistics not implemented(low prio)
+    if(current_state != game_states.RESULTS_SERVED) {
+        console.log("Host desync detected");
+        ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
+    }
+    current_state = game_states.FINAL_RESULTS_SERVED;
+
     game_helpers.showEndLeaderboard(body.data_you, body.data_all, true, null);
+    
 });
 
 ws_api.support(handler, ws_api.signals.GAMEOVER,  (ws, body) => {
+    if(current_state != game_states.FINAL_RESULTS_SERVED) {
+        console.log("Host desync detected");
+        ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
+    }
 
+    //TODO not implemented!!!!
 });
 
 //--- BUTTON CALLBACKS --------------------------------------------------------
@@ -149,6 +190,7 @@ fetch("/api/games", fetchData)
                     game_helpers.createLobby(code, () => {
                         settings = game_helpers.getSettings();
 
+                        current_state = game_states.WAITING;
                         ws.signal(ws_api.signals.START, {
                             rounds: settings.rounds,
                             categories: settings.categories,

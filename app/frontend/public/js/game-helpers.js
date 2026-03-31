@@ -123,8 +123,8 @@ function getSettings() {
     return {
         rounds: 5,
         categories: [3,],
-        preview: 10,
-        dead: 10,
+        preview: 5,
+        dead: 7,
         live: 10
     }
 }

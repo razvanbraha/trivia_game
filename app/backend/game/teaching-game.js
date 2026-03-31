@@ -167,7 +167,7 @@ class teachingGame {
             }
         });
 
-        ws_api.support(this.handlers.host, ws_api.signals.CONTINUE, (ws, body) => {
+        ws_api.support(this.handlers.host, ws_api.signals.NEXTROUND, (ws, body) => {
             if (this.state === teachingGame.STATES.AWAIT_NEXT) {
                 this.signalNextRound();
             } else if(ws !== this.host) {
@@ -377,7 +377,7 @@ class teachingGame {
             this.state = teachingGame.STATES.SHOW_QUESTION;
 
             // Delay 1 - Show question
-            delay(1000 * this.preview_time);
+            await delay(1000 * this.settings.preview);
 
             // Send CHOICES to host & players
             const question = this.questions[this.current_question_idx];
@@ -393,7 +393,7 @@ class teachingGame {
             this.state = teachingGame.STATES.SHOW_ANSWERS;
 
             // Delay 2 - Show Answers
-            await delay(1000 * this.dead_time);
+            await delay(1000 * this.settings.dead);
 
             // Send READY
             this.sendAll(ws_api.signals.READY, {});
@@ -402,7 +402,7 @@ class teachingGame {
 
             // Delay 3 - Accept Answers
             this.answering_start_time = new Date();
-            await delay(1000 * this.live_time);
+            await delay(1000 * this.settings.live);
 
             // Fill in incorrect response(-1) for players who didn't answer
             this.players.forEach((player) => {
@@ -442,7 +442,7 @@ class teachingGame {
                 });
             });
 
-            this.state = teachingGame.STATES.AWAIT_CONTINUE;
+            this.state = teachingGame.STATES.AWAIT_NEXT;
 
             // Wait for NEXTROUND
             await this.waitForNextRound();
