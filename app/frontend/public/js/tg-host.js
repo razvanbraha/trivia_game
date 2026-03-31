@@ -65,7 +65,7 @@ ws_api.support(handler, ws_api.signals.JOINEE, (ws, body) => {
 });
 
 ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
-    if(current_state != game_states.WAITING) {
+    if(current_state != game_states.WAITING && current_state != game_states.RESULTS_SERVED) {
         console.log("Host desync detected");
         ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
     }
@@ -115,6 +115,7 @@ ws_api.support(handler, ws_api.signals.RESULTS,  (ws, body) => {
     current_state = game_states.RESULTS_SERVED;
 
     game_helpers.showLeaderboard(body.data_you, body.data_all, true, () => {
+        current_state = game_states.WAITING;
         ws.signal(ws_api.signals.NEXTROUND, {});
     });
     
