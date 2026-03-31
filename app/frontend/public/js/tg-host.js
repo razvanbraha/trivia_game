@@ -31,6 +31,16 @@ let code;
 let players = [];
 let ws;
 
+// user-visible settings
+const settings = {
+    rounds: 0, // how many questions to send 
+    categories: [], // which categories to pull from
+    preview: 0, // question preview time
+    dead: 0, // question dead time
+    live: 0, // question live time
+};
+
+
 //--- SIGNAL HANDLERS ---------------------------------------------------------
 
 // signal handler object: maps signal ids to a handler function
@@ -54,27 +64,37 @@ ws_api.support(handler, ws_api.signals.JOINEE, (ws, body) => {
 });
 
 ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
-
-});
-
-ws_api.support(handler, ws_api.signals.QUESTION,  (ws, body) => {
-
+    if(current_state != game_states.WAITING) {
+        console.log("Player desync detected");
+        ws.signal(ws_api.signals.ERR, {err: "Player desync detected."});
+    }
+    helpers.showQuestion(body.text, body.preview);
 });
 
 ws_api.support(handler, ws_api.signals.CHOICES,  (ws, body) => {
-
+    helpers.showAnswers(body.choices, settings.dead);
 });
 
 ws_api.support(handler, ws_api.signals.READY,  (ws, body) => {
-
+    helpers.answersClickable(settings.live, true, null);
 });
 
 ws_api.support(handler, ws_api.signals.DONE,  (ws, body) => {
-
+    // TODO put function in button callbacks? may need to reorder the file
+    helpers.showCorrectAnswer(-1, body.correct_answer_num, true, () => {
+        ws.signal(ws_api.signals.CONTINUE, {});
+    });
 });
 
 ws_api.support(handler, ws_api.signals.RESULTS,  (ws, body) => {
+    helpers.showLeaderboard(body.data_you, body.data_all, true, () => {
+        ws.signal(ws_api.signals.NEXTROUND, {});
+    });
+});
 
+ws_api.support(handler, ws_api.signals.FINAL,  (ws, body) => {
+    // TODO endgame statistics not implemented(low prio)
+    helpers.showEndLeaderboard(body.data_you, body.data_all, true, null);
 });
 
 ws_api.support(handler, ws_api.signals.GAMEOVER,  (ws, body) => {
@@ -82,6 +102,9 @@ ws_api.support(handler, ws_api.signals.GAMEOVER,  (ws, body) => {
 });
 
 //--- BUTTON CALLBACKS --------------------------------------------------------
+
+
+
 
 //--- BEGIN SCRIPT ------------------------------------------------------------
 
@@ -91,6 +114,9 @@ const fetchData = {
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify({type: "teaching"})
 };
+
+// Load html for questions pages
+helpers.setupPage();
 
 // initiate the game:
 fetch("/api/games", fetchData)

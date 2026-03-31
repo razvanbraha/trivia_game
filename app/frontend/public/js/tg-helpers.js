@@ -169,10 +169,11 @@ function showAnswers(answers, timerStart) {
  * 
  * Makes answer choices clickable and attaches given handler (live time)
  * 
- * @param {*} handler Text of the question
  * @param {Number} timerStart Starting time on the timer(Live time)
+ * @param {Boolean} isTeacher If the page should be prepared for a teacher instead of a student view
+ * @param {Function} answerHandler (not required if isTeacher) Handler to call when answer choice clicked. Receives parameter of the answer number.
  */
-function answersClickable(handler, timerStart) {
+function answersClickable(timerStart, isTeacher, answerHandler) {
     const content_container = document.getElementById("content");
     const question_container = content_container.querySelector("#question-container");
 
@@ -184,7 +185,9 @@ function answersClickable(handler, timerStart) {
     // Edit elements
     let idx = 0
     answer_choices.querySelectorAll('p').forEach((answer_choice) => {
-        answer_choice.addEventListener('click', () => {handler(idx + 1)}); // TODO this ok?
+        if(!isTeacher){
+            answer_choice.addEventListener('click', () => {answerHandler(idx + 1)}); // TODO this ok?
+        }
         answer_choice.classList.remove("preview");
         idx += 1;
     });
@@ -196,11 +199,12 @@ function answersClickable(handler, timerStart) {
  * 
  * Changes the question element to the showing correct/incorrect answer state
  * 
- * @param {Number} chosenAnswerNum Number (1-4) of the answer the user chose, or 0 if none chosen
+ * @param {Number} chosenAnswerNum Number (1-4) of the answer the user chose, or -1 if none chosen
  * @param {Number} correctAnswerNum Number (1-4) of the correct answer
  * @param {Boolean} isTeacher If the page object should be prepared for a teacher instead of a student view
+ * @param {Function} continueBtnHandler (not required if !isTeacher) Function to be called when teacher continue button is clicked
  */
-function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isTeacher) {
+function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isTeacher, continueBtnHandler) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call setupPage.");
     }
@@ -228,9 +232,12 @@ function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isTeacher) {
             question_container.appendChild(incorrect_prompt);
         }
     } else {
+        // Teacher has continue control
         const next_question_btn = template_question_container.querySelector(".next-question-btn").cloneNode(true);
-        // TODO connect handler here??
         question_container.appendChild(next_question_btn);
+        next_question_btn.addEventListener("click", () => {
+            continueBtnHandler();
+        });
     }
 
     // Edit elements
@@ -313,8 +320,9 @@ function getEncouragementText(place, final) {
  * @param {{name: String, points: Number, latest_answer: Number}} current_player Current player's points, name, and latest answer in an object
  * @param {Array({name: String, points: Number, latest_answer: Number})} all_players Array of all player's points, name, and latest answer in an object
  * @param {Boolean} isTeacher If the page object should be prepared for a teacher instead of a student view
+ * @param {Function} nextQuestionBtnHandler (not required if !isTeacher) Function to be called when teacher next question button is clicked
  */
-function showLeaderboard(current_player, all_players, isTeacher) {
+function showLeaderboard(current_player, all_players, isTeacher, nextQuestionBtnHandler) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call setupPage.");
     }
@@ -347,8 +355,12 @@ function showLeaderboard(current_player, all_players, isTeacher) {
     }
     question_container.appendChild(leaderboard);
     if(isTeacher) {
+        // Teacher has continue control
         const next_question_btn = template_question_container.querySelector(".next-question-btn").cloneNode(true);
         question_container.appendChild(next_question_btn);
+        next_question_btn.addEventListener("click", () => {
+            nextQuestionBtnHandler();
+        });
     }
 }
 

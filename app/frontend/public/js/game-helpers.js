@@ -89,6 +89,11 @@ function updatePlayers(players, kick) {
     }
 }
 
+
+function startGame() {
+    
+}
+
 // TODO add functions to create question text, create answer choices, etc
 
 //--- EXPORTS -----------------------------------------------------------------
