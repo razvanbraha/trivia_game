@@ -174,3 +174,9 @@ globalThis.addEventListener("keydown", (event) => {
         event.preventDefault();
     }
 })
+
+css_cube.classList.add("show-right")
+setTimeout(() => {
+    css_cube.classList = "cube";
+    css_cube.classList.add("show-top")
+}, 750)

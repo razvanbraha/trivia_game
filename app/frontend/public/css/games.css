@@ -1,7 +1,56 @@
+* {
+    box-sizing: border-box;
+    margin: 0px;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+p {
+    margin-bottom: 0px;
+}
+
+
+/* ------------- Large Screen ------------- */
+@media screen and (min-width: 1200px) {
+    .next-question-container, .question-text-container {
+        width: 40vw;
+    }
+
+    .answer-choices {
+        width: 55vw;
+        font-size: 22px;
+    }
+}
+
+/* ------------- Medium Screen ------------- */
+@media screen and (min-width: 600px) and (max-width:1199px)  {
+     .next-question-container, .question-text-container {
+        width: 60vw;
+    }
+
+    .answer-choices {
+        width: 80vw;
+        font-size: 20px;
+    }
+}
+
+/* ------------- Small Screen ------------- */
+@media screen and (max-width: 599px) {
+    .next-question-container, .question-text-container {
+        width: 80vw;
+    }
+
+    .answer-choices {
+        width: 95vw;
+        font-size: 14px;
+    }
+}
+
 #question-container {
     display: flex;
     flex-direction: column;
     align-items: center;
+    height: 90vh;
+    background: linear-gradient(#9292ff, #7575eb);
 }
 
 .lobby-ctnr {
@@ -10,6 +59,216 @@
     align-items: center;
 }
 
-.question-ctnr {
+/* -------------  Next Question Styling ------------- */
 
+.next-question-container {
+    background-color: rgba(255, 255, 255, 0.3);
+    height: 5vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 5vh;
+    border-radius: 10px;
+    font-size: 25px;
+    font-weight:700;
+}
+
+.question-text-container {
+    background-color: white;
+    min-height: 20vh;
+    overflow: scroll;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    margin-top: 5vh;
+    border-radius: 10px;
+    font-size: 18px;
+    padding: 10px;
+}
+
+.state-question-display {
+    max-height: 60vh;
+}
+
+/* ------------- Timer Bar ------------- */
+/* source : https://css-tricks.com/timer-bars-in-css-with-custom-properties/ */
+.countdown {
+    margin-top:auto;
+    margin-bottom: 5%;
+}
+.round-time-bar-background {
+    background: linear-gradient(#6f6ffc, #5757e5);
+    height: 15px;
+    width: 100vw;
+    margin: 0px;
+    padding: 0px;
+}
+.round-time-bar {
+  overflow: hidden;
+}
+
+.round-time-bar div {
+  height: 15px;
+  width: 100vw;
+  animation: roundtime calc(var(--duration) * 1s) linear forwards;
+  transform-origin: left center;
+  background: linear-gradient(to bottom, red, #900);
+}
+
+@keyframes roundtime {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* ------------- Answer Choices ------------- */
+.answer-choices {
+    height: 40vh;
+    margin-top: 5vh;
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 15px; 
+}
+
+.answer-choice-container {
+    height: 100%;
+    width: 100%;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    overflow:scroll;
+    text-align: center;
+    padding: 10px;
+    border-radius: 10px;
+    color: white;
+}
+
+/* ------------- Answer Choices (preview) ------------- */
+
+.container-choice-one.preview {
+    background-color: rgb(255, 0, 0, 0.5);
+}
+
+.container-choice-two.preview {
+    background-color: rgb(0, 128, 0, 0.5);
+}
+
+.container-choice-three.preview {
+    background-color: rgb(254, 190, 16, 0.5);
+}
+
+.container-choice-four.preview {
+    background-color: rgb(0, 0, 255, 0.5);
+}
+
+.state-answer-display {
+    max-height: 20vh;
+}
+
+/* ------------- Answer Choices ------------- (no preview) */
+
+.container-choice-one {
+    background-color: rgb(255, 0, 0);
+}
+
+.container-choice-one:not(.preview):not(.unpicked):not(.correct):not(.incorrect):hover {
+    background-color: rgb(198, 1, 1);
+}
+
+.container-choice-two {
+    background-color: rgb(0, 128, 0);
+}
+
+.container-choice-two:not(.preview):not(.unpicked):not(.correct):not(.incorrect):hover {
+    background-color: rgb(0, 91, 0);
+}
+
+.container-choice-three {
+    background-color: rgb(254, 190, 16);
+}
+
+.container-choice-three:not(.preview):not(.unpicked):not(.correct):not(.incorrect):hover {
+    background-color: rgb(183, 138, 13);
+}
+
+.container-choice-four {
+    background-color: rgb(0, 0, 255);
+}
+
+.container-choice-four:not(.preview):not(.unpicked):not(.correct):not(.incorrect):hover {
+    background-color: rgb(0, 0, 198);
+}
+
+.answer-choice-container:not(.preview):not(.unpicked):not(.correct):not(.incorrect):hover {
+    cursor: pointer;
+}
+
+/* ------------- Answer Choices ------------- (answered) */
+
+.unpicked {
+    opacity: 50%;
+    background-color: lightgray;
+}
+
+.correct {
+    background-color: rgb(65, 190, 65);
+}
+
+.incorrect {
+    background-color: red;
+}
+
+/* Stretch Goal: Add confetti Animation (or maybe something more sustainability conscious */
+.correct-prompt-container {
+    margin-top: 5vh;
+    font-size: 30px;
+    color: rgb(89, 215, 89);
+    font-weight: 900;
+}
+
+/* Stretch Goal: Add Rain Animation */
+.incorrect-prompt-container {
+    margin-top: 5vh;
+    font-size: 30px;
+    color: red;
+    font-weight: 900;
+}
+
+.next-question-btn {
+    width: 100vw;
+    display: flex;
+}
+
+.next-question-btn-btn {
+    margin-left:auto;
+    margin-right: 5%;
+    margin-top: 5vh;
+    font-size: 25px;
+    font-weight: 900;
+    background-color: #6495ED;
+    border-radius: 10px;
+    padding:10px;
+    border: 1px solid #6495ED;
+    color: white;
+}
+
+/* ------------- Student Leaderboard ------------- */
+.box {
+    margin-top: 5vh;
+    margin-bottom: 10vh;
+}
+
+.self-ranking {
+    font-size: 25px;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.3);
+    height: 10vh;
+    padding-top: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 5px;
+    color: white;
 }
