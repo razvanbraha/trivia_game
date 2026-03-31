@@ -39,8 +39,8 @@ class teachingGame {
             MAX: 50
         },
         PREVIEW_TIME: {
-            MIN: 30,
-            MAX: 0,
+            MIN: 0,
+            MAX: 30,
         },
         DEAD_TIME: {
             MIN: 0,
@@ -231,7 +231,7 @@ class teachingGame {
             return;
         }
         ws.handler = this.handlers.player;
-        this.players.push({name, ws, latest: this.NO_ANSWER_NUM, points: 0});
+        this.players.push({name, ws, latest: teachingGame.NO_ANSWER_NUM, points: 0});
 
         this.log(`player ${this.players.length} (${name}) joined`);
         ws.respond(ws_api.signals.JOIN, true);
@@ -249,28 +249,28 @@ class teachingGame {
         }
 
         let valid = true;
-        if(!inRange(settings.rounds, RANGES.ROUNDS)) {
+        if(!inRange(settings.rounds, teachingGame.RANGES.ROUNDS)) {
             this.host.err( "Invalid setting: number of questions.");
             valid = false;
         }
-        if(!inRange(settings.preview, RANGES.PREVIEW_TIME)) {
+        if(!inRange(settings.preview, teachingGame.RANGES.PREVIEW_TIME)) {
             this.host.err( "Invalid setting: preview time.");
             valid = false;
         }
-        if(!inRange(settings.dead, RANGES.DEAD_TIME)) {
+        if(!inRange(settings.dead, teachingGame.RANGES.DEAD_TIME)) {
             this.host.err( "Invalid setting: dead time.");
             valid = false;
         }
-        if(!inRange(settings.live, RANGES.LIVE_TIME)) {
+        if(!inRange(settings.live, teachingGame.RANGES.LIVE_TIME)) {
             this.host.err( "Invalid setting: live time.");
             valid = false;
         }
-        if(!inRange(settings.categories.length, RANGES.CATEGORIES)) {
+        if(!inRange(settings.categories.length, teachingGame.RANGES.CATEGORIES)) {
             this.host.err( "Invalid setting: categories.");
             valid = false;
         }
         // Check duplicates
-        if(new Set(settings.categories).size !== settingscategories.length) {
+        if(new Set(settings.categories).size !== settings.categories.length) {
             this.host.err( "Invalid setting: categories.");
             valid = false;
         }
@@ -402,7 +402,7 @@ class teachingGame {
             // Fill in incorrect response(-1) for players who didn't answer
             this.players.forEach((player) => {
                 if(this.answers.get(player[ws])[this.current_question_idx] === undefined) {
-                    this.answers.get(player[ws])[this.current_question_idx] = this.NO_ANSWER_NUM;
+                    this.answers.get(player[ws])[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
                 }
                 // Don't need to add any points
             });
@@ -464,7 +464,7 @@ class teachingGame {
 
         // Now wait till CONTINUE to end game
 
-        await teachingGame.delay(1000 * this.AUTO_CLOSE_TIMER);
+        await teachingGame.delay(1000 * teachingGame.AUTO_CLOSE_TIMER);
 
         // If game not closed yet, do it manually
         if(this.state === teachingGame.STATES.FINAL) {
@@ -499,14 +499,14 @@ class teachingGame {
             const elapsed_seconds = elapsed_time / 1000; // Date() is in milliseconds
 
             // Points = ratio of elapsed time to live time, multiplied by the base number of points
-            let points = ((this.live_time - elapsed_seconds) / this.live_time) * this.BASE_QUESTION_POINTS;
+            let points = ((this.live_time - elapsed_seconds) / this.live_time) * teachingGame.BASE_QUESTION_POINTS;
             points = Math.round(points); // Round to integer
 
             if(points < 0) {
                 // Timed out, no points
                 points = 0;
                 // Set no answer because answer did not come in time
-                this.answers.get(ws)[this.current_question_idx] = this.NO_ANSWER_NUM;
+                this.answers.get(ws)[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
             }
 
             this.points.set(ws, this.points.get(ws) + points);
@@ -528,7 +528,7 @@ class teachingGame {
             const timeout = setTimeout(() => {
                 this.signalContinue = null;
                 resolve();
-            }, this.AUTO_CONTINUE_TIMER * 1000);
+            }, teachingGame.AUTO_CONTINUE_TIMER * 1000);
         });
     }
 
@@ -547,7 +547,7 @@ class teachingGame {
             const timeout = setTimeout(() => {
                 this.signalNextRound = null;
                 resolve();
-            }, this.AUTO_NEXTROUND_TIMER * 1000);
+            }, teachingGame.AUTO_NEXTROUND_TIMER * 1000);
         });
     }
 
