@@ -124,7 +124,7 @@ class teachingGame {
         // teacher (host) - can send START, KICK and CONTINUE
         ws_api.support(this.handlers.host, ws_api.signals.START, (ws, body) => {
             if (this.state === teachingGame.STATES.LOBBY) {
-                this.startGame(ws, body);
+                this.startGame(body);
             } 
             else {
                 ws.err("Game has already started.");
@@ -147,8 +147,11 @@ class teachingGame {
             ws.respond(ws_api.signals.KICK, success);
             if(!success) {
                 const err = `Could not find player '${body.name}'`;
-                this.error(err);
-                ws.err(err);
+                this.log(err);
+                this.sendAll(
+                    ws_api.signals.ERR, 
+                    { err: err }
+                );
             }
         });
 
@@ -158,9 +161,9 @@ class teachingGame {
             } else if (this.state === teachingGame.STATES.FINAL && ws === this.host) {
                 this.endGame(ws, body);
             } else if(ws !== this.host) {
-                ws.err("Only host can continue.");
+                ws.signal(ws_api.signals.ERR, {err: "Only host can continue."});
             } else if(this.state === teachingGame.STATES.ENDED) {
-                ws.err("Game has already ended.");
+                ws.signal(ws_api.signals.ERR, {err: "Game has already ended."});
             }
         });
 
@@ -168,16 +171,16 @@ class teachingGame {
             if (this.state === teachingGame.STATES.AWAIT_NEXT) {
                 this.signalNextRound();
             } else if(ws !== this.host) {
-                ws.err("Only host can continue.");
+                ws.signal(ws_api.signals.ERR, {err: "Only host can continue."});
             } else if(this.state === teachingGame.STATES.ENDED) {
-                ws.err("Game has already ended.");
+                ws.signal(ws_api.signals.ERR, {err: "Game has already ended."});
             }
         });
 
         // students (players) - only signal needed is answer
         ws_api.support(this.handlers.player, ws_api.signals.ANSWER, (ws, body) => {
             console.log("Haven't implemented handling answers yet");
-            ws.send(ws_api.signals.ACK, { msg: `received your answer (${body.num}); answer handling not implemented yet`});
+            ws.signal(ws_api.signals.ACK, { msg: `received your answer (${body.num}); answer handling not implemented yet`});
         });
     }
 
@@ -205,10 +208,10 @@ class teachingGame {
      */
     sendAll(sig, body) {
         if(this.host) {
-            this.host.send(sig, body);
+            this.host.signal(sig, body);
         }
-        for(const player of players) {
-            player.ws.send(sig, body);
+        for(const player of this.players) {
+            player.ws.signal(sig, body);
         }
     }
 
@@ -244,34 +247,39 @@ class teachingGame {
      * @returns true/false if the settings are valid
      */
     validateSettings(settings) {
-        const inRange = (a, range) => {
-            return a <= range.MAX && a >= range.MIN;
-        }
-
         let valid = true;
-        if(!inRange(settings.rounds, teachingGame.RANGES.ROUNDS)) {
-            this.host.err( "Invalid setting: number of questions.");
-            valid = false;
-        }
-        if(!inRange(settings.preview, teachingGame.RANGES.PREVIEW_TIME)) {
-            this.host.err( "Invalid setting: preview time.");
-            valid = false;
-        }
-        if(!inRange(settings.dead, teachingGame.RANGES.DEAD_TIME)) {
-            this.host.err( "Invalid setting: dead time.");
-            valid = false;
-        }
-        if(!inRange(settings.live, teachingGame.RANGES.LIVE_TIME)) {
-            this.host.err( "Invalid setting: live time.");
-            valid = false;
-        }
-        if(!inRange(settings.categories.length, teachingGame.RANGES.CATEGORIES)) {
-            this.host.err( "Invalid setting: categories.");
-            valid = false;
-        }
-        // Check duplicates
-        if(new Set(settings.categories).size !== settings.categories.length) {
-            this.host.err( "Invalid setting: categories.");
+        try {
+            const inRange = (a, range) => {
+                return a <= range.MAX && a >= range.MIN;
+            }
+            if(!inRange(settings.rounds, teachingGame.RANGES.ROUNDS)) {
+                this.host.err( "Invalid setting: number of questions.");
+                valid = false;
+            }
+            if(!inRange(settings.preview, teachingGame.RANGES.PREVIEW_TIME)) {
+                this.host.err( "Invalid setting: preview time.");
+                valid = false;
+            }
+            if(!inRange(settings.dead, teachingGame.RANGES.DEAD_TIME)) {
+                this.host.err( "Invalid setting: dead time.");
+                valid = false;
+            }
+            if(!inRange(settings.live, teachingGame.RANGES.LIVE_TIME)) {
+                this.host.err( "Invalid setting: live time.");
+                valid = false;
+            }
+            if(!inRange(settings.categories.length, teachingGame.RANGES.CATEGORIES)) {
+                this.host.err( "Invalid setting: categories.");
+                valid = false;
+            }
+            // Check duplicates
+            if(new Set(settings.categories).size !== settings.categories.length) {
+                this.host.err( "Invalid setting: categories.");
+                valid = false;
+            }
+        } catch(e) {
+            this.host.err(`Error reading settings: ${e.message}`);
+            this.log(e.stack);
             valid = false;
         }
 
@@ -317,25 +325,25 @@ class teachingGame {
      */
     async startGame(settings) {
         if(!this.validateSettings(settings)) {
-            ws_api.error(this.host, "Invalid settings")
+            this.host.signal(ws_api.signals.ERR, { err: "Invalid settings." })
             return;
         }
         this.settings = settings;
 
         // Load questions & error check
         try {
-            this.questions = await questionsDB.selectRandQuestions(categories, num_questions);
+            this.questions = await questionsDB.selectRandQuestions(settings.rounds, settings.categories);
         } catch (e) {
             this.sendAll(
-                ws_api.signals.ERROR, 
+                ws_api.signals.ERR, 
                 { err: "Questions could not be loaded succcessfully." }
             );
         }
         
-        if(this.questions.length < count) {
+        if(this.questions.length < settings.rounds) {   
             this.sendAll(
-                ws_api.signals.ERROR, 
-                { err: "Not enough questions in Database. Expect unstable behavior." }
+                ws_api.signals.ERR, 
+                { err: `Not enough questions in Database. Expect unstable behavior. Need ${settings.rounds}, has ${this.questions.length}` }
             );
         }
 
@@ -350,16 +358,16 @@ class teachingGame {
      */
     async serveQuestions() {
         // used only in here: set a delay of a given number of milliseconds
-        const delay = (ms) => { return new Promise(() => setTimeout(null, ms)) };
+        const delay = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) };
 
 
-        while(this.questions_sent < this.settings.questions) {
+        while(this.current_question_idx  < this.settings.rounds) {
             // Send QUESTION to host & players
             this.sendAll(
                 ws_api.signals.QUESTION, 
                 {
                     text: this.questions[this.current_question_idx].question,
-                    num: this.questions_sent,
+                    num: this.current_question_idx + 1,
                     preview: this.settings.preview,
                     dead: this.settings.dead,
                     live: this.settings.live
@@ -378,26 +386,23 @@ class teachingGame {
             teachingGame.shuffle(choices_list);
             this.current_correct_answer_number = choices_list.indexOf(correct_answer) + 1;
 
-            this.sendAll({
-                "type": messages.CHOICES,
-                "answer_choices": choices_list,
+            this.sendAll(ws_api.signals.CHOICES, {
+                "choices": choices_list,
             });
 
             this.state = teachingGame.STATES.SHOW_ANSWERS;
 
             // Delay 2 - Show Answers
-            delay(1000 * this.dead_time);
+            await delay(1000 * this.dead_time);
 
             // Send READY
-            this.sendAll({
-                "type": messages.READY,
-            });
+            this.sendAll(ws_api.signals.READY, {});
 
             this.state = teachingGame.STATES.RECEIVE_RESPONSES;
 
             // Delay 3 - Accept Answers
             this.answering_start_time = new Date();
-            await teachingGame.delay(1000 * this.live_time);
+            await delay(1000 * this.live_time);
 
             // Fill in incorrect response(-1) for players who didn't answer
             this.players.forEach((player) => {
@@ -408,12 +413,12 @@ class teachingGame {
             });
 
             // Send DONE
-            ws_api.send(this.host, ws_api.signals.DONE, {
+            this.host.signal(ws_api.signals.DONE, {
                 correct_answer_num: this.current_correct_answer_number,
                 data_you: null,
             });
             this.players.forEach((player) => {
-                ws_api.send(player[ws], ws_api.signals.DONE, {
+                player.ws.signal(ws_api.signals.DONE, {
                     correct_answer_num: this.current_correct_answer_number,
                     data_you: player,
                 });
@@ -426,7 +431,7 @@ class teachingGame {
 
             // Send RESULTS
             const allRankings = this.getRankings();
-            this.host.api.send(ws_api.signals.RESULTS, {
+            this.host.signal(ws_api.signals.RESULTS, {
                 data_you: null,
                 data_all: allRankings,
             });
@@ -449,7 +454,7 @@ class teachingGame {
         // Send FINAL
         const allRankings = this.getRankings();
 
-        this.host.api.send(ws_api.signals.FINAL, {
+        this.host.signal(ws_api.signals.FINAL, {
             data_you: null,
             data_all: allRankings,
         });
@@ -464,7 +469,7 @@ class teachingGame {
 
         // Now wait till CONTINUE to end game
 
-        await teachingGame.delay(1000 * teachingGame.AUTO_CLOSE_TIMER);
+        await delay(1000 * teachingGame.AUTO_CLOSE_TIMER);
 
         // If game not closed yet, do it manually
         if(this.state === teachingGame.STATES.FINAL) {
