@@ -26,9 +26,10 @@ class teachingGame {
         SHOW_QUESTION: 2, // state of each turn when game reveals the question
         SHOW_ANSWERS: 3, // state of each turn when game reveals answer choices
         RECEIVE_RESPONSES: 4, // state of each turn when game accepts responses
-        AWAIT_NEXT: 5, // state of each turn when game waits for teacher to proceed & shows player progress
-        FINAL: 6, // final state: game shows final results & waits for game to end
-        ENDED: 7, // After final state, game is closed out
+        AWAIT_CONTINUE: 5, // state of each turn when game waits for teacher to proceed to show player progress
+        AWAIT_NEXT: 6, // state of each turn when game waits for teacher to proceed to next question
+        FINAL: 7, // final state: game shows final results & waits for game to end
+        ENDED: 8, // After final state, game is closed out
     }
 
     // setting limits as ranges
@@ -60,6 +61,7 @@ class teachingGame {
     static NO_ANSWER_NUM = -1;
     static BASE_QUESTION_POINTS = 1000;
     static AUTO_CONTINUE_TIMER = 120; // 2 mins
+    static AUTO_NEXTROUND_TIMER = 60; // 1 mins
     static AUTO_CLOSE_TIMER = 300; // 5 mins
 
     //--- STATE DATA -----------------------------------------------------------------
@@ -80,6 +82,8 @@ class teachingGame {
 
     signalContinue = null; // Function to resolve the promise making the main game flow(serveQuestions) wait for CONTINUE
     // Effectively, calling signalContinue() allows the main flow to continue with the next question
+
+    signalNextRound = null; // Same idea as signalContinue
 
     // user-visible settings
     settings = {
@@ -149,10 +153,20 @@ class teachingGame {
         });
 
         ws_api.support(this.handlers.host, ws_api.signals.CONTINUE, (ws, body) => {
-            if (this.state === teachingGame.STATES.AWAIT_NEXT) {
-                this.advanceQuestion(ws, body);
+            if (this.state === teachingGame.STATES.AWAIT_CONTINUE) {
+                this.signalContinue();
             } else if (this.state === teachingGame.STATES.FINAL && ws === this.host) {
                 this.endGame(ws, body);
+            } else if(ws !== this.host) {
+                ws.err("Only host can continue.");
+            } else if(this.state === teachingGame.STATES.ENDED) {
+                ws.err("Game has already ended.");
+            }
+        });
+
+        ws_api.support(this.handlers.host, ws_api.signals.CONTINUE, (ws, body) => {
+            if (this.state === teachingGame.STATES.AWAIT_NEXT) {
+                this.signalNextRound();
             } else if(ws !== this.host) {
                 ws.err("Only host can continue.");
             } else if(this.state === teachingGame.STATES.ENDED) {
@@ -394,40 +408,53 @@ class teachingGame {
             });
 
             // Send DONE
-            const allRankings = this.getRankings();
             ws_api.send(this.host, ws_api.signals.DONE, {
                 correct_answer_num: this.current_correct_answer_number,
                 data_you: null,
-                data_all: allRankings
             });
             this.players.forEach((player) => {
                 ws_api.send(player[ws], ws_api.signals.DONE, {
                     correct_answer_num: this.current_correct_answer_number,
                     data_you: player,
+                });
+            });
+
+            this.state = teachingGame.STATES.AWAIT_CONTINUE;
+
+            // Wait for CONTINUE
+            await this.waitForContinue();
+
+            // Send RESULTS
+            const allRankings = this.getRankings();
+            this.host.api.send(ws_api.signals.RESULTS, {
+                data_you: null,
+                data_all: allRankings,
+            });
+            this.players.forEach((player) => {
+                player.ws.signal(ws_api.signals.RESULTS, {
+                    data_you: player,
                     data_all: allRankings
                 });
             });
 
-            this.state = teachingGame.STATES.AWAIT_NEXT;
+            this.state = teachingGame.STATES.AWAIT_CONTINUE;
 
-            // Wait for CONTINUE (advanceQuestion)
-            await this.waitForContinue();
+            // Wait for NEXTROUND
+            await this.waitForNextRound();
 
             // Increment question index
             this.current_question_idx = this.current_question_idx + 1;
         }
 
-        // Send RESULTS
+        // Send FINAL
         const allRankings = this.getRankings();
 
-        this.host.api.send(ws_api.signals.RESULTS, {
-            correct_answer_num: this.current_correct_answer_number,
+        this.host.api.send(ws_api.signals.FINAL, {
             data_you: null,
             data_all: allRankings,
         });
         this.players.forEach((player) => {
-            player.ws.signal(ws_api.signals.RESULTS, {
-                correct_answer_num: this.current_correct_answer_number,
+            player.ws.signal(ws_api.signals.FINAL, {
                 data_you: player,
                 data_all: allRankings
             });
@@ -506,10 +533,22 @@ class teachingGame {
     }
 
     /**
-     * Advances game to the next question
+     * Called by main flow to wait for CONTINUE signal
+     * @returns A promise waiting for something to call signalContinue()
      */
-    advanceQuestion() {
-        // TODO implement
+    waitForNextRound() {
+        return new Promise(resolve => {
+            this.signalNextRound = () => {
+                clearTimeout(timeout);
+                resolve();
+            };
+
+            // In case host disconnects, auto-continue
+            const timeout = setTimeout(() => {
+                this.signalNextRound = null;
+                resolve();
+            }, this.AUTO_NEXTROUND_TIMER * 1000);
+        });
     }
 
     

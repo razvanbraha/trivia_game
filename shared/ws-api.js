@@ -145,11 +145,10 @@ const signals = {
         sender: "server",
         fields: [
             "correct_answer_num",
-            "data_you", // {name, points, latest_answer}
-            "data_all" // List({name, points, latest_answer})
+            "data_you" // {name, points, latest_answer}
         ]
     },
-    // sent by a host client to tell the server to continue to the next part of a game
+    // sent by a host client to tell the server to continue to the next screen(results screen)
     CONTINUE: {
         id: "CONTINUE",
         sender: "client",
@@ -165,6 +164,12 @@ const signals = {
             "data_you", // {name, points, latest_answer}
             "data_all" // List({name, points, latest_answer})
         ]
+    },
+    // sent by a host client to tell the server to continue to the next round of a game
+    NEXTROUND: {
+        id: "NEXTROUND",
+        sender: "client",
+        fields: []
     },
     // sent by the server to tell clients that the game has ended and report the final results
     FINAL: {
