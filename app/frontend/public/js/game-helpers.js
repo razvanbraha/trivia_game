@@ -415,8 +415,12 @@ function showLeaderboard(current_player, all_players, isHost, nextQuestionBtnHan
     // Edit elements
     let idx = 0;
     leaderboard.querySelectorAll('p').forEach((ranking) => {
-        ranking.innerText = `${all_players[idx].name}: ${all_players[idx].points}`;
-        idx += 1;
+        if(all_players[idx]) {
+            ranking.innerText = `${all_players[idx].name}: ${all_players[idx].points}`;
+            idx += 1;
+        } else {
+            leaderboard.removeChild(ranking);
+        }
     });
 
     // Add new elements
@@ -472,8 +476,12 @@ function showEndLeaderboard(current_player, all_players, isHost, statistics) {
     // Edit elements
     let idx = 0;
     leaderboard.querySelectorAll('p').forEach((ranking) => {
-        ranking.innerText = `${all_players[idx].name}: ${all_players[idx].points}`;
-        idx += 1;
+        if(all_players[idx]) {
+            ranking.innerText = `${all_players[idx].name}: ${all_players[idx].points}`;
+            idx += 1;
+        } else {
+            leaderboard.removeChild(ranking);
+        }
     });
     if(isHost) {
         your_learning.innerText = "Class Learning";
