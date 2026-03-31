@@ -10,8 +10,7 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 const ws_api = window.ws_api;
-import bootstrap_helpers from "./game-helpers.js";
-import helpers from "./tg-helpers.js";
+import game_helpers from "./game-helpers.js";
 
 //--- SETUP -------------------------------------------------------------------
 
@@ -51,7 +50,7 @@ function kick(name) {
         console.log(success ? `Kicked ${name}` : `Failed to kick ${name}`);
         if(success) {
             players.splice(players.indexOf(name), 1);
-            bootstrap_helpers.updatePlayers(players, kick);
+            game_helpers.updatePlayers(players, kick);
         }
     });
     ws.signal(ws_api.signals.KICK, {name});
@@ -60,7 +59,7 @@ function kick(name) {
 ws_api.support(handler, ws_api.signals.JOINEE, (ws, body) => {
     players.push(body.name);
     console.log(`Player ${body.name} joined; players:`, players);
-    bootstrap_helpers.updatePlayers(players, kick);
+    game_helpers.updatePlayers(players, kick);
 });
 
 ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
@@ -68,33 +67,33 @@ ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
         console.log("Player desync detected");
         ws.signal(ws_api.signals.ERR, {err: "Player desync detected."});
     }
-    helpers.showQuestion(body.text, body.preview);
+    game_helpers.showQuestion(body.text, body.preview);
 });
 
 ws_api.support(handler, ws_api.signals.CHOICES,  (ws, body) => {
-    helpers.showAnswers(body.choices, settings.dead);
+    game_helpers.showAnswers(body.choices, settings.dead);
 });
 
 ws_api.support(handler, ws_api.signals.READY,  (ws, body) => {
-    helpers.answersClickable(settings.live, true, null);
+    game_helpers.answersClickable(settings.live, true, null);
 });
 
 ws_api.support(handler, ws_api.signals.DONE,  (ws, body) => {
     // TODO put function in button callbacks? may need to reorder the file
-    helpers.showCorrectAnswer(-1, body.correct_answer_num, true, () => {
+    game_helpers.showCorrectAnswer(-1, body.correct_answer_num, true, () => {
         ws.signal(ws_api.signals.CONTINUE, {});
     });
 });
 
 ws_api.support(handler, ws_api.signals.RESULTS,  (ws, body) => {
-    helpers.showLeaderboard(body.data_you, body.data_all, true, () => {
+    game_helpers.showLeaderboard(body.data_you, body.data_all, true, () => {
         ws.signal(ws_api.signals.NEXTROUND, {});
     });
 });
 
 ws_api.support(handler, ws_api.signals.FINAL,  (ws, body) => {
     // TODO endgame statistics not implemented(low prio)
-    helpers.showEndLeaderboard(body.data_you, body.data_all, true, null);
+    game_helpers.showEndLeaderboard(body.data_you, body.data_all, true, null);
 });
 
 ws_api.support(handler, ws_api.signals.GAMEOVER,  (ws, body) => {
@@ -116,7 +115,7 @@ const fetchData = {
 };
 
 // Load html for questions pages
-helpers.setupPage();
+game_helpers.setupPage();
 
 // initiate the game:
 fetch("/api/games", fetchData)
@@ -147,7 +146,7 @@ fetch("/api/games", fetchData)
             ws.expect(ws_api.signals.JOIN, (success) => {
                 if(success) {
                     console.log(`Successfully joined ${code}`);
-                    bootstrap_helpers.createLobby(code);
+                    game_helpers.createLobby(code);
                     return;
                 }
                 console.log(`Rejected from ${code}`, "Ouch! Rejection hurts")
