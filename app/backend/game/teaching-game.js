@@ -75,7 +75,6 @@ class teachingGame {
     state = 0; // the current state
     questions = []; // List of questions to be used by the game
     current_question_idx = 0; // Index of current question in game(increment on "CONTINUE")
-    answers = new Map(); // Map{socket(player): List(answer #)} - list indicies correspond to questions list
     current_correct_answer_number = -1; // Correct answer number (1/2/3/4)
     
     answering_start_time = null; // Date() of the time when the answering period/"live time" started
@@ -97,7 +96,7 @@ class teachingGame {
     // client-related
     host = null; // the host WebSocket connection
     // list of players, each storing: name, websocket, points, and last answer(latest)
-    // {ws, name, points, latest_answer}
+    // {ws, name, points, latest_answer, List(answer #)}
     // order of list is implicitly the player ranks
     players = []; 
     
@@ -234,8 +233,7 @@ class teachingGame {
             return;
         }
         ws.handler = this.handlers.player;
-        this.players.push({name, ws, latest: teachingGame.NO_ANSWER_NUM, points: 0});
-        this.answers.set(ws, []);
+        this.players.push({name, ws, latest: teachingGame.NO_ANSWER_NUM, points: 0, answers: []});
 
         this.log(`player ${this.players.length} (${name}) joined`);
         ws.respond(ws_api.signals.JOIN, true);
@@ -308,12 +306,39 @@ class teachingGame {
         }
     }
 
+    /**
+     * Returns class accuracy percent for a given question
+     * @param {Number} questionIdx Index of the question
+     * @param {Number} correctAnswerNumber Correct answer number (1-4)
+     */
+    getClassAccuracy(questionIdx, correctAnswerNumber) {
+        // if no students
+        if(this.players.length === 0) {
+            return 0;
+        }
+
+        let num_correct = 0;
+
+        this.players.forEach((player) => {
+            try {
+                if(player.answers[questionIdx] === correctAnswerNumber) {
+                    num_correct += 1;
+                }
+            } catch (e) {
+                // Do nothing, may not have answered yet
+            }  
+        });
+
+        return Math.round((num_correct / this.players.length) * 100);
+    }
+
     // Returns player without ws field
     getSanitizedPlayer(player) {
         return {
             name: player.name, 
             points: player.points, 
-            latest_answer: player.latest_answer
+            latest_answer: player.latest_answer,
+            answers: player.answers
         };
     }
 
@@ -416,21 +441,24 @@ class teachingGame {
 
             // Fill in incorrect response(-1) for players who didn't answer
             this.players.forEach((player) => {
-                if(this.answers.get(player.ws)[this.current_question_idx] === undefined) {
-                    this.answers.get(player.ws)[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
+                if(player.answers[this.current_question_idx] === undefined) {
+                    player.answers[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
                 }
                 // Don't need to add any points
             });
 
             // Send DONE
+            const class_accuracy = this.getClassAccuracy(this.current_question_idx, this.current_correct_answer_number);
             this.host.signal(ws_api.signals.DONE, {
                 correct_answer_num: this.current_correct_answer_number,
                 data_you: null,
+                class_accuracy_percent: class_accuracy,
             });
             this.players.forEach((player) => {
                 player.ws.signal(ws_api.signals.DONE, {
                     correct_answer_num: this.current_correct_answer_number,
                     data_you: this.getSanitizedPlayer(player),
+                    class_accuracy_percent: class_accuracy,
                 });
             });
 
@@ -501,15 +529,15 @@ class teachingGame {
             return;
         }
 
-        // Stop duplicate answers
-        if (this.answers.get(ws)[this.current_question_idx] !== undefined) {
-            return;
-        } 
-
         const player = this.players.find((p) => p.ws == ws);
 
+        // Stop duplicate answers
+        if (player.answers[this.current_question_idx] !== undefined) {
+            return;
+        }    
+
         // Register answer
-        this.answers.get(ws)[this.current_question_idx] = answer_number;
+        player.answers[this.current_question_idx] = answer_number;
         // Add points
         if (answer_number === this.current_correct_answer_number) {
             const elapsed_time = new Date() - this.answering_start_time;
@@ -523,7 +551,7 @@ class teachingGame {
                 // Timed out, no points
                 points = 0;
                 // Set no answer because answer did not come in time
-                this.answers.get(ws)[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
+                player.answers[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
             }
 
             player.points += points;
@@ -594,7 +622,6 @@ class teachingGame {
         this.host.handler = null;
         this.players = [];
         this.questions = [];
-        this.answers.clear();
     }
 }
 
