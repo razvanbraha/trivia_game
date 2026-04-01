@@ -198,6 +198,30 @@ function getSettings() {
     }
 }
 
+/**
+ * Pulls 
+ * @param {*} text 
+ * @param {*} dead_time 
+ */
+function createQuestion(text, prev) {
+    const template_div = document.createElement('div');
+
+    fetch('/public/templates/question-template.html')
+    .then(res => res.text())
+    .then((template_str) => {
+        template_div.innerHTML = template_str;
+        const template = template_div.querySelector("#game-ui-template");
+        template_question_container = template.content.querySelector("#question-container").cloneNode(true);
+        if(window.location.href.includes("test-tg-templates")) {
+            document.body.appendChild(template_question_container);
+            // Tell script in interactive-box.js that the cube exists
+            document.dispatchEvent(new Event('boxAdded'));
+        }
+        showQuestion(text, prev);
+    });
+
+
+}
 
 // Imported from tg-helpers
 /**
@@ -206,21 +230,7 @@ function getSettings() {
  * Sets up the page with content from question-template.html
  */
 function loadTemplateContent() {
-    const template_div = document.createElement('div');
-
-    fetch('/public/templates/question-template.html')
-    .then((res) => {
-        res.text().then((template_str) => {
-            template_div.innerHTML = template_str;
-            const template = template_div.querySelector("#game-ui-template");
-            template_question_container = template.content.querySelector("#question-container").cloneNode(true);
-            if(window.location.href.includes("test-tg-templates")) {
-                document.body.appendChild(template_question_container);
-                // Tell script in interactive-box.js that the cube exists
-                document.dispatchEvent(new Event('boxAdded'));
-            }
-        });
-    });
+    
 }
 
 /**
@@ -613,7 +623,7 @@ export default {
     createLobby,
     updatePlayers,
     getSettings,
-    loadTemplateContent,
+    createQuestion,
     showQuestion,
     showAnswers,
     answersClickable,
