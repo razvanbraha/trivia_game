@@ -1,3 +1,12 @@
+//-----------------------------------------------------------------------------
+/**
+ * @file utils.js
+ * @author Will Mungas
+ * 
+ * Place for helpers that aren't strongly associated with just one game
+ */
+//-----------------------------------------------------------------------------
+
 
 /**
  * Shuffles array randomly using
