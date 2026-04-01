@@ -12,6 +12,7 @@
 // include ws_api as an ES module
 const ws_api = require("../ws-api");
 
+const utils = require('./utils');
 const questionsDB = require("../db_queries/questions-db");
 
 
@@ -287,27 +288,6 @@ class teachingGame {
     }
 
     /**
-     * Shuffles array randomly using
-     * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
-     * @param {Array} array Array to be shuffled
-     */
-    static shuffle(array) {
-        let currentIndex = array.length;
-
-        // While there remain elements to shuffle
-        while (currentIndex != 0) {
-
-            // pick a remaining element
-            let randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex--;
-
-            // and swap it with the current element
-            [array[currentIndex], array[randomIndex]] = [
-            array[randomIndex], array[currentIndex]];
-        }
-    }
-
-    /**
      * Returns class accuracy percent for a given question
      * @param {Number} questionIdx Index of the question
      * @param {Number} correctAnswerNumber Correct answer number (1-4)
@@ -384,7 +364,7 @@ class teachingGame {
         // pre-sort and save correct indices
         for(const question of this.questions) {
             const choices = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
-            question.shuffled = this.shuffle(choices);
+            question.shuffled = utils.shuffle(choices);
             question.correct_idx = question.shuffled.indexOf(question.corrAnswer);
         }
 
