@@ -16,16 +16,26 @@ import game_helpers from './game-helpers.js';
 
 const handler = {};
 
-handler[ws_api.signals.JOINED.id] = (ws, body) => {
-    if(code !== body.code) {
-        console.log(`Joined the wrong room!! In ${body.code}, should be in ${code}`);
-    }
-    console.log("Successfully joined!");
-}
+// students will receive QUESTION, CHOICES, READY, and DONE
+// students can send ANSWER
 
-handler[ws_api.signals.REJECTED.id] = (ws, body) => {
-    console.log(`Failed to join room ${body.code}; ouch, rejection hurts`);
-}
+ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
+    // display the question text
+});
+
+ws_api.support(handler, ws_api.signals.CHOICES, (ws, body) => {
+    // display the answer choices in addition to the question text
+    // (not yet selectable)
+});
+
+ws_api.support(handler, ws_api.signals.READY, (ws, body) => {
+    // make answer choices selectable
+});
+
+ws_api.support(handler, ws_api.signals.DONE, (ws, body) => {
+    // show 
+});
+
 
 //--- SCRIPT ------------------------------------------------------------------
 
