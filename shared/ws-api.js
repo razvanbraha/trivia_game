@@ -19,6 +19,14 @@ const games = {
     STUDY: "study"
 }
 
+const choices = {
+    A: 0,
+    B: 1,
+    C: 2,
+    D: 3,
+    NONE: -1,
+}
+
 const users = {
     SERVER: "server",
     CLIENT: "client"
@@ -144,7 +152,7 @@ const signals = {
         id: "DONE",
         sender: "server",
         fields: [
-            "correct_answer_num",
+            "correct_idx",
             "data_you", // {name, points, latest_answer, List(answer #)}
             "class_accuracy_percent" // Number
         ]
@@ -437,6 +445,7 @@ const ws_api = {
     support,
     uri,
     signals,
+    choices,
     games,
     users
 };

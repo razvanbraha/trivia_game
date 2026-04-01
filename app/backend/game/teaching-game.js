@@ -383,110 +383,23 @@ class teachingGame {
         }
 
         // Start main game flow
-        this.serveQuestions();
+        this.runGame();
     }
 
 
     /**
-     * Contains the main game flow of serving questions and answers, and managing delays.
+     * @author Connor Hekking, Will Mungas
+     * @description Contains the main game flow of serving questions and answers, and managing delays.
      * See "Teaching Game Flow" https://drive.google.com/file/d/1Ot5iEwynpoNxzL3qfV24YOHXDSmfGL-P/view?usp=sharing
      */
-    async serveQuestions() {
+    async runGame() {
         // used only in here: set a delay of a given number of milliseconds
         const delay = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) };
 
-
-        while(this.current_question_idx  < this.settings.rounds) {
-            // Send QUESTION to host & players
-            this.sendAll(
-                ws_api.signals.QUESTION, 
-                {
-                    text: this.questions[this.current_question_idx].question,
-                    num: this.current_question_idx + 1,
-                    preview: this.settings.preview,
-                    dead: this.settings.dead,
-                    live: this.settings.live
-                }
-            );
-
-            this.state = teachingGame.STATES.SHOW_QUESTION;
-
-            // Delay 1 - Show question
-            await delay(1000 * this.settings.preview);
-
-            // Send CHOICES to host & players
-            const question = this.questions[this.current_question_idx];
-            const correct_answer = question.corrAnswer;
-            const choices_list = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
-            teachingGame.shuffle(choices_list);
-            this.current_correct_answer_number = choices_list.indexOf(correct_answer) + 1;
-
-            this.sendAll(ws_api.signals.CHOICES, {
-                "choices": choices_list,
-            });
-
-            this.state = teachingGame.STATES.SHOW_ANSWERS;
-
-            // Delay 2 - Show Answers
-            await delay(1000 * this.settings.dead);
-
-            // Send READY
-            this.sendAll(ws_api.signals.READY, {});
-
-            this.state = teachingGame.STATES.RECEIVE_RESPONSES;
-
-            // Delay 3 - Accept Answers
-            this.answering_start_time = new Date();
-            await delay(1000 * this.settings.live);
-
-            // Fill in incorrect response(-1) for players who didn't answer
-            this.players.forEach((player) => {
-                if(player.answers[this.current_question_idx] === undefined) {
-                    player.answers[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
-                }
-                // Don't need to add any points
-            });
-
-            // Send DONE
-            const class_accuracy = this.getClassAccuracy(this.current_question_idx, this.current_correct_answer_number);
-            this.host.signal(ws_api.signals.DONE, {
-                correct_answer_num: this.current_correct_answer_number,
-                data_you: null,
-                class_accuracy_percent: class_accuracy,
-            });
-            this.players.forEach((player) => {
-                player.ws.signal(ws_api.signals.DONE, {
-                    correct_answer_num: this.current_correct_answer_number,
-                    data_you: this.getSanitizedPlayer(player),
-                    class_accuracy_percent: class_accuracy,
-                });
-            });
-
-            this.state = teachingGame.STATES.AWAIT_CONTINUE;
-
-            // Wait for CONTINUE
-            await this.waitForContinue();
-
-            // Send RESULTS
-            const allRankings = this.getRankings();
-            this.host.signal(ws_api.signals.RESULTS, {
-                data_you: null,
-                data_all: allRankings,
-            });
-            this.players.forEach((player) => {
-                player.ws.signal(ws_api.signals.RESULTS, {
-                    data_you: this.getSanitizedPlayer(player),
-                    data_all: allRankings
-                });
-            });
-
-            this.state = teachingGame.STATES.AWAIT_NEXT;
-
-            // Wait for NEXTROUND
+        // run the set number of rounds
+        for(let i = 0; i < this.settings.rounds; i++) {
+            await this.runRound(i, delay);
             await this.waitForNextRound();
-
-            // Increment question index
-            this.current_question_idx = this.current_question_idx + 1;
         }
 
         // Send FINAL
@@ -513,6 +426,96 @@ class teachingGame {
         if(this.state === teachingGame.STATES.FINAL) {
             this.endGame(this.host, null);
         }
+    }
+
+    /**
+     * Runs a single round of the game
+     * @param {*} i round index (round number is i + 1)
+     * @param {*} delay function that sets delays as a Promise
+     */
+    async runRound(i, delay) {
+        // Send QUESTION to host & players
+        this.sendAll(
+            ws_api.signals.QUESTION, 
+            {
+                text: this.questions[i].question,
+                num: i + 1,
+                preview: this.settings.preview,
+                dead: this.settings.dead,
+                live: this.settings.live
+            }
+        );
+
+        this.state = teachingGame.STATES.SHOW_QUESTION;
+
+        // Delay 1 - Show question
+        await delay(1000 * this.settings.preview);
+
+        // Send CHOICES to host & players
+        const question = this.questions[i];
+        const choices = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
+        teachingGame.shuffle(choices);
+        const correct_idx = choices.indexOf(question.corrAnswer) + 1;
+
+        this.sendAll(ws_api.signals.CHOICES, {choices});
+
+        this.state = teachingGame.STATES.SHOW_ANSWERS;
+
+        // Delay 2 - Show Answers
+        await delay(1000 * this.settings.dead);
+
+        // Send READY
+        this.sendAll(ws_api.signals.READY, {});
+
+        this.state = teachingGame.STATES.RECEIVE_RESPONSES;
+
+        // Delay 3 - Accept Answers
+        this.answering_start_time = new Date();
+        await delay(1000 * this.settings.live);
+
+        // Fill in incorrect response(-1) for players who didn't answer
+        this.players.forEach((player) => {
+            if(player.answers[i] === undefined) {
+                player.answers[i] = ws_api.choices.NONE;
+            }
+            // Don't need to add any points - player did not answer
+            // players who answered already have their points from registerAnswer
+        });
+
+        // Send DONE
+        const class_accuracy_percent = this.getClassAccuracy(i, correct);
+        this.host.signal(ws_api.signals.DONE, {
+            correct_idx,
+            data_you: null,
+            class_accuracy_percent,
+        });
+        this.players.forEach((player) => {
+            player.ws.signal(ws_api.signals.DONE, {
+                correct_idx,
+                data_you: this.getSanitizedPlayer(player),
+                class_accuracy_percent: null,
+            });
+        });
+
+        this.state = teachingGame.STATES.AWAIT_CONTINUE;
+
+        // Wait for CONTINUE
+        await this.waitForContinue();
+
+        // Send RESULTS
+        const allRankings = this.getRankings();
+        this.host.signal(ws_api.signals.RESULTS, {
+            data_you: null,
+            data_all: allRankings,
+        });
+        this.players.forEach((player) => {
+            player.ws.signal(ws_api.signals.RESULTS, {
+                data_you: this.getSanitizedPlayer(player),
+                data_all: allRankings
+            });
+        });
+
+        this.state = teachingGame.STATES.AWAIT_NEXT;
     }
 
     /**
