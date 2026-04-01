@@ -237,12 +237,12 @@ p {
     font-weight: 900;
 }
 
-.next-question-btn {
+.next-question-btn, .new-game-btn {
     width: 100vw;
     display: flex;
 }
 
-.next-question-btn-btn {
+.next-question-btn-btn, .new-game-btn-btn {
     margin-left:auto;
     margin-right: 5%;
     margin-top: 5vh;
