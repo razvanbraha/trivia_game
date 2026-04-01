@@ -9,6 +9,98 @@ document.addEventListener('boxAdded', () => {
     current = (current + 1) % faces.length;
     box.className = 'cube show-' + faces[current];
     });
+
+
+    //CSS Cube code
+    const css_cube = document.querySelector(".cube");
+
+    globalThis.addEventListener("keydown", (event) => {
+        switch (event.key) {
+            case "ArrowUp":
+                if (css_cube.classList.contains("show-front")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-top")
+                }
+                else if (css_cube.classList.contains("show-top")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-back")
+                }
+                else if (css_cube.classList.contains("show-back")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-bottom")
+                }
+                else {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-front")
+                }
+                break;
+            case "ArrowDown":
+                if (css_cube.classList.contains("show-front")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-bottom")
+                }
+                else if (css_cube.classList.contains("show-bottom")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-back")
+                }
+                else if (css_cube.classList.contains("show-back")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-top")
+                }
+                else {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-front")
+                }
+                break;
+            case "ArrowLeft":
+                if (css_cube.classList.contains("show-front")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-left")
+                }
+                else if (css_cube.classList.contains("show-left")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-back")
+                }
+                else if (css_cube.classList.contains("show-back")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-right")
+                }
+                else {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-front")
+                }
+                break;
+            case "ArrowRight":
+                if (css_cube.classList.contains("show-front")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-right")
+                }
+                else if (css_cube.classList.contains("show-right")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-back")
+                }
+                else if (css_cube.classList.contains("show-back")) {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-left")
+                }
+                else {
+                    css_cube.classList = "cube";
+                    css_cube.classList.add("show-front")
+                }
+                break;
+        }
+
+        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+            event.preventDefault();
+        }
+    })
+
+    css_cube.classList.add("show-right")
+    setTimeout(() => {
+        css_cube.classList = "cube";
+        css_cube.classList.add("show-top")
+    }, 750)
+
 })
 
 // ------------------------------Cube STUFF------------------------------
@@ -90,93 +182,3 @@ document.addEventListener('boxAdded', () => {
 //   renderer.render( scene, camera );
 // }
 // renderer.setAnimationLoop( animate );
-
-//CSS Cube code
-const css_cube = document.querySelector(".cube");
-
-globalThis.addEventListener("keydown", (event) => {
-    switch (event.key) {
-        case "ArrowUp":
-            if (css_cube.classList.contains("show-front")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-top")
-            }
-            else if (css_cube.classList.contains("show-top")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-back")
-            }
-            else if (css_cube.classList.contains("show-back")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-bottom")
-            }
-            else {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-front")
-            }
-            break;
-        case "ArrowDown":
-            if (css_cube.classList.contains("show-front")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-bottom")
-            }
-            else if (css_cube.classList.contains("show-bottom")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-back")
-            }
-            else if (css_cube.classList.contains("show-back")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-top")
-            }
-            else {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-front")
-            }
-            break;
-        case "ArrowLeft":
-            if (css_cube.classList.contains("show-front")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-left")
-            }
-            else if (css_cube.classList.contains("show-left")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-back")
-            }
-            else if (css_cube.classList.contains("show-back")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-right")
-            }
-            else {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-front")
-            }
-            break;
-        case "ArrowRight":
-            if (css_cube.classList.contains("show-front")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-right")
-            }
-            else if (css_cube.classList.contains("show-right")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-back")
-            }
-            else if (css_cube.classList.contains("show-back")) {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-left")
-            }
-            else {
-                css_cube.classList = "cube";
-                css_cube.classList.add("show-front")
-            }
-            break;
-    }
-
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
-        event.preventDefault();
-    }
-})
-
-css_cube.classList.add("show-right")
-setTimeout(() => {
-    css_cube.classList = "cube";
-    css_cube.classList.add("show-top")
-}, 750)
