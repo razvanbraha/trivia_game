@@ -74,8 +74,9 @@ class teachingGame {
 
     state = 0; // the current state
     questions = []; // List of questions to be used by the game
-    current_question_idx = 0; // Index of current question in game(increment on "CONTINUE")
-    current_correct_answer_number = -1; // Correct answer number (1/2/3/4)
+
+    // not sure if this is really necessary either
+    round_idx = 0;
     
     answering_start_time = null; // Date() of the time when the answering period/"live time" started
 
@@ -96,7 +97,7 @@ class teachingGame {
     // client-related
     host = null; // the host WebSocket connection
     // list of players, each storing: name, websocket, points, and last answer(latest)
-    // {ws, name, points, latest_answer, List(answer #)}
+    // {ws, name, points, List(answer #)}
     // order of list is implicitly the player ranks
     players = []; 
     
@@ -337,7 +338,6 @@ class teachingGame {
         return {
             name: player.name, 
             points: player.points, 
-            latest_answer: player.latest_answer,
             answers: player.answers
         };
     }
@@ -380,6 +380,13 @@ class teachingGame {
                 ws_api.signals.ERR, 
                 { err: `Not enough questions in Database. Need ${settings.rounds}, has ${this.questions.length}` }
             );
+        }
+
+        // pre-sort and save correct indices
+        for(const question of this.questions) {
+            const choices = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
+            question.shuffled = this.shuffle(choices);
+            question.correct_idx = question.shuffled.indexOf(question.corrAnswer);
         }
 
         // Start main game flow
@@ -434,6 +441,7 @@ class teachingGame {
      * @param {*} delay function that sets delays as a Promise
      */
     async runRound(i, delay) {
+        this.round_idx = i;
         // Send QUESTION to host & players
         this.sendAll(
             ws_api.signals.QUESTION, 
@@ -452,11 +460,7 @@ class teachingGame {
         await delay(1000 * this.settings.preview);
 
         // Send CHOICES to host & players
-        const question = this.questions[i];
-        const choices = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
-        teachingGame.shuffle(choices);
-        const correct_idx = choices.indexOf(question.corrAnswer) + 1;
-
+        const choices = this.questions[i].shuffled;
         this.sendAll(ws_api.signals.CHOICES, {choices});
 
         this.state = teachingGame.STATES.SHOW_ANSWERS;
@@ -521,28 +525,28 @@ class teachingGame {
     /**
      * Registers a player's answer in the game state.
      * @param {WebSocket} ws Player websocket which initiated the request
-     * @param {Object} message Message object containing the request
+     * @param {Object} body Message object containing the request
      */
-    registerAnswer(ws, message) {
-        const answer_number = message.num;
+    registerAnswer(ws, body) {
+        // Do not allow multiple answers
+        if (player.answers[this.round_idx] !== undefined) {
+            return;
+        }
+
+        const choice = body.num;
 
         // Check invalid answer number
-        if(answer_number > 4 || answer_number < 1) {
+        if(choice !== ws_api.choices.NONE && (choice < ws_api.choices.MIN || choice > ws_api.choices.MAX)) {
             ws.err( "Invalid answer number.");
             return;
         }
 
-        const player = this.players.find((p) => p.ws == ws);
-
-        // Stop duplicate answers
-        if (player.answers[this.current_question_idx] !== undefined) {
-            return;
-        }    
+        const player = this.players.find((p) => p.ws === ws);
 
         // Register answer
-        player.answers[this.current_question_idx] = answer_number;
+        player.answers[this.round_idx] = answer_number;
         // Add points
-        if (answer_number === this.current_correct_answer_number) {
+        if (answer_number === questions[this.round_idx].correct_idx) {
             const elapsed_time = new Date() - this.answering_start_time;
             const elapsed_seconds = elapsed_time / 1000; // Date() is in milliseconds
 
@@ -554,11 +558,10 @@ class teachingGame {
                 // Timed out, no points
                 points = 0;
                 // Set no answer because answer did not come in time
-                player.answers[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
+                player.answers[this.round_idx] = teachingGame.NO_ANSWER_NUM;
             }
 
             player.points += points;
-            player.latest_answer = answer_number;
         }
     }
 
@@ -603,7 +606,7 @@ class teachingGame {
     
 
     /**
-     * Sends out DONE signal then closes all connections
+     * Sends out GAMEOVER signal then closes all connections
      * @param {WebSocket} ws Host websocket which initiated the request
      * @param {Object} message Message object containing the request
      */
