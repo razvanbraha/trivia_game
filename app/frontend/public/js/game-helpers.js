@@ -556,14 +556,13 @@ function showLeaderboard(current_player, all_players, isHost, nextQuestionBtnHan
  * @param {{name: String, points: Number, latest_answer: Number}} current_player Current player's points, name, and latest answer in an object
  * @param {Array({name: String, points: Number, latest_answer: Number})} all_players Array of all player's points, name, and latest answer in an object
  * @param {Boolean} isHost If the page object should be prepared for a host instead of a player view
- * @param {*} statistics TODO should have category statistics, not implemented
+ * @param {List} category_accuracy Category statistics in form List({category_num, accuracy, num_correct, num_questions})
  * @returns cloneable object containing the body of the leaderboard page 
  */
-function showEndLeaderboard(current_player, all_players, isHost, statistics) {
+function showEndLeaderboard(current_player, all_players, isHost, category_accuracy) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
-    // TODO not actually showing any statistics(on box)
     // TODO different rankings display?
 
     const content_container = getContent();
@@ -590,6 +589,19 @@ function showEndLeaderboard(current_player, all_players, isHost, statistics) {
     if(isHost) {
         your_learning.innerText = "Class Learning";
     }
+
+    const box_sides = ["cube__face--front, cube__face--back", "cube__face--right", "cube__face--left", "cube__face--top", "cube__face--bottom"];
+    idx = 0;
+    box_sides.forEach((box_side_name) => {
+        // Note this just goes off of order, does not check cube face names
+        const box_side = box.querySelector(box_side_name);
+        const stats_label = box_side.querySelector(".cube_face_stats");
+        const category_stat = category_accuracy[idx];
+        
+        stats_label.innerText = `${category_stat.num_questions}/${category_stat.num_correct} ${category_stat.accuracy}% accuracy`;
+
+        idx += 1;
+    });
 
     // Add new elements
     question_container.appendChild(your_learning);

@@ -71,7 +71,7 @@ ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
     }
     current_state = game_states.QUESTION_SERVED;
 
-    game_helpers.showQuestion(body.text, body.preview);
+    game_helpers.createQuestion(body.text, body.preview);
 });
 
 ws_api.support(handler, ws_api.signals.CHOICES,  (ws, body) => {
@@ -129,7 +129,7 @@ ws_api.support(handler, ws_api.signals.FINAL,  (ws, body) => {
     }
     current_state = game_states.FINAL_RESULTS_SERVED;
 
-    game_helpers.showEndLeaderboard(body.data_you, body.data_all, true, null);
+    game_helpers.showEndLeaderboard(body.data_you, body.data_all, true, body.category_accuracy);
     
 });
 

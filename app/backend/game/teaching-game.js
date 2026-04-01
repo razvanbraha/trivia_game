@@ -75,7 +75,6 @@ class teachingGame {
     state = 0; // the current state
     questions = []; // List of questions to be used by the game
     current_question_idx = 0; // Index of current question in game(increment on "CONTINUE")
-    current_correct_answer_number = -1; // Correct answer number (1/2/3/4)
     
     answering_start_time = null; // Date() of the time when the answering period/"live time" started
 
@@ -310,6 +309,7 @@ class teachingGame {
      * Returns class accuracy percent for a given question
      * @param {Number} questionIdx Index of the question
      * @param {Number} correctAnswerNumber Correct answer number (1-4)
+     * @returns Class accuracy as a percent i.e. 100% => return 100
      */
     getClassAccuracy(questionIdx, correctAnswerNumber) {
         // if no students
@@ -330,6 +330,57 @@ class teachingGame {
         });
 
         return Math.round((num_correct / this.players.length) * 100);
+    }
+
+    /**
+     * Returns category accuracy for a specific player or for the whole class
+     * @param {Object} player Player to get category accuracy for, or null for the whole class
+     * @returns List of category accuracies as a percent and category answer ratios. 
+     * List({category_num, accuracy, num_correct, num_questions})
+     */
+    getCategoryAccuracy(player) {
+        let players;
+        if(player) {
+            players = [player];
+        } else {
+            players = this.players;
+        }
+        const category_accuracy = [];
+        for(let i = 0; i < 6; i++) {
+            category_accuracy.push({
+                category_num: i+1, 
+                accuracy: 0, 
+                num_correct: 0, 
+                num_questions: 0
+            });
+        }
+
+        // Tally answers
+        for(let i = 0; i < this.questions.length; i++) {
+            const category_stat = category_accuracy[this.questions[i].category - 1];
+            const correct_answer = this.questions[i].corrAnswerNumber;
+            players.forEach((p) => {
+                // num_questions will be #questions x #players which is fine.
+                category_stat.num_questions += 1;
+                if(i < p.answers.length) {
+                    const player_answer = p.answers[i];
+                    if(correct_answer === player_answer) {
+                        category_stat.num_correct += 1;
+                    }
+                }
+            });
+        }
+
+        // Calculate accuracy
+        category_accuracy.forEach((category_stat) => {
+            // Leave at 0% if no questions in category
+            if(category_stat.num_questions !== 0) {
+                category_stat.accuracy = Math.round((category_stat.num_correct / category_stat.num_questions) * 100);
+            }
+        });
+
+
+        return category_accuracy;
     }
 
     // Returns player without ws field
@@ -419,7 +470,8 @@ class teachingGame {
             const correct_answer = question.corrAnswer;
             const choices_list = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
             teachingGame.shuffle(choices_list);
-            this.current_correct_answer_number = choices_list.indexOf(correct_answer) + 1;
+            const current_correct_answer_number = choices_list.indexOf(correct_answer) + 1;
+            question.corrAnswerNumber = current_correct_answer_number;
 
             this.sendAll(ws_api.signals.CHOICES, {
                 "choices": choices_list,
@@ -448,15 +500,15 @@ class teachingGame {
             });
 
             // Send DONE
-            const class_accuracy = this.getClassAccuracy(this.current_question_idx, this.current_correct_answer_number);
+            const class_accuracy = this.getClassAccuracy(this.current_question_idx, current_correct_answer_number);
             this.host.signal(ws_api.signals.DONE, {
-                correct_answer_num: this.current_correct_answer_number,
+                correct_answer_num: current_correct_answer_number,
                 data_you: null,
                 class_accuracy_percent: class_accuracy,
             });
             this.players.forEach((player) => {
                 player.ws.signal(ws_api.signals.DONE, {
-                    correct_answer_num: this.current_correct_answer_number,
+                    correct_answer_num: current_correct_answer_number,
                     data_you: this.getSanitizedPlayer(player),
                     class_accuracy_percent: class_accuracy,
                 });
@@ -495,11 +547,13 @@ class teachingGame {
         this.host.signal(ws_api.signals.FINAL, {
             data_you: null,
             data_all: allRankings,
+            category_accuracy: this.getCategoryAccuracy(null),
         });
         this.players.forEach((player) => {
             player.ws.signal(ws_api.signals.FINAL, {
                 data_you: this.getSanitizedPlayer(player),
-                data_all: allRankings
+                data_all: allRankings,
+                category_accuracy: this.getCategoryAccuracy(player),
             });
         });
 
@@ -539,6 +593,7 @@ class teachingGame {
         // Register answer
         player.answers[this.current_question_idx] = answer_number;
         // Add points
+        const current_correct_answer_number = this.questions[this.current_question_idx].corrAnswerNumber;
         if (answer_number === this.current_correct_answer_number) {
             const elapsed_time = new Date() - this.answering_start_time;
             const elapsed_seconds = elapsed_time / 1000; // Date() is in milliseconds
