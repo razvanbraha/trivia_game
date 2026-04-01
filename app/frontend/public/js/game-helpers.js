@@ -407,10 +407,10 @@ function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isHost, continueBt
     // Edit elements
     let currentAnswerNum = 1;
     answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice) => {
-        if(currentAnswerNum == correctAnswerNum) {
+        if(currentAnswerNum === correctAnswerNum) {
             answer_choice.classList.add("correct");
-        } else if(currentAnswerNum != chosenAnswerNum) {
-            // Add incorrect styling only if NOT correct
+        } else if(currentAnswerNum === chosenAnswerNum) {
+            // Add incorrect styling only if chosen & NOT correct
             answer_choice.classList.add("incorrect");
         } else {
             answer_choice.classList.add("unpicked");
