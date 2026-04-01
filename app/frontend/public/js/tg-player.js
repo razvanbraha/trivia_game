@@ -12,6 +12,12 @@
 const ws_api = window.ws_api;
 import game_helpers from './game-helpers.js';
 
+//--- INTERNAL DATA 
+
+
+let times = null;
+let choice = -1;
+
 //--- SIGNAL HANDLERS ---------------------------------------------------------
 
 const handler = {};
@@ -20,20 +26,29 @@ const handler = {};
 // students can send ANSWER
 
 ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
+    if(!times) {
+        times = { preview: body.preview, dead: body.dead, live: body.live }
+    }
     // display the question text
+    game_helpers.createQuestion(body.text, times.preview);
 });
 
 ws_api.support(handler, ws_api.signals.CHOICES, (ws, body) => {
     // display the answer choices in addition to the question text
-    // (not yet selectable)
+    // (preview at this point)
+    game_helpers.showAnswers();
 });
 
 ws_api.support(handler, ws_api.signals.READY, (ws, body) => {
-    // make answer choices selectable
+    // make answer choices selectable for the live time
+    game_helpers.makeAnswersLive(times.live);
+    
 });
 
 ws_api.support(handler, ws_api.signals.DONE, (ws, body) => {
+    
     // show 
+    game_helpers.showCorrectAnswer();
 });
 
 
