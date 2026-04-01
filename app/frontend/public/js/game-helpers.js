@@ -80,13 +80,13 @@ function createLobby(code, start) {
                 <label class="mt-3">Questions: <span id="questionCount">25</span></label>
                 <input type="range" min="5" max="50" value="25" id="questionSlider" class="form-range">
 
-                <label class="mt-3">Preview Time: <span id="previewTime">5</span> seconds</label>
+                <label class="mt-3">Question Preview Time: <span id="previewTime">5</span> seconds</label>
                 <input type="range" min="0" max="30" value="5" id="previewSlider" class="form-range">
 
-                <label class="mt-3">Dead Time: <span id="deadTime">3</span> seconds</label>
+                <label class="mt-3">Answer Preview Time: <span id="deadTime">3</span> seconds</label>
                 <input type="range" min="0" max="30" value="3" id="deadSlider" class="form-range">
 
-                <label class="mt-3">Live Time: <span id="liveTime">10</span> seconds</label>
+                <label class="mt-3">Answering Period: <span id="liveTime">10</span> seconds</label>
                 <input type="range" min="1" max="30" value="10" id="liveSlider" class="form-range">
 
                 <h5 class="mt-4">Categories</h5>
