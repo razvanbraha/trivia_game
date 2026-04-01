@@ -225,7 +225,7 @@ function resetTimer(countdown, timerStart) {
 /**
  * Pulls 
  * @param {*} text 
- * @param {*} dead_time 
+ * @param {*} prev preview time before answers will be sent
  */
 function createQuestion(text, prev) {
     const template_div = document.createElement('div');

@@ -289,28 +289,24 @@ class teachingGame {
 
     /**
      * Returns class accuracy percent for a given question
-     * @param {Number} questionIdx Index of the question
-     * @param {Number} correctAnswerNumber Correct answer number (1-4)
+     * @param {Number} i Index of the current round/question
+     * @param {Number} correct_idx Correct answer number (1-4)
      */
-    getClassAccuracy(questionIdx, correctAnswerNumber) {
+    getClassAccuracy(i, correct_idx) {
         // if no students
         if(this.players.length === 0) {
             return 0;
         }
 
-        let num_correct = 0;
+        let correct_cnt = 0;
 
         this.players.forEach((player) => {
-            try {
-                if(player.answers[questionIdx] === correctAnswerNumber) {
-                    num_correct += 1;
-                }
-            } catch (e) {
-                // Do nothing, may not have answered yet
-            }  
+            if(player.answers[i] && player.answers[i] === correct_idx) {
+                correct_cnt++;
+            }
         });
 
-        return Math.round((num_correct / this.players.length) * 100);
+        return Math.round((correct_cnt / this.players.length) * 100);
     }
 
     // Returns player without ws field
@@ -346,27 +342,31 @@ class teachingGame {
         this.settings = settings;
 
         // Load questions & error check
+        let db_questions;
         try {
-            this.questions = await questionsDB.selectRandQuestions(settings.rounds, settings.categories);
+            db_questions = await questionsDB.selectRandQuestions(settings.rounds, settings.categories);
         } catch (e) {
             this.sendAll(
                 ws_api.signals.ERR, 
                 { err: "Questions could not be loaded succcessfully." }
             );
         }
-        if(this.questions.length < settings.rounds) {   
+        if(db_questions.length < settings.rounds) {   
             this.sendAll(
                 ws_api.signals.ERR, 
                 { err: `Not enough questions in Database. Need ${settings.rounds}, has ${this.questions.length}` }
             );
         }
 
+        console.log("Test, contents of first question pulled from db:", db_questions[0]);
+
         // pre-sort and save correct indices
-        for(const question of this.questions) {
+        this.questions = db_questions.map((question) => {
             const choices = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
-            question.shuffled = utils.shuffle(choices);
-            question.correct_idx = question.shuffled.indexOf(question.corrAnswer);
-        }
+            utils.shuffle(choices);
+            const correct_idx = choices.indexOf(question.corrAnswer);
+            return { text: question.question, choices, correct_idx };
+        });
 
         // Start main game flow
         this.runGame();
@@ -425,7 +425,7 @@ class teachingGame {
         this.sendAll(
             ws_api.signals.QUESTION, 
             {
-                text: this.questions[i].question,
+                text: this.questions[i].text,
                 num: i + 1,
                 preview: this.settings.preview,
                 dead: this.settings.dead,
@@ -439,7 +439,7 @@ class teachingGame {
         await delay(1000 * this.settings.preview);
 
         // Send CHOICES to host & players
-        const choices = this.questions[i].shuffled;
+        const choices = this.questions[i].choices;
         this.sendAll(ws_api.signals.CHOICES, {choices});
 
         this.state = teachingGame.STATES.SHOW_ANSWERS;
@@ -466,7 +466,8 @@ class teachingGame {
         });
 
         // Send DONE
-        const class_accuracy_percent = this.getClassAccuracy(i, correct);
+        const { correct_idx } = this.questions[i];
+        const class_accuracy_percent = this.getClassAccuracy(i, correct_idx);
         this.host.signal(ws_api.signals.DONE, {
             correct_idx,
             data_you: null,
@@ -507,12 +508,18 @@ class teachingGame {
      * @param {Object} body Message object containing the request
      */
     registerAnswer(ws, body) {
+        // do not allow answers outside of answer window
+        if(!this.state === teachingGame.STATES.RECEIVE_RESPONSES) {
+            ws.err("Too late!");
+            return;
+        }
+        const player = this.players.find((p) => p.ws === ws);
         // Do not allow multiple answers
         if (player.answers[this.round_idx] !== undefined) {
             return;
         }
 
-        const choice = body.num;
+        const choice = body.idx;
 
         // Check invalid answer number
         if(choice !== ws_api.choices.NONE && (choice < ws_api.choices.MIN || choice > ws_api.choices.MAX)) {
@@ -520,25 +527,16 @@ class teachingGame {
             return;
         }
 
-        const player = this.players.find((p) => p.ws === ws);
-
         // Register answer
-        player.answers[this.round_idx] = answer_number;
+        player.answers[this.round_idx] = choice;
         // Add points
-        if (answer_number === questions[this.round_idx].correct_idx) {
+        if (choice === questions[this.round_idx].correct_idx) {
             const elapsed_time = new Date() - this.answering_start_time;
             const elapsed_seconds = elapsed_time / 1000; // Date() is in milliseconds
 
             // Points = ratio of elapsed time to live time, multiplied by the base number of points
             let points = ((this.live_time - elapsed_seconds) / this.live_time) * teachingGame.BASE_QUESTION_POINTS;
             points = Math.round(points); // Round to integer
-
-            if(points < 0) {
-                // Timed out, no points
-                points = 0;
-                // Set no answer because answer did not come in time
-                player.answers[this.round_idx] = teachingGame.NO_ANSWER_NUM;
-            }
 
             player.points += points;
         }
