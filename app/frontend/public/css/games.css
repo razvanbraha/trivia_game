@@ -76,7 +76,7 @@ p {
 .question-text-container {
     background-color: white;
     min-height: 20vh;
-    overflow: scroll;
+    overflow: auto;
     display: flex;
     text-align: center;
     align-items: center;
@@ -139,7 +139,7 @@ p {
     display:flex;
     align-items: center;
     justify-content: center;
-    overflow:scroll;
+    overflow:auto;
     text-align: center;
     padding: 10px;
     border-radius: 10px;
