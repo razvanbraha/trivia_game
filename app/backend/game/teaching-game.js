@@ -233,8 +233,7 @@ class teachingGame {
             return;
         }
         ws.handler = this.handlers.player;
-        this.players.push({name, ws, latest: teachingGame.NO_ANSWER_NUM, points: 0});
-        this.players.answers = [];
+        this.players.push({name, ws, latest: teachingGame.NO_ANSWER_NUM, points: 0, answers: []});
 
         this.log(`player ${this.players.length} (${name}) joined`);
         ws.respond(ws_api.signals.JOIN, true);
@@ -313,6 +312,11 @@ class teachingGame {
      * @param {Number} correctAnswerNumber Correct answer number (1-4)
      */
     getClassAccuracy(questionIdx, correctAnswerNumber) {
+        // if no students
+        if(this.players.length === 0) {
+            return 0;
+        }
+
         let num_correct = 0;
 
         this.players.forEach((player) => {
@@ -444,7 +448,7 @@ class teachingGame {
             });
 
             // Send DONE
-            const class_accuracy = getClassAccuracy(this.current_question_idx, this.current_correct_answer_number);
+            const class_accuracy = this.getClassAccuracy(this.current_question_idx, this.current_correct_answer_number);
             this.host.signal(ws_api.signals.DONE, {
                 correct_answer_num: this.current_correct_answer_number,
                 data_you: null,

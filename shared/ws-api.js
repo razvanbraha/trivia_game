@@ -145,7 +145,8 @@ const signals = {
         sender: "server",
         fields: [
             "correct_answer_num",
-            "data_you" // {name, points, latest_answer}
+            "data_you", // {name, points, latest_answer, List(answer #)}
+            "class_accuracy_percent" // Number
         ]
     },
     // sent by a host client to tell the server to continue to the next screen(results screen)
@@ -161,8 +162,8 @@ const signals = {
         id: "RESULTS",
         sender: "server",
         fields: [
-            "data_you", // {name, points, latest_answer}
-            "data_all" // List({name, points, latest_answer})
+            "data_you", // {name, points, latest_answer, List(answer #)}
+            "data_all" // List({name, points, latest_answer, List(answer #)})
         ]
     },
     // sent by a host client to tell the server to continue to the next round of a game
@@ -176,8 +177,8 @@ const signals = {
         id: "FINAL",
         sender: "server",
         fields: [
-            "data_you", // {name, points, latest_answer}
-            "data_all" // List({name, points, latest_answer})
+            "data_you", // {name, points, latest_answer, List(answer #)}
+            "data_all" // List({name, points, latest_answer, List(answer #)})
         ]
     },
     // sent by a host client to tell the server to end a game
@@ -269,7 +270,7 @@ function receive(ws, data) {
         return;
     }
 
-    // console.log(`received signal ${type} with body`, body);
+    console.log(`received signal ${type} with body`, body);
     const signal = signals[type];
 
     if(!validate(signal, body)) {
