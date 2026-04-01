@@ -374,7 +374,6 @@ class teachingGame {
                 { err: "Questions could not be loaded succcessfully." }
             );
         }
-        
         if(this.questions.length < settings.rounds) {   
             this.sendAll(
                 ws_api.signals.ERR, 
