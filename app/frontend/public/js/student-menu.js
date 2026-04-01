@@ -22,7 +22,7 @@ async function joinRoom() {
 }
 
 function launchMultiplayer() {
-    window.location.href = "/api/play/multi-host";
+    window.location.href = "/api/play/multi/host";
 }
 
 function launchStudy() {
