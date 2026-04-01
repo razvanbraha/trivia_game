@@ -36,12 +36,14 @@ ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
 ws_api.support(handler, ws_api.signals.CHOICES, (ws, body) => {
     // display the answer choices in addition to the question text
     // (preview at this point)
-    game_helpers.showAnswers();
+    game_helpers.showAnswers(body.choices, times.dead);
 });
 
 ws_api.support(handler, ws_api.signals.READY, (ws, body) => {
     // make answer choices selectable for the live time
-    game_helpers.makeAnswersLive(times.live);
+    game_helpers.answersClickable(times.live, false, (idx) => {
+        ws.signal(ws_api.signals.ANSWER, {idx});
+    });
     
 });
 

@@ -142,7 +142,7 @@ const signals = {
         id: "ANSWER",
         sender: "client",
         fields: [
-            "num"
+            "idx"
         ]
     },
     // sent by the server to tell player clients that it is no longer accepting ANSWER signals

@@ -198,6 +198,30 @@ function getSettings() {
     }
 }
 
+//--- TIMER SETUP -------------------------------------------------------------
+
+/**
+ * @author Connor Hekking
+ * 
+ * Resets round-time-bar animation and time
+ * 
+ * @param {String} countdown Countdown element
+ * @param {Number} timerStart Start time of timer
+ */
+function resetTimer(countdown, timerStart) {
+    const timer_bar = countdown.querySelector('.round-time-bar div');
+
+    // Reset animation
+    timer_bar.style.animation = 'none';
+    timer_bar.offsetHeight;
+    timer_bar.style.animation = null;
+
+    // Update duration
+    countdown.querySelector('.round-time-bar').style = `--duration: ${timerStart};`;
+}
+
+//--- QUESTIONS ---------------------------------------------------------------
+
 /**
  * Pulls 
  * @param {*} text 
@@ -222,37 +246,6 @@ function createQuestion(text, prev) {
 
 
 }
-
-// Imported from tg-helpers
-/**
- * @author Will Mungas
- * 
- * Sets up the page with content from question-template.html
- */
-function loadTemplateContent() {
-    
-}
-
-/**
- * @author Connor Hekking
- * 
- * Resets round-time-bar animation and time
- * 
- * @param {String} countdown Countdown element
- * @param {Number} timerStart Start time of timer
- */
-function resetTimer(countdown, timerStart) {
-    const timer_bar = countdown.querySelector('.round-time-bar div');
-
-    // Reset animation
-    timer_bar.style.animation = 'none';
-    timer_bar.offsetHeight;
-    timer_bar.style.animation = null;
-
-    // Update duration
-    countdown.querySelector('.round-time-bar').style = `--duration: ${timerStart};`;
-}
-
 
 /**
  * @author Connor Hekking
@@ -352,7 +345,6 @@ function answersClickable(timerStart, isHost, answerHandler) {
     const question_container = content_container.querySelector("#question-container");
 
     // Get current elements
-    const question_text = question_container.querySelector(".question-text");
     const answer_choices = question_container.querySelector(".answer-choices");
     const countdown = question_container.querySelector(".countdown");
 
@@ -360,7 +352,7 @@ function answersClickable(timerStart, isHost, answerHandler) {
     let idx = 0
     answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice) => {
         if(!isHost){
-            answer_choice.addEventListener('click', () => {answerHandler(idx + 1)}); // TODO this ok?
+            answer_choice.addEventListener('click', () => {answerHandler(idx)}); // TODO this ok?
         }
         answer_choice.classList.remove("preview");
         idx += 1;
