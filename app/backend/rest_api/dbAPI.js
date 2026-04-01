@@ -53,16 +53,17 @@ router.get('/populate', async (req, res) => {
  */
 router.post('/create', async (req, res) => {
     try {
-        if (validateQuestion(req.body)) {
+        const err = validateQuestion(req.body);
+        if (err.length === 0) {
             addQuestion(req.body);
             console.log("Received Data:", req.body);
-            res.status(201).json({ message: "Question added" });
+            res.status(201).json({ msg: "Question added" });
         } else {
-            res.status(400).json({error: "Unable to add question"});
+            res.status(400).json({ msg: "Unable to add question", err});
         }
     } catch (err) {
         console.log(err);
-        res.status(500).json({error: "Unable to add question"});
+        res.status(500).json({ msg: "Unable to add question", err});
     }
 });
 
