@@ -179,8 +179,8 @@ class teachingGame {
 
         // students (players) - only signal needed is answer
         ws_api.support(this.handlers.player, ws_api.signals.ANSWER, (ws, body) => {
-            console.log("Haven't implemented handling answers yet");
-            ws.signal(ws_api.signals.ACK, { msg: `received your answer (${body.num}); answer handling not implemented yet`});
+            this.registerAnswer(ws, body);
+            ws.signal(ws_api.signals.ACK, { msg: `received your answer (${body.num})`});
         });
     }
 
@@ -235,6 +235,7 @@ class teachingGame {
         }
         ws.handler = this.handlers.player;
         this.players.push({name, ws, latest: teachingGame.NO_ANSWER_NUM, points: 0});
+        this.answers.set(ws, []);
 
         this.log(`player ${this.players.length} (${name}) joined`);
         ws.respond(ws_api.signals.JOIN, true);
@@ -343,7 +344,7 @@ class teachingGame {
         if(this.questions.length < settings.rounds) {   
             this.sendAll(
                 ws_api.signals.ERR, 
-                { err: `Not enough questions in Database. Expect unstable behavior. Need ${settings.rounds}, has ${this.questions.length}` }
+                { err: `Not enough questions in Database. Need ${settings.rounds}, has ${this.questions.length}` }
             );
         }
 
@@ -406,8 +407,8 @@ class teachingGame {
 
             // Fill in incorrect response(-1) for players who didn't answer
             this.players.forEach((player) => {
-                if(this.answers.get(player[ws])[this.current_question_idx] === undefined) {
-                    this.answers.get(player[ws])[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
+                if(this.answers.get(player.ws)[this.current_question_idx] === undefined) {
+                    this.answers.get(player.ws)[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
                 }
                 // Don't need to add any points
             });
@@ -483,7 +484,7 @@ class teachingGame {
      * @param {Object} message Message object containing the request
      */
     registerAnswer(ws, message) {
-        const answer_number = message.body.answer_number;
+        const answer_number = message.num;
 
         // Check invalid answer number
         if(answer_number > 4 || answer_number < 1) {
@@ -495,6 +496,8 @@ class teachingGame {
         if (this.answers.get(ws)[this.current_question_idx] !== undefined) {
             return;
         } 
+        
+        const player = this.players.find((p) => p.ws == ws);
 
         // Register answer
         this.answers.get(ws)[this.current_question_idx] = answer_number;
@@ -514,7 +517,8 @@ class teachingGame {
                 this.answers.get(ws)[this.current_question_idx] = teachingGame.NO_ANSWER_NUM;
             }
 
-            this.points.set(ws, this.points.get(ws) + points);
+            player.points += points;
+            player.latest_answer = answer_number;
         }
     }
 
