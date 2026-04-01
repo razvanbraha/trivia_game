@@ -11,8 +11,13 @@ p {
 
 /* ------------- Large Screen ------------- */
 @media screen and (min-width: 1200px) {
-    .next-question-container, .question-text-container {
+    .next-question-container, .question-text-container, .podium {
         width: 40vw;
+    }
+
+    .small-leaderboard {
+        max-width: 40vw;
+        font-size: 30px;
     }
 
     .answer-choices {
@@ -23,8 +28,13 @@ p {
 
 /* ------------- Medium Screen ------------- */
 @media screen and (min-width: 600px) and (max-width:1199px)  {
-     .next-question-container, .question-text-container {
+     .next-question-container, .question-text-container, .podium {
         width: 60vw;
+    }
+
+    .small-leaderboard {
+        max-width: 60vw;
+        font-size: 25px;
     }
 
     .answer-choices {
@@ -35,8 +45,13 @@ p {
 
 /* ------------- Small Screen ------------- */
 @media screen and (max-width: 599px) {
-    .next-question-container, .question-text-container {
+    .next-question-container, .question-text-container, .podium {
         width: 80vw;
+    }
+
+    .small-leaderboard {
+        max-width: 80vw;
+        font-size: 20px;
     }
 
     .answer-choices {
@@ -76,7 +91,7 @@ p {
 .question-text-container {
     background-color: white;
     min-height: 20vh;
-    overflow: auto;
+    overflow: scroll;
     display: flex;
     text-align: center;
     align-items: center;
@@ -95,7 +110,7 @@ p {
 /* source : https://css-tricks.com/timer-bars-in-css-with-custom-properties/ */
 .countdown {
     margin-top:auto;
-    margin-bottom: 5%;
+    margin-bottom: 5vh;
 }
 .round-time-bar-background {
     background: linear-gradient(#6f6ffc, #5757e5);
@@ -139,7 +154,7 @@ p {
     display:flex;
     align-items: center;
     justify-content: center;
-    overflow:auto;
+    overflow:scroll;
     text-align: center;
     padding: 10px;
     border-radius: 10px;
@@ -174,7 +189,7 @@ p {
     background-color: rgb(255, 0, 0);
 }
 
-.container-choice-one:not(.preview):not(.unpicked):not(.correct):not(.incorrect):hover {
+.container-choice-one:not(.preview):not(.unpicked):not(.correct):not(.incorrect):not(.host):hover {
     background-color: rgb(198, 1, 1);
 }
 
@@ -182,7 +197,7 @@ p {
     background-color: rgb(0, 128, 0);
 }
 
-.container-choice-two:not(.preview):not(.unpicked):not(.correct):not(.incorrect):hover {
+.container-choice-two:not(.preview):not(.unpicked):not(.correct):not(.incorrect):not(.host):hover {
     background-color: rgb(0, 91, 0);
 }
 
@@ -190,7 +205,7 @@ p {
     background-color: rgb(254, 190, 16);
 }
 
-.container-choice-three:not(.preview):not(.unpicked):not(.correct):not(.incorrect):hover {
+.container-choice-three:not(.preview):not(.unpicked):not(.correct):not(.incorrect):not(.host):hover {
     background-color: rgb(183, 138, 13);
 }
 
@@ -198,11 +213,11 @@ p {
     background-color: rgb(0, 0, 255);
 }
 
-.container-choice-four:not(.preview):not(.unpicked):not(.correct):not(.incorrect):hover {
+.container-choice-four:not(.preview):not(.unpicked):not(.correct):not(.incorrect):not(.host):hover {
     background-color: rgb(0, 0, 198);
 }
 
-.answer-choice-container:not(.preview):not(.unpicked):not(.correct):not(.incorrect):hover {
+.answer-choice-container:not(.preview):not(.unpicked):not(.correct):not(.incorrect):not(.host):hover {
     cursor: pointer;
 }
 
@@ -237,12 +252,14 @@ p {
     font-weight: 900;
 }
 
-.next-question-btn, .new-game-btn {
+.next-question-btn {
     width: 100vw;
     display: flex;
+    margin-top:auto;
+    margin-bottom: 5vh;
 }
 
-.next-question-btn-btn, .new-game-btn-btn {
+.next-question-btn-btn {
     margin-left:auto;
     margin-right: 5%;
     margin-top: 5vh;
@@ -258,7 +275,7 @@ p {
 /* ------------- Student Leaderboard ------------- */
 .box {
     margin-top: 5vh;
-    margin-bottom: 10vh;
+    margin-bottom: 5vh;
 }
 
 .self-ranking {
@@ -270,5 +287,169 @@ p {
     padding-left: 10px;
     padding-right: 10px;
     border-radius: 5px;
+    color: white;
+}
+
+/* ------------- Teacher Leaderboard ------------- */
+.small-leaderboard {
+    margin-top: 5vh;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.3);
+    padding: 10px;
+    border-radius: 10px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap:5px;
+}
+
+.question-class-accuracy {
+    margin-top: 5vh;
+    font-size: 30px;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.3);
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+}
+
+.medal-winner {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.medal {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+    color: #000;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease-in-out;
+}
+
+.first-medal {
+    background: linear-gradient(
+        45deg,
+        #e2bb3a 5%,
+        #debc5b 10%,
+        #e7c97c 30%,
+        #efd69d 50%,
+        #e7c97c 70%,
+        #debc5b 80%,
+        #d4af37 95%
+    );
+
+}
+
+.second-medal {
+    background: linear-gradient(
+        45deg,
+        #999 5%,
+        #fff 10%,
+        #ccc 30%,
+        #ddd 50%,
+        #ccc 70%,
+        #fff 80%,
+        #999 95%
+    );
+}
+
+.third-medal {
+    background: linear-gradient(
+        45deg,
+        #421f1f 5%,
+        #4b2222 10%,
+        #4f2727 30%,
+        #822d2d 50%,
+        #873838 70%,
+        #7b2b2b 80%,
+        #4f2222 95%
+    );
+}
+
+/* ------------- Final Leaderboard ------------- */
+
+.podium {
+    display: flex;
+    flex-direction: row;
+    margin-top:auto;
+    margin-bottom: 3vh;
+    height: 40vh;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1px;
+}
+
+.position {
+    flex-grow: 1;
+    flex-basis: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.pillar {
+    background-color: rgb(81, 81, 199);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.five {
+    height: 16vh;
+}
+
+.four {
+    height: 20vh;
+}
+
+.three {
+    height: 24vh;
+}
+
+.two {
+    height: 28vh;
+}
+
+.one {
+    height: 32vh;
+}
+
+.winner-text {
+    margin-bottom: 5px;
+    color: white
+}
+
+.points-text {
+    color: white;
+}
+
+.new-game-btn {
+    width: 100vw;
+    display: flex;
+    margin-top:auto;
+    margin-bottom: 3vh;
+    justify-content: center;
+}
+
+.new-game-btn-btn {
+    font-size: 25px;
+    font-weight: 900;
+    background-color: #6495ED;
+    border-radius: 10px;
+    padding:10px;
+    border: 1px solid #6495ED;
     color: white;
 }
