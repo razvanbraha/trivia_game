@@ -55,25 +55,88 @@ function createLobby(code, start) {
 
     // sets up lobby: added to page content when the teacher first joins the game successfully
     // game-players is dynamically updated by the teacher script (tg-host.js) on JOINEE and KICK events
-    content.innerHTML += 
-    `
-    <section id="game-settings">
-        <h3>JOIN: ${code}</h3>
-        <h4>Settings</h4>
-        <p>TODO: add other settings</p>
-    </section>
-    <section id="game-players">
-        <h4>Joined Players</h4>
-        <div id="players-list">
-            TODO add players
-        </div>
-        <button id="start-game">Start Game</button>
-    </section>
-    `;
+    // content.innerHTML += 
+    // `
+    // <section id="game-settings">
+    //     <h3>JOIN: ${code}</h3>
+    //     <h4>Settings</h4>
+    //     <p>TODO: add other settings</p>
+    // </section>
+    // <section id="game-players">
+    //     <h4>Joined Players</h4>
+    //     <div id="players-list">
+    //         TODO add players
+    //     </div>
+    //     <button id="start-game">Start Game</button>
+    // </section>
+    // `;
 
-    content.querySelector("#start-game").addEventListener("click", () => {
+    content.innerHTML += `
+    <div class="container-fluid main-container">
+        <div class="row h-100 text-white">
+            <div class="col-md-4 left-panel p-4">
+                <h3>Settings</h3>
+
+                <label class="mt-3">Questions: <span id="questionCount">25</span></label>
+                <input type="range" min="5" max="50" value="25" id="questionSlider" class="form-range">
+
+                <label class="mt-3">Preview Time: <span id="previewTime">5</span> seconds</label>
+                <input type="range" min="0" max="30" value="5" id="previewSlider" class="form-range">
+
+                <label class="mt-3">Dead Time: <span id="deadTime">3</span> seconds</label>
+                <input type="range" min="0" max="30" value="3" id="deadSlider" class="form-range">
+
+                <label class="mt-3">Live Time: <span id="liveTime">10</span> seconds</label>
+                <input type="range" min="1" max="30" value="10" id="liveSlider" class="form-range">
+
+                <h5 class="mt-4">Categories</h5>
+                <div>
+                    <input type="checkbox" checked value="1">History & Evolution<br>
+                    <input type="checkbox" checked value="2">Technical Aspects & Engineering<br>
+                    <input type="checkbox" checked value="3">Sustainability<br>
+                    <input type="checkbox" checked value="4">Consumerism & Ethics<br>
+                    <input type="checkbox" checked value="5">End-of-Life & Data<br>
+                    <input type="checkbox" checked value="6">Logistics & Distribution<br>
+                </div>
+
+            </div>
+
+            <div class="col-md-8 right-panel p-4">
+
+                <h4>CODE: <span id="roomCode">${code}</span></h4>
+
+                <h5 class="mt-4">Joinees</h5>
+                <div id="players"></div>
+
+                <div class="mt-5 d-flex gap-4">
+                    <button id="cancelRoomButton" class="btn btn-danger">Cancel</button>
+                    <button id="startGameButton" class="btn btn-primary"">Start</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    `
+
+    content.querySelector("#cancelRoomButton").addEventListener("click", () => {
+        //TODO should replace this with main.js method instead
+        globalThis.location.href = "/api/teacher/home";
+    });
+
+    content.querySelector("#startGameButton").addEventListener("click", () => {
         start();
     });
+
+    const sliders = ["questionSlider", "previewSlider", "deadSlider", "liveSlider"];
+    const countDisplays = ["questionCount", "previewTime", "deadTime", "liveTime"];
+
+    for(let i = 0; i < sliders.length; i++) {
+        const slider = document.getElementById(sliders[i]);
+        const countDisplay = document.getElementById(countDisplays[i]);
+        slider.addEventListener("input", () => {
+            countDisplay.innerText = slider.value;
+        });
+    }
 
     content.classList.add("lobby-ctnr")
 }
@@ -85,14 +148,14 @@ function createLobby(code, start) {
  * @param {(name: String)} kick function to call to kick a player by name (called when button is clicked)
  */
 function updatePlayers(players, kick) {
-    const player_section = document.getElementById("players-list");
+    const player_section = document.getElementById("players");
     player_section.innerHTML = "";
     for(const player of players) {
         player_section.innerHTML += 
         `
         <div>
             <p>${player}</p>
-            <button>Kick</button>
+            <button class="btn btn-danger">Kick</button>
         </div>
         `;
     }
@@ -119,13 +182,19 @@ function updatePlayers(players, kick) {
  * }
  */
 function getSettings() {
-    //TODO
+    const rounds = document.getElementById("questionSlider").value;
+    const categories = [...document.querySelectorAll("input[type=checkbox]:checked")]
+        .map(c => c.value);
+    const preview = document.getElementById("previewSlider").value;
+    const dead = document.getElementById("deadSlider").value;
+    const live = document.getElementById("liveSlider").value;
+
     return {
-        rounds: 5,
-        categories: [3,],
-        preview: 5,
-        dead: 7,
-        live: 10
+        rounds,
+        categories,
+        preview,
+        dead,
+        live
     }
 }
 
@@ -523,6 +592,7 @@ function showEndLeaderboard(current_player, all_players, isHost, statistics) {
     question_container.appendChild(leaderboard);
     if(isHost) {
         const new_game_btn = template_question_container.querySelector(".new-game-btn").cloneNode(true);
+        new_game_btn.addEventListener("click", () => window.location.reload());
         question_container.appendChild(new_game_btn);
     }
 }

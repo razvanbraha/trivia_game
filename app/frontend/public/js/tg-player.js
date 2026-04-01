@@ -10,7 +10,7 @@
 //--- INCLUDE -----------------------------------------------------------------
 
 const ws_api = window.ws_api;
-import tg_helpers from './tg-helpers.js';
+import game_helpers from './game-helpers.js';
 
 //--- SIGNAL HANDLERS ---------------------------------------------------------
 
