@@ -156,9 +156,6 @@ const fetchData = {
     body: JSON.stringify({type: "teaching"})
 };
 
-// Load html for questions pages
-game_helpers.loadTemplateContent();
-
 // initiate the game:
 fetch("/api/games", fetchData)
     .then((res) => {

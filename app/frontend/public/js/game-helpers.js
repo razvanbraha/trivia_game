@@ -198,40 +198,7 @@ function getSettings() {
     }
 }
 
-/**
- * Pulls 
- * @param {*} text 
- * @param {*} dead_time 
- */
-function createQuestion(text, prev) {
-    const template_div = document.createElement('div');
-
-    fetch('/public/templates/question-template.html')
-    .then(res => res.text())
-    .then((template_str) => {
-        template_div.innerHTML = template_str;
-        const template = template_div.querySelector("#game-ui-template");
-        template_question_container = template.content.querySelector("#question-container").cloneNode(true);
-        if(window.location.href.includes("test-tg-templates")) {
-            document.body.appendChild(template_question_container);
-            // Tell script in interactive-box.js that the cube exists
-            document.dispatchEvent(new Event('boxAdded'));
-        }
-        showQuestion(text, prev);
-    });
-
-
-}
-
-// Imported from tg-helpers
-/**
- * @author Will Mungas
- * 
- * Sets up the page with content from question-template.html
- */
-function loadTemplateContent() {
-    
-}
+//--- TIMER SETUP -------------------------------------------------------------
 
 /**
  * @author Connor Hekking
@@ -253,6 +220,32 @@ function resetTimer(countdown, timerStart) {
     countdown.querySelector('.round-time-bar').style = `--duration: ${timerStart};`;
 }
 
+//--- QUESTIONS ---------------------------------------------------------------
+
+/**
+ * Pulls 
+ * @param {*} text 
+ * @param {*} prev preview time before answers will be sent
+ */
+function createQuestion(text, prev) {
+    const template_div = document.createElement('div');
+
+    fetch('/public/templates/question-template.html')
+    .then(res => res.text())
+    .then((template_str) => {
+        template_div.innerHTML = template_str;
+        const template = template_div.querySelector("#game-ui-template");
+        template_question_container = template.content.querySelector("#question-container").cloneNode(true);
+        if(window.location.href.includes("test-tg-templates")) {
+            document.body.appendChild(template_question_container);
+            // Tell script in interactive-box.js that the cube exists
+            document.dispatchEvent(new Event('boxAdded'));
+        }
+        showQuestion(text, prev);
+    });
+
+
+}
 
 /**
  * @author Connor Hekking
@@ -352,7 +345,6 @@ function answersClickable(timerStart, isHost, answerHandler) {
     const question_container = content_container.querySelector("#question-container");
 
     // Get current elements
-    const question_text = question_container.querySelector(".question-text");
     const answer_choices = question_container.querySelector(".answer-choices");
     const countdown = question_container.querySelector(".countdown");
 
@@ -360,7 +352,7 @@ function answersClickable(timerStart, isHost, answerHandler) {
     let idx = 0
     answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice) => {
         if(!isHost){
-            answer_choice.addEventListener('click', () => {answerHandler(idx + 1)}); // TODO this ok?
+            answer_choice.addEventListener('click', () => {answerHandler(idx)}); // TODO this ok?
         }
         answer_choice.classList.remove("preview");
         idx += 1;

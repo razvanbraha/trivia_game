@@ -3,7 +3,7 @@
  * Test question data for valid fields
  * @author Riley Wickens & Razvan Braha
  * @param {Object} body - question data to validate
- * @returns true if valid, false otherwise
+ * @returns a list of errors accumulated during validation; if empty, question is valid 
  */
 module.exports = validateQuestion = (body) => {
     const {question, category, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, ai } = body;
@@ -38,9 +38,8 @@ module.exports = validateQuestion = (body) => {
 
     if (!valid) {
         console.log(errors);
-        return false;
     }
-    return true;
+    return errors;
 }
 
 
