@@ -308,6 +308,15 @@ class teachingGame {
         }
     }
 
+    // Returns player without ws field
+    getSanitizedPlayer(player) {
+        return {
+            name: player.name, 
+            points: player.points, 
+            latest_answer: player.latest_answer
+        };
+    }
+
     /**
      * Sorts players by points earned, then returns players without the websocket
      * @author Will Mungas
@@ -421,7 +430,7 @@ class teachingGame {
             this.players.forEach((player) => {
                 player.ws.signal(ws_api.signals.DONE, {
                     correct_answer_num: this.current_correct_answer_number,
-                    data_you: player,
+                    data_you: this.getSanitizedPlayer(player),
                 });
             });
 
@@ -438,7 +447,7 @@ class teachingGame {
             });
             this.players.forEach((player) => {
                 player.ws.signal(ws_api.signals.RESULTS, {
-                    data_you: player,
+                    data_you: this.getSanitizedPlayer(player),
                     data_all: allRankings
                 });
             });
@@ -461,7 +470,7 @@ class teachingGame {
         });
         this.players.forEach((player) => {
             player.ws.signal(ws_api.signals.FINAL, {
-                data_you: player,
+                data_you: this.getSanitizedPlayer(player),
                 data_all: allRankings
             });
         });
@@ -496,7 +505,7 @@ class teachingGame {
         if (this.answers.get(ws)[this.current_question_idx] !== undefined) {
             return;
         } 
-        
+
         const player = this.players.find((p) => p.ws == ws);
 
         // Register answer
