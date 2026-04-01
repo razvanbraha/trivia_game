@@ -367,8 +367,9 @@ function answersClickable(timerStart, isHost, answerHandler) {
  * @param {Number} correctAnswerNum Number (1-4) of the correct answer
  * @param {Boolean} isHost If the page object should be prepared for a host instead of a player view
  * @param {Function} continueBtnHandler (not required if !isHost) Function to be called when host continue button is clicked
+ * @param {Number} classAccuracyPercent (not required if !isHost) Class accuracy perecentage i.e. 55
  */
-function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isHost, continueBtnHandler) {
+function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isHost, continueBtnHandler, classAccuracyPercent) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
@@ -396,6 +397,11 @@ function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isHost, continueBt
             question_container.appendChild(incorrect_prompt);
         }
     } else {
+        // Add class accuracy element
+        const class_accuracy = template_question_container.querySelector(".class-accuracy").cloneNode(true);
+        question_container.appendChild(class_accuracy);
+        class_accuracy.querySelector('p').innerText = `Class accuracy: ${classAccuracyPercent}%`;
+
         // Host has continue control
         const next_question_btn = template_question_container.querySelector(".next-question-btn").cloneNode(true);
         question_container.appendChild(next_question_btn);
