@@ -123,7 +123,7 @@ ws_api.support(handler, ws_api.signals.RESULTS,  (ws, body) => {
 
 ws_api.support(handler, ws_api.signals.FINAL,  (ws, body) => {
     // TODO endgame statistics not implemented(low prio)
-    if(current_state != game_states.RESULTS_SERVED) {
+    if(current_state != game_states.WAITING && current_state != game_states.RESULTS_SERVED) {
         console.log("Host desync detected");
         ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
     }

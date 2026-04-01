@@ -4,35 +4,45 @@
     <main id="question-container">
         <!-- Will put combinations of the following game ui items here-->
         <section class="next-question game-ui-item">
-            <p>Next Question!</p>
+            <div class="next-question-container">
+                <p>Next Question!</p>
+            </div>
         </section>
         <section class="question-text game-ui-item">
-            <p>Question text...</p>
+            <div class="question-text-container state-answer-display">
+                <p>Question Text...</p>
+            </div>
         </section>
         <section class="answer-choices game-ui-item">
-            <p class="answer-choice choice-one preview">Choice 1(unselectable, preview time)</p>
-            <p class="answer-choice choice-two">Choice 2</p>
-            <p class="answer-choice choice-three">Choice 3</p>
-            <p class="answer-choice choice-four">Choice 4</p>
+            <div class="answer-choice-container preview container-choice-one"><p class="answer-choice choice-one">Choice 1(unselectable, preview time)</p></div>
+            <div class="answer-choice-container preview container-choice-two"><p class="answer-choice choice-two">Choice 2(unselectable, preview time)</p></div>
+            <div class="answer-choice-container preview container-choice-three"><p class="answer-choice choice-three">Choice 3(unselectable, preview time)</p></div>
+            <div class="answer-choice-container preview container-choice-four"><p class="answer-choice choice-four">Choice 4(unselectable, preview time)</p></div>
         </section>
         <section class="BLA game-ui-item">
             <!-- Don't clone this -->
             <!-- This is how correct/incorrect/unpicked answers will be indicated once revealed -->
-            <p class="answer-choice choice-one incorrect">Choice 1 (incorrect)</p>
-            <p class="answer-choice choice-two unpicked">Choice 2 (unpicked)</p>
-            <p class="answer-choice choice-three correct">Choice 3 (correct)</p>
-            <p class="answer-choice choice-four unpicked">Choice 4 (unpicked)</p>
+           <div class="answer-choice-container container-choice-one correct"><p class="answer-choice choice-one">Choice 1 (correct)</p></div>
+            <div class="answer-choice-container container-choice-two unpicked"><p class="answer-choice choice-two">Choice 2 (unpicked)</p></div>
+            <div class="answer-choice-container container-choice-three unpicked"><p class="answer-choice choice-three">Choice 3 (unpicked)</p></div>
+            <div class="answer-choice-container container-choice-four incorrect"><p class="answer-choice choice-four"></p>Choice 4 (incorrect)</div>
         </section>
         <section class="countdown game-ui-item">
-            <!-- This will probably be changed in the future to be more reactive than text,
-            but you can still style this block -->
-            <p>Time remaining: 5 seconds</p>
+            <div class="round-time-bar-background">
+                <div class="round-time-bar" style="--duration: 8;">
+                    <div></div>
+                </div>
+            </div>
         </section>
         <section class="correct-prompt game-ui-item">
-            <p>Correct!</p>
+            <div class="correct-prompt-container">
+                <p>Correct!</p>
+            </div>
         </section>
         <section class="incorrect-prompt game-ui-item">
-            <p>Incorrect!</p>
+           <div class="incorrect-prompt-container">
+                <p>Incorrect</p>
+            </div>
         </section>
 
         <!-- Leaderboard stuff -->
@@ -56,18 +66,19 @@
             <p>Your Learning</p>
         </section>
         <section class="box">
-            <div class="box_container">
-                <div class="scene">
-                    <div class="cube show-front">
-                        <div class="cube__face cube__face--front">History & Evolution</div>
-                        <div class="cube__face cube__face--back">Sustainability</div>
-                        <div class="cube__face cube__face--right">Consumerism & Ethics</div>
-                        <div class="cube__face cube__face--left">Production/Scalability</div>
-                        <div class="cube__face cube__face--top">End-of-life & Data</div>
-                        <div class="cube__face cube__face--bottom">Technical Aspects/Engineering</div>
+                    <p>Move the cube with arrow keys or by clicking!</p>
+                    <div class="box_container">
+                        <div class="scene">
+                            <div class="cube show-front">
+                                <div class="cube__face cube__face--front">History & Evolution</div>
+                                <div class="cube__face cube__face--back">Sustainability</div>
+                                <div class="cube__face cube__face--right">Consumerism & Ethics</div>
+                                <div class="cube__face cube__face--left">Production/Scalability</div>
+                                <div class="cube__face cube__face--top">End-of-life & Data</div>
+                                <div class="cube__face cube__face--bottom">Technical Aspects/Engineering</div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
         </section>
         <section class="self-ranking game-ui-item">
             <p>You are in 0th place!</p>

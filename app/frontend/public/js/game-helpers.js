@@ -154,6 +154,25 @@ function loadTemplateContent() {
     });
 }
 
+/**
+ * @author Connor Hekking
+ * 
+ * Resets round-time-bar animation and time
+ * 
+ * @param {String} countdown Countdown element
+ * @param {Number} timerStart Start time of timer
+ */
+function resetTimer(countdown, timerStart) {
+    const timer_bar = countdown.querySelector('.round-time-bar div');
+
+    // Reset animation
+    timer_bar.style.animation = 'none';
+    timer_bar.offsetHeight;
+    timer_bar.style.animation = null;
+
+    // Update duration
+    countdown.querySelector('.round-time-bar').style = `--duration: ${timerStart};`;
+}
 
 
 /**
@@ -184,7 +203,7 @@ function showQuestion(questionText, timerStart) {
 
     // Edit elements
     question_text.querySelector('p').innerText = questionText;
-    countdown.querySelector('p').innerText = timerStart; // TODO
+    resetTimer(countdown, timerStart);
 
     // Add new elements
     question_container.appendChild(next_question);
@@ -228,9 +247,9 @@ function showAnswers(answers, timerStart) {
     const answer_choices = template_question_container.querySelector(".answer-choices").cloneNode(true);
 
     // Edit elements
-    countdown.innerText = timerStart; // TODO
+    resetTimer(countdown, timerStart);
     let idx = 0;
-    answer_choices.querySelectorAll('p').forEach((answer_choice) => {
+    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice) => {
         answer_choice.innerText = answers[idx];
         answer_choice.classList.add("preview");
         idx += 1;
@@ -260,14 +279,14 @@ function answersClickable(timerStart, isHost, answerHandler) {
 
     // Edit elements
     let idx = 0
-    answer_choices.querySelectorAll('p').forEach((answer_choice) => {
+    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice) => {
         if(!isHost){
             answer_choice.addEventListener('click', () => {answerHandler(idx + 1)}); // TODO this ok?
         }
         answer_choice.classList.remove("preview");
         idx += 1;
     });
-    countdown.innerText = timerStart; // TODO
+    resetTimer(countdown, timerStart);
 }
 
 /**
@@ -318,7 +337,7 @@ function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isHost, continueBt
 
     // Edit elements
     let currentAnswerNum = 1;
-    answer_choices.querySelectorAll('p').forEach((answer_choice) => {
+    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice) => {
         if(currentAnswerNum == correctAnswerNum) {
             answer_choice.classList.add("correct");
         } else if(currentAnswerNum != chosenAnswerNum) {
