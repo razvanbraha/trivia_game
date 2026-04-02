@@ -23,7 +23,7 @@
 
             <div class="col-md-6 right-panel d-flex flex-column justify-content-center align-items-center text-center gap-4">
                 <h2 class="text-white fw-bold">Add User</h2>
-                <form class="form-container" action="/api/users" method="post" enctype="application/json">
+                <form id="userForm" class="form-container">
 
                     <section>
                         <label for="unityID">Unity ID:</label>
@@ -46,8 +46,34 @@
 
     <div class="popup" id="popup">  
         <button class="btn btn-danger" id="close-popup">Close</button>
+
         <div class="popup-container">
             <div id="user-list"></div>
+            <div id="edit-user-container" class="mt-4" style="display:none;">
+                <h3>Edit User</h3>
+
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserID">
+
+                    <div class="mb-2">
+                        <label>Unity ID:</label>
+                        <input type="text" id="editUnityID" class="form-control" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Question Privilege:</label>
+                        <input type="checkbox" id="editQuestionPriv">
+                    </div>
+
+                    <div class="mb-2">
+                        <label>User Privilege:</label>
+                        <input type="checkbox" id="editUserPriv">
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" id="cancelEdit" class="btn btn-secondary">Cancel</button>
+                </form>
+            </div>
         </div>
     </div>
 

@@ -13,9 +13,9 @@ class Header extends HTMLElement {
                 <div class="logo"></div>
                 <h1 class="fw-bold m-0">Sustainable Box Trivia</h1>
                 <div class="buttons">
-                    <button id="dynamicButton1" class="btn student-btn btn-lg px-5" onclick="" hidden></button>
-                    <button id="dynamicButton2" class="btn student-btn btn-lg px-5" onclick="" hidden></button>
-                <div class="buttons">
+                    <button id="dynamicButton1" class="btn student-btn btn-lg px-5" hidden></button>
+                    <button id="dynamicButton2" class="btn student-btn btn-lg px-5" hidden></button>
+                </div>
             </header>
         `;
         setButtons();

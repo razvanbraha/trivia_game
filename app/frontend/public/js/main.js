@@ -1,23 +1,21 @@
-
 export function studentMenu() {
     globalThis.location.href = "../../templates/student-menu.html";
 }
 
 export function loginAsProfessor() {
-    //window.location.href = "../../templates/teacher-login.html";
-    globalThis.location.href = "../../templates/teacher-menu.html";
+    globalThis.location.href = "/teacher";
 }
 
 export function teacherMenu() {
-    globalThis.location.href = "../../templates/teacher-menu.html";
+    globalThis.location.href = "/api/teacher-menu";
 }
 
 export function questionsManage() {
-    globalThis.location.href = "../../templates/teacher-question-manage.html";
+    globalThis.location.href = "/api/teacher-question-manage"
 }
 
 export function usersManage() {
-    globalThis.location.href = "../../templates/teacher-user-manage.html";
+    globalThis.location.href = "/api/teacher-user-manage"
 }
 
 export function home() {
