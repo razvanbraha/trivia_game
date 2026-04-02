@@ -320,11 +320,9 @@ function showAnswers(answers, timerStart) {
 
     // Edit elements
     resetTimer(countdown, timerStart);
-    let idx = 0;
-    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice) => {
+    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice, idx) => {
         answer_choice.innerText = answers[idx];
         answer_choice.classList.add("preview");
-        idx += 1;
     });
 
     // Add new elements
@@ -349,13 +347,11 @@ function answersClickable(timerStart, isHost, answerHandler) {
     const countdown = question_container.querySelector(".countdown");
 
     // Edit elements
-    let idx = 0
-    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice) => {
+    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice, idx) => {
         if(!isHost){
             answer_choice.addEventListener('click', () => {answerHandler(idx)}); // TODO this ok?
         }
         answer_choice.classList.remove("preview");
-        idx += 1;
     });
     resetTimer(countdown, timerStart);
 }
@@ -422,6 +418,10 @@ function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isHost, continueBt
             answer_choice.classList.add("incorrect");
         } else {
             answer_choice.classList.add("unpicked");
+        }
+
+        if(!isHost) {
+            answer_choice.removeEventListener("click");
         }
         currentAnswerNum += 1;
     });
@@ -509,11 +509,9 @@ function showLeaderboard(current_player, all_players, isHost, nextQuestionBtnHan
     const leaderboard = template_question_container.querySelector(".leaderboard").cloneNode(true);
 
     // Edit elements
-    let idx = 0;
-    leaderboard.querySelectorAll('p').forEach((ranking) => {
+    leaderboard.querySelectorAll('p').forEach((ranking, idx) => {
         if(all_players[idx]) {
             ranking.innerText = `${all_players[idx].name}: ${all_players[idx].points}`;
-            idx += 1;
         } else {
             leaderboard.removeChild(ranking);
         }
@@ -569,11 +567,9 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
     const box = template_question_container.querySelector(".box").cloneNode(true);
 
     // Edit elements
-    let idx = 0;
-    leaderboard.querySelectorAll('p').forEach((ranking) => {
+    leaderboard.querySelectorAll('p').forEach((ranking, idx) => {
         if(all_players[idx]) {
             ranking.innerText = `${all_players[idx].name}: ${all_players[idx].points}`;
-            idx += 1;
         } else {
             leaderboard.removeChild(ranking);
         }
@@ -583,16 +579,13 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
     }
 
     const box_sides = ["cube__face--front, cube__face--back", "cube__face--right", "cube__face--left", "cube__face--top", "cube__face--bottom"];
-    idx = 0;
-    box_sides.forEach((box_side_name) => {
+    box_sides.forEach((box_side_name, idx) => {
         // Note this just goes off of order, does not check cube face names
         const box_side = box.querySelector(box_side_name);
         const stats_label = box_side.querySelector(".cube_face_stats");
         const category_stat = category_accuracy[idx];
         
         stats_label.innerText = `${category_stat.num_questions}/${category_stat.num_correct} ${category_stat.accuracy}% accuracy`;
-
-        idx += 1;
     });
 
     // Add new elements
