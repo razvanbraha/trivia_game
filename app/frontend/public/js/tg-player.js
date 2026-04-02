@@ -50,7 +50,7 @@ ws_api.support(handler, ws_api.signals.READY, (ws, body) => {
 ws_api.support(handler, ws_api.signals.DONE, (ws, body) => {
     
     // show 
-    game_helpers.showCorrectAnswer();
+    game_helpers.showCorrectAnswer(body.data_you.answers.at(-1), body.correct_idx, false, null, body.class_accuracy_percent);
 });
 
 

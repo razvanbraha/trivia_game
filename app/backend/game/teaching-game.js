@@ -97,8 +97,8 @@ class teachingGame {
 
     // client-related
     host = null; // the host WebSocket connection
-    // list of players, each storing: name, websocket, points, and last answer(latest)
-    // {ws, name, points, List(answer #)}
+    // list of players, each storing: name, websocket, points
+    // {ws, name, points, List(answer idx)}
     // order of list is implicitly the player ranks
     players = []; 
     
@@ -235,7 +235,7 @@ class teachingGame {
             return;
         }
         ws.handler = this.handlers.player;
-        this.players.push({name, ws, latest: teachingGame.NO_ANSWER_NUM, points: 0, answers: []});
+        this.players.push({name, ws, points: 0, answers: []});
 
         this.log(`player ${this.players.length} (${name}) joined`);
         ws.respond(ws_api.signals.JOIN, true);
@@ -290,7 +290,7 @@ class teachingGame {
     /**
      * Returns class accuracy percent for a given question
      * @param {Number} i Index of the current round/question
-     * @param {Number} correct_idx Correct answer number (1-4)
+     * @param {Number} correct_idx Correct answer index (0-3)
      */
     getClassAccuracy(i, correct_idx) {
         // if no students
@@ -335,13 +335,11 @@ class teachingGame {
         // Tally answers
         for(let i = 0; i < this.questions.length; i++) {
             const category_stat = category_accuracy[this.questions[i].category - 1];
-            const correct_answer_num = this.questions[i].correct_idx + 1;
             players.forEach((p) => {
                 // num_questions will be #questions x #players which is fine.
                 category_stat.num_questions += 1;
                 if(i < p.answers.length) {
-                    const player_answer_num = p.answers[i];
-                    if(correct_answer_num === player_answer_num) {
+                    if(this.questions[i].correct_idx === p.answers[i]) {
                         category_stat.num_correct += 1;
                     }
                 }
@@ -519,7 +517,7 @@ class teachingGame {
         });
 
         // Send DONE
-        const { correct_idx } = this.questions[i];
+        const correct_idx = this.questions[i].correct_idx;
         const class_accuracy_percent = this.getClassAccuracy(i, correct_idx);
         this.host.signal(ws_api.signals.DONE, {
             correct_idx,
@@ -569,6 +567,7 @@ class teachingGame {
         const player = this.players.find((p) => p.ws === ws);
         // Do not allow multiple answers
         if (player.answers[this.round_idx] !== undefined) {
+            ws.err( "Multiple answer submissions not allowed.");
             return;
         }
 
@@ -583,12 +582,12 @@ class teachingGame {
         // Register answer
         player.answers[this.round_idx] = choice;
         // Add points
-        if (choice === questions[this.round_idx].correct_idx) {
+        if (choice === this.questions[this.round_idx].correct_idx) {
             const elapsed_time = new Date() - this.answering_start_time;
             const elapsed_seconds = elapsed_time / 1000; // Date() is in milliseconds
 
             // Points = ratio of elapsed time to live time, multiplied by the base number of points
-            let points = ((this.live_time - elapsed_seconds) / this.live_time) * teachingGame.BASE_QUESTION_POINTS;
+            let points = ((this.settings.live - elapsed_seconds) / this.settings.live) * teachingGame.BASE_QUESTION_POINTS;
             points = Math.round(points); // Round to integer
 
             player.points += points;

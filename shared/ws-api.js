@@ -151,7 +151,7 @@ const signals = {
         sender: "server",
         fields: [
             "correct_idx",
-            "data_you", // {name, points, latest_answer, List(answer #)}
+            "data_you", // {name, points, answers:List(answer idx)}
             "class_accuracy_percent" // Number
         ]
     },

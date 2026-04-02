@@ -349,7 +349,7 @@ function answersClickable(timerStart, isHost, answerHandler) {
     // Edit elements
     answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice, idx) => {
         if(!isHost){
-            answer_choice.addEventListener('click', () => {answerHandler(idx)}); // TODO this ok?
+            answer_choice.addEventListener('click', () => answerHandler(idx), {once: true});
         }
         answer_choice.classList.remove("preview");
     });
@@ -361,13 +361,13 @@ function answersClickable(timerStart, isHost, answerHandler) {
  * 
  * Changes the question element to the showing correct/incorrect answer state
  * 
- * @param {Number} chosenAnswerNum Number (1-4) of the answer the user chose, or -1 if none chosen
- * @param {Number} correctAnswerNum Number (1-4) of the correct answer
+ * @param {Number} chosenAnswerIdx Index (0-3) of the answer the user chose, or -1 if none chosen
+ * @param {Number} correctAnswerIdx Number (0-3) of the correct answer
  * @param {Boolean} isHost If the page object should be prepared for a host instead of a player view
  * @param {Function} continueBtnHandler (not required if !isHost) Function to be called when host continue button is clicked
  * @param {Number} classAccuracyPercent (not required if !isHost) Class accuracy perecentage i.e. 55
  */
-function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isHost, continueBtnHandler, classAccuracyPercent) {
+function showCorrectAnswer(chosenAnswerIdx, correctAnswerIdx, isHost, continueBtnHandler, classAccuracyPercent) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
@@ -385,7 +385,7 @@ function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isHost, continueBt
 
     // Add new elements
     if(!isHost) {
-        if(chosenAnswerNum == correctAnswerNum) {
+        if(chosenAnswerIdx == correctAnswerIdx) {
             // Add correct element
             const correct_prompt = template_question_container.querySelector(".correct-prompt").cloneNode(true);
             question_container.appendChild(correct_prompt);
@@ -409,21 +409,15 @@ function showCorrectAnswer(chosenAnswerNum, correctAnswerNum, isHost, continueBt
     }
 
     // Edit elements
-    let currentAnswerNum = 1;
-    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice) => {
-        if(currentAnswerNum === correctAnswerNum) {
+    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice, idx) => {
+        if(idx === correctAnswerIdx) {
             answer_choice.classList.add("correct");
-        } else if(currentAnswerNum === chosenAnswerNum) {
+        } else if(idx === chosenAnswerIdx) {
             // Add incorrect styling only if chosen & NOT correct
             answer_choice.classList.add("incorrect");
         } else {
             answer_choice.classList.add("unpicked");
         }
-
-        if(!isHost) {
-            answer_choice.removeEventListener("click");
-        }
-        currentAnswerNum += 1;
     });
 }
 

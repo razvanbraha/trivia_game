@@ -102,7 +102,7 @@ ws_api.support(handler, ws_api.signals.DONE,  (ws, body) => {
     current_state = game_states.RESPONSE_CLOSED;
 
     // TODO put function in button callbacks? may need to reorder the file
-    game_helpers.showCorrectAnswer(-1, body.correct_answer_num, true, () => {
+    game_helpers.showCorrectAnswer(-1, body.correct_idx, true, () => {
         ws.signal(ws_api.signals.CONTINUE, {});
     }, body.class_accuracy_percent);
 });
