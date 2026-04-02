@@ -48,9 +48,17 @@ ws_api.support(handler, ws_api.signals.READY, (ws, body) => {
 });
 
 ws_api.support(handler, ws_api.signals.DONE, (ws, body) => {
-    
+    //TODO just filling in these methods for testing, needs state & error checking
     // show 
     game_helpers.showCorrectAnswer(body.data_you.answers.at(-1), body.correct_idx, false, null, body.class_accuracy_percent);
+});
+
+ws_api.support(handler, ws_api.signals.RESULTS, (ws, body) => {
+    game_helpers.showLeaderboard(body.data_you, body.data_all, false, null);
+});
+
+ws_api.support(handler, ws_api.signals.FINAL, (ws, body) => {
+    game_helpers.showEndLeaderboard(body.data_you, body.data_all, false, body.category_accuracy);
 });
 
 

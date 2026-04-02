@@ -542,11 +542,13 @@ class teachingGame {
         this.host.signal(ws_api.signals.RESULTS, {
             data_you: null,
             data_all: allRankings,
+            category_accuracy: this.getCategoryAccuracy(null),
         });
         this.players.forEach((player) => {
             player.ws.signal(ws_api.signals.RESULTS, {
                 data_you: this.getSanitizedPlayer(player),
-                data_all: allRankings
+                data_all: allRankings,
+                category_accuracy: this.getCategoryAccuracy(player),
             });
         });
 

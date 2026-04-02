@@ -396,9 +396,9 @@ function showCorrectAnswer(chosenAnswerIdx, correctAnswerIdx, isHost, continueBt
         }
     } else {
         // Add class accuracy element
-        const class_accuracy = template_question_container.querySelector(".class-accuracy").cloneNode(true);
+        const class_accuracy = template_question_container.querySelector(".question-class-accuracy").cloneNode(true);
         question_container.appendChild(class_accuracy);
-        class_accuracy.querySelector('p').innerText = `Class accuracy: ${classAccuracyPercent}%`;
+        class_accuracy.querySelector('p').innerText = `${classAccuracyPercent}% Class Accuracy!`;
 
         // Host has continue control
         const next_question_btn = template_question_container.querySelector(".next-question-btn").cloneNode(true);
@@ -499,17 +499,20 @@ function showLeaderboard(current_player, all_players, isHost, nextQuestionBtnHan
     // Remove unwanted elements
     question_container.innerHTML = '';
     
-    // Clone new elements
-    const leaderboard = template_question_container.querySelector(".leaderboard").cloneNode(true);
+    if(isHost) {
+        // Clone new elements
+        const leaderboard = template_question_container.querySelector(".small-leaderboard").cloneNode(true);
 
-    // Edit elements
-    leaderboard.querySelectorAll('p').forEach((ranking, idx) => {
-        if(all_players[idx]) {
-            ranking.innerText = `${all_players[idx].name}: ${all_players[idx].points}`;
-        } else {
-            leaderboard.removeChild(ranking);
-        }
-    });
+        // Edit elements
+        leaderboard.querySelectorAll('p').forEach((ranking, idx) => {
+            if(all_players[idx]) {
+                ranking.innerText = `${ranking.innerText.split(":")[0]} ${all_players[idx].name} with ${all_players[idx].points} points`;
+            } else {
+                leaderboard.removeChild(ranking);
+            }
+        });
+    }
+    
 
     // Add new elements
     if(!isHost) {
@@ -521,8 +524,9 @@ function showLeaderboard(current_player, all_players, isHost, nextQuestionBtnHan
         self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, false);
         question_container.appendChild(self_ranking);
     }
-    question_container.appendChild(leaderboard);
     if(isHost) {
+        question_container.appendChild(leaderboard);
+
         // host has continue control
         const next_question_btn = template_question_container.querySelector(".next-question-btn").cloneNode(true);
         question_container.appendChild(next_question_btn);

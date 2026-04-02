@@ -169,7 +169,8 @@ const signals = {
         sender: "server",
         fields: [
             "data_you", // {name, points, latest_answer, List(answer #)}
-            "data_all" // List({name, points, latest_answer, List(answer #)})
+            "data_all", // List({name, points, latest_answer, List(answer #)})
+            "category_accuracy" // List({category_num, accuracy, num_correct, num_questions})
         ]
     },
     // sent by a host client to tell the server to continue to the next round of a game
