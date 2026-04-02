@@ -414,7 +414,7 @@ class teachingGame {
             const choices = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
             utils.shuffle(choices);
             const correct_idx = choices.indexOf(question.corrAnswer);
-            return { text: question.question, choices, correct_idx };
+            return { text: question.question, choices, correct_idx, category: question.category };
         });
 
         // Start main game flow

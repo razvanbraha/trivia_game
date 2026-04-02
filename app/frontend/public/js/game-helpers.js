@@ -572,14 +572,14 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         your_learning.innerText = "Class Learning";
     }
 
-    const box_sides = ["cube__face--front, cube__face--back", "cube__face--right", "cube__face--left", "cube__face--top", "cube__face--bottom"];
+    const box_sides = [".cube__face--front, .cube__face--back", ".cube__face--right", ".cube__face--left", ".cube__face--top", ".cube__face--bottom"];
     box_sides.forEach((box_side_name, idx) => {
         // Note this just goes off of order, does not check cube face names
         const box_side = box.querySelector(box_side_name);
         const stats_label = box_side.querySelector(".cube_face_stats");
         const category_stat = category_accuracy[idx];
         
-        stats_label.innerText = `${category_stat.num_questions}/${category_stat.num_correct} ${category_stat.accuracy}% accuracy`;
+        stats_label.innerText = `${category_stat.num_correct}/${category_stat.num_questions} ${category_stat.accuracy}% accuracy`;
     });
 
     // Add new elements
