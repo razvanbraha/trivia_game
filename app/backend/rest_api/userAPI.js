@@ -1,3 +1,15 @@
+//-----------------------------------------------------------------------------
+/**
+ * @file userAPI.js
+ * @author 
+ * TODO add authors
+ * 
+ * Handles operations on the api endpoint /api/users
+ */
+//-----------------------------------------------------------------------------
+
+
+
 const express = require('express');
 const path = require("node:path");
 const validateUser = require('../db_queries/user-validation')
