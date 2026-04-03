@@ -75,7 +75,7 @@
 .cube__face--front:not(.final)  { background: linear-gradient(0deg, red, var(--front-percentage), white); transform: rotateY(  0deg) translateZ(18vh);}
 .cube__face--right:not(.final)  { background: linear-gradient(0deg, blue, var(--right-percentage),white); transform: rotateY( 90deg) translateZ(18vh);}
 .cube__face--back:not(.final)   { background: linear-gradient(0deg, green, var(--back-percentage), white); transform: rotateY(180deg) translateZ(18vh);}
-.cube__face--left:not(.final)   { background: linear-gradient(0deg, yellow, var(--left-percentage), white); transform: rotateY(-90deg) translateZ(18vh);}
+.cube__face--left:not(.final)   { background: linear-gradient(0deg, gold, var(--left-percentage), white); transform: rotateY(-90deg) translateZ(18vh);}
 .cube__face--top:not(.final)   { background: linear-gradient(0deg, magenta, var(--top-percentage), white); transform: rotateX( 90deg) translateZ(18vh); }
 .cube__face--bottom:not(.final) { background: linear-gradient(0deg, orange, var(--bottom-percentage), white); transform: rotateX(-90deg) translateZ(18vh);}
 
@@ -89,7 +89,7 @@
 .cube__face--front.final { background: linear-gradient(0deg, red, var(--front-percentage), rgba(255, 0, 0, 0)); transform: rotateY(  0deg) translateZ(100px);}
 .cube__face--right.final { background: linear-gradient(0deg, blue, var(--right-percentage), rgba(255, 0, 0, 0)); transform: rotateY( 90deg) translateZ(100px);}
 .cube__face--back.final   { background: linear-gradient(0deg, green, var(--back-percentage), rgba(255, 0, 0, 0)); transform: rotateY(180deg) translateZ(100px);}
-.cube__face--left.final   { background: linear-gradient(0deg, yellow, var(--left-percentage), rgba(255, 0, 0, 0)); transform: rotateY(-90deg) translateZ(100px);}
+.cube__face--left.final   { background: linear-gradient(0deg, gold, var(--left-percentage), rgba(255, 0, 0, 0)); transform: rotateY(-90deg) translateZ(100px);}
 .cube__face--top.final  { background: linear-gradient(0deg, magenta, var(--top-percentage), rgba(255, 0, 0, 0)); transform: rotateX( 90deg) translateZ(100px); }
 .cube__face--bottom.final { background: linear-gradient(0deg, orange, var(--bottom-percentage), rgba(255, 0, 0, 0)); transform: rotateX(-90deg) translateZ(100px);}
 

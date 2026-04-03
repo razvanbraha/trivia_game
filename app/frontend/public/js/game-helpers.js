@@ -561,7 +561,7 @@ function showLeaderboard(current_player, all_players, isHost, category_accuracy,
         
         //Set Box Colour Gradients & Accuracy message
         const box_sides = [".cube__face--front", ".cube__face--back", ".cube__face--right", ".cube__face--left", ".cube__face--top", ".cube__face--bottom"];
-        const colors = ["--front-percentage", "--back-percentage", "--right-percentage", "--left-percentage", "-top--percentage", "--bottom-percentage"];
+        const colors = ["--front-percentage", "--back-percentage", "--right-percentage", "--left-percentage", "--top--percentage", "--bottom-percentage"];
         box_sides.forEach((box_side_name, idx) => {
             // Note this just goes off of order, does not check cube face names
             let box_side = box.querySelector(box_side_name);
@@ -628,7 +628,7 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
 
     //Set Box Colour Gradients & Accuracy message
     const box_sides = [".cube__face--front", ".cube__face--back", ".cube__face--right", ".cube__face--left", ".cube__face--top", ".cube__face--bottom"];
-    const colors = ["--front-percentage", "--back-percentage", "--right-percentage", "--left-percentage", "-top--percentage", "--bottom-percentage"];
+    const colors = ["--front-percentage", "--back-percentage", "--right-percentage", "--left-percentage", "--top--percentage", "--bottom-percentage"];
     box_sides.forEach((box_side_name, idx) => {
         // Note this just goes off of order, does not check cube face names
         let box_side = box.querySelector(box_side_name);
