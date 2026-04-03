@@ -124,6 +124,7 @@ function createLobby(code, start) {
     });
 
     content.querySelector("#startGameButton").addEventListener("click", () => {
+        //TODO Reject game start if no players present
         start();
     });
 
@@ -349,7 +350,19 @@ function answersClickable(timerStart, isHost, answerHandler) {
     // Edit elements
     answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice, idx) => {
         if(!isHost){
-            answer_choice.addEventListener('click', () => answerHandler(idx), {once: true});
+            answer_choice.addEventListener('click', () => {
+                answerHandler(idx)
+                answer_choices.querySelectorAll('.answer-choice-container').forEach((choices, i) => {
+                    if (i != idx && !choices.classList.contains('picked')) {
+                        choices.classList.add('unpicked');
+                    } 
+                    else {
+                        choices.classList.add('picked');
+                    }
+                });
+        }, {once: true});
+        } else {
+            answer_choice.classList.add("host");
         }
         answer_choice.classList.remove("preview");
     });
@@ -411,6 +424,7 @@ function showCorrectAnswer(chosenAnswerIdx, correctAnswerIdx, isHost, continueBt
     // Edit elements
     answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice, idx) => {
         if(idx === correctAnswerIdx) {
+            if (answer_choice.classList.contains('unpicked')) answer_choice.classList.remove('unpicked');
             answer_choice.classList.add("correct");
         } else if(idx === chosenAnswerIdx) {
             // Add incorrect styling only if chosen & NOT correct
@@ -440,13 +454,12 @@ function getPlaceText(place, final) {
 
     // Get ordinal suffix
     const lastTwo = place % 100;
+    const last = place % 10;
     if (lastTwo >= 11 && lastTwo <= 13) place_text += place + 'th';
-
-    const last = n % 10;
-    if (last === 1) place_text += place + 'st';
-    if (last === 2) place_text += place + 'nd';
-    if (last === 3) place_text += place + 'rd';
-    place_text += place + 'th';
+    else if (last === 1) place_text += place + 'st';
+    else if (last === 2) place_text += place + 'nd';
+    else if (last === 3) place_text += place + 'rd';
+    else place_text += place + 'th';
 
     place_text += ' place!';
     
@@ -479,7 +492,7 @@ function getEncouragementText(place, final) {
 }
 
 /**
- * @author Connor Hekking
+ * @author Connor Hekking, Riley Wickens
  * 
  * Populates the page with the leaderboard
  * 
@@ -488,7 +501,7 @@ function getEncouragementText(place, final) {
  * @param {Boolean} isHost If the page object should be prepared for a host instead of a player view
  * @param {Function} nextQuestionBtnHandler (not required if !isHost) Function to be called when host next question button is clicked
  */
-function showLeaderboard(current_player, all_players, isHost, nextQuestionBtnHandler) {
+function showLeaderboard(current_player, all_players, isHost, category_accuracy, nextQuestionBtnHandler) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
@@ -496,35 +509,36 @@ function showLeaderboard(current_player, all_players, isHost, nextQuestionBtnHan
     const content_container = getContent();
     const question_container = content_container.querySelector("#question-container");
 
-    // Remove unwanted elements
-    question_container.innerHTML = '';
+    // Get Current Elements
+    const answer_choices = question_container.querySelector(".answer-choices");
+    const prev_next_question_btn = question_container.querySelector(".next-question-btn");
     
     if(isHost) {
+        // Remove unwanted elements
+        answer_choices.remove();
+        prev_next_question_btn.remove();
+
         // Clone new elements
         const leaderboard = template_question_container.querySelector(".small-leaderboard").cloneNode(true);
 
-        // Edit elements
+
+        // Edit Elements
         leaderboard.querySelectorAll('p').forEach((ranking, idx) => {
             if(all_players[idx]) {
                 ranking.innerText = `${ranking.innerText.split(":")[0]} ${all_players[idx].name} with ${all_players[idx].points} points`;
-            } else {
-                leaderboard.removeChild(ranking);
             }
+            else if (idx < 3) {
+                const medals = leaderboard.querySelectorAll('.medal-winner');
+                medals.forEach((medal) => {
+                    if (idx + 1 === Number.parseInt(medal.querySelector(".medal").innerText)) {
+                        medal.remove();
+                    }
+                })
+            }
+            else ranking.remove();
         });
-    }
-    
 
-    // Add new elements
-    if(!isHost) {
-        // Get current player's rank
-        const rank = 1 + all_players.findIndex((player) => player.name == current_player.name);
-
-        const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
-        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(rank, false);
-        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, false);
-        question_container.appendChild(self_ranking);
-    }
-    if(isHost) {
+        //Add Elements
         question_container.appendChild(leaderboard);
 
         // host has continue control
@@ -533,6 +547,43 @@ function showLeaderboard(current_player, all_players, isHost, nextQuestionBtnHan
         next_question_btn.addEventListener("click", () => {
             nextQuestionBtnHandler();
         });
+    }
+    
+    // Add new elements
+    if(!isHost) {
+        //Empty Page Contents
+        question_container.innerHTML = '';
+
+        // Get current player's rank
+        const rank = 1 + all_players.findIndex((player) => player.name == current_player.name);
+
+        const box = template_question_container.querySelector(".box").cloneNode(true);
+        
+        //Set Box Colour Gradients & Accuracy message
+        //TODO: The accuracy is calculated
+        const box_sides = [".cube__face--front", ".cube__face--back", ".cube__face--right", ".cube__face--left", ".cube__face--top", ".cube__face--bottom"];
+        const colors = ["--front-percentage", "--back-percentage", "--right-percentage", "--left-percentage", "-top--percentage", "--bottom-percentage"];
+        box_sides.forEach((box_side_name, idx) => {
+        // Note this just goes off of order, does not check cube face names
+        let box_side = box.querySelector(box_side_name);
+        document.documentElement.style.setProperty(colors[idx], category_accuracy[idx].accuracy + '%');
+
+        if (category_accuracy[idx].accuracy > 50) {
+            box_side.style.color = 'white';
+        }
+
+        const stats_label = box_side.querySelector(".cube_face_stats");
+        const category_stat = category_accuracy[idx];
+            stats_label.innerText = `${category_stat.num_correct}/${category_stat.num_questions} ${category_stat.accuracy}% accuracy`;
+        });
+
+        question_container.appendChild(box);   
+        document.dispatchEvent(new Event('boxAdded'));
+
+        const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
+        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(rank, false);
+        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, false);
+        question_container.appendChild(self_ranking);
     }
 }
 
@@ -576,7 +627,7 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         your_learning.innerText = "Class Learning";
     }
 
-    const box_sides = [".cube__face--front, .cube__face--back", ".cube__face--right", ".cube__face--left", ".cube__face--top", ".cube__face--bottom"];
+    const box_sides = [".cube__face--front", ".cube__face--back", ".cube__face--right", ".cube__face--left", ".cube__face--top", ".cube__face--bottom"];
     box_sides.forEach((box_side_name, idx) => {
         // Note this just goes off of order, does not check cube face names
         const box_side = box.querySelector(box_side_name);

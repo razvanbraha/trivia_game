@@ -114,7 +114,7 @@ ws_api.support(handler, ws_api.signals.RESULTS,  (ws, body) => {
     }
     current_state = game_states.RESULTS_SERVED;
 
-    game_helpers.showLeaderboard(body.data_you, body.data_all, true, () => {
+    game_helpers.showLeaderboard(body.data_you, body.data_all, true, body.category_accuracy, () => {
         current_state = game_states.WAITING;
         ws.signal(ws_api.signals.NEXTROUND, {});
     });
