@@ -33,6 +33,7 @@ let players = [];
 let ws;
 
 // user-visible settings
+//TODO: Need to change minimum settings, shouldn't be able to set time to 0 seconds, & shouldn't be able to start game with no players
 let settings = {
     rounds: 0, // how many questions to send 
     categories: [], // which categories to pull from
