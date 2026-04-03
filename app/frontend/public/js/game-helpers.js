@@ -618,8 +618,8 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
     const box = template_question_container.querySelector(".box").cloneNode(true);
 
     // Setup Podium
-    for (let i = 0; i < 5; i++) {
-        const column = podium.querySelector(`.podium-${idx + 1}`);
+    for (let idx = 0; idx < 5; idx++) {
+        const column = podium.querySelector(`.position-${idx + 1}`);
         if(all_players[idx]) {
             column.querySelector(`.winner-text-${idx + 1}`).innerText = all_players[idx].name;
             column.querySelector(`.points-text-${idx + 1}`).innerText = `${all_players[idx].points} points`;
@@ -649,7 +649,7 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         }
 
         if (isHost) {
-            box_side_name.classList.add('final');
+            box_side.classList.add('final');
         }
 
     });
@@ -662,7 +662,7 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         // Get current player's rank
         const rank = 1 + all_players.findIndex((player) => player.name == current_player.name);
 
-        const self_ranking = question_container.querySelector(".self-ranking").cloneNode(true);
+        const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
         self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(rank, false);
         self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, false);
         question_container.appendChild(self_ranking);
@@ -670,7 +670,7 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
     question_container.appendChild(podium);
     if(isHost) {
         //TODO END GAME
-        const new_game_btn = question_container.querySelector(".new-game-btn").cloneNode(true);
+        const new_game_btn = template_question_container.querySelector(".new-game-btn").cloneNode(true);
         new_game_btn.addEventListener("click", () => globalThis.location.reload());
         question_container.appendChild(new_game_btn);
     }
