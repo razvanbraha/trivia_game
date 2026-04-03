@@ -614,8 +614,8 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
     question_container.innerHTML = '';
     
     // Clone new elements
-    const podium = question_container.querySelector(".podium").cloneNode(true);
-    const box = question_container.querySelector(".box").cloneNode(true);
+    const podium = template_question_container.querySelector(".podium").cloneNode(true);
+    const box = template_question_container.querySelector(".box").cloneNode(true);
 
     // Edit Elements
     podium.querySelectorAll('.position').forEach((column, idx) => {
