@@ -617,14 +617,15 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
     const podium = template_question_container.querySelector(".podium").cloneNode(true);
     const box = template_question_container.querySelector(".box").cloneNode(true);
 
-    // Edit Elements
-    podium.querySelectorAll('.position').forEach((column, idx) => {
+    // Setup Podium
+    for (let i = 0; i < 5; i++) {
+        const column = podium.querySelector(`.podium-${idx + 1}`);
         if(all_players[idx]) {
             column.querySelector(`.winner-text-${idx + 1}`).innerText = all_players[idx].name;
             column.querySelector(`.points-text-${idx + 1}`).innerText = `${all_players[idx].points} points`;
         }
         else column.remove();
-    });
+    }
 
     //Set Box Colour Gradients & Accuracy message
     const box_sides = [".cube__face--front", ".cube__face--back", ".cube__face--right", ".cube__face--left", ".cube__face--top", ".cube__face--bottom"];
