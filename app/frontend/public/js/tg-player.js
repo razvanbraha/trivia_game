@@ -74,6 +74,7 @@ ws_api.init(ws, ws_api.users.CLIENT, handler, () => {
     ws.expect(ws_api.signals.JOIN, (success) => {
         if(success) {
             console.log(`Successfully joined ${code}`);
+            game_helpers.waitingRoom();
             return;
         }
         console.log(`Rejected from ${code}`, "Ouch! Rejection hurts")

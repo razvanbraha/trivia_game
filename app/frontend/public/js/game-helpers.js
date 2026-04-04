@@ -106,7 +106,7 @@ function createLobby(code, start) {
                 <h4>CODE: <span id="roomCode">${code}</span></h4>
 
                 <h5 class="mt-4">Joinees</h5>
-                <div id="players"></div>
+                <div class="players" id="players"></div>
 
                 <div class="mt-5 d-flex gap-4">
                     <button id="cancelRoomButton" class="btn btn-danger">Cancel</button>
@@ -142,6 +142,18 @@ function createLobby(code, start) {
     content.classList.add("lobby-ctnr")
 }
 
+function waitingRoom() {
+    const content = getContent();
+
+    content.innerHTML += `
+     <main id="question-container">
+        <div class="next-question-container">Successfully Joined!</div>
+        <div class="waiting-container">Waiting for the host to begin game.</div>
+        <div class="loader"></div>
+    </main>
+    `
+}
+
 /**
  * @author Will Mungas
  * @description Updates the list of players & attaches their kick buttons
@@ -154,7 +166,7 @@ function updatePlayers(players, kick) {
     for(const player of players) {
         player_section.innerHTML += 
         `
-        <div>
+        <div class="player">
             <p>${player}</p>
             <button class="btn btn-danger">Kick</button>
         </div>
@@ -685,6 +697,7 @@ export default {
     getContent,
     clearContent,
     createLobby,
+    waitingRoom,
     updatePlayers,
     getSettings,
     createQuestion,
