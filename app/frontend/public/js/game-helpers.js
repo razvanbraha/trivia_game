@@ -659,37 +659,41 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
             }
             stats_label.innerText = `${category_stat.num_correct}/${category_stat.num_questions} ${category_stat.accuracy}% accuracy`;
         }
-
-        if (isHost) {
-            document.documentElement.style.setProperty('--cube-scene-size', '16vh');
-            document.documentElement.style.setProperty('--cube-box-size', '8vh');
-
-            const box_container = document.querySelector('.box_container');
-            const playersDiv = document.createElement('div');
-            playersDiv.classList.add('players');
-
-            all_players.forEach((player) => {
-                const playerDiv = document.createElement('div');
-                playerDiv.classList.add('player');
-                const playerName = document.createElement('p');
-                playerName.innerText = `${player.name}: `;
-                const playerPoints = document.createElement('p');
-                playerPoints.innerText = `${player.points} points`;
-
-                playerDiv.appendChild(playerName);
-                playerDiv.appendChild(playerPoints)
-
-                playersDiv.appendChild(playerDiv);
-            })
-            box_container.appendChild(playersDiv);
-        }
-
     });
+
+    if (isHost) {
+        document.documentElement.style.setProperty('--cube-scene-size', '16vh');
+        document.documentElement.style.setProperty('--cube-box-size', '8vh');
+        document.documentElement.style.setProperty('--cube-font-size', '12px');
+    }
 
     // Add new elements
     question_container.appendChild(box);
     // Tell script in interactive-box.js that the box exists
     document.dispatchEvent(new Event('boxAdded'));
+
+    if(isHost) {
+        const playersDiv = document.createElement('div');
+        playersDiv.classList.add('players');
+
+        all_players.forEach((player) => {
+            const playerDiv = document.createElement('div');
+            playerDiv.classList.add('player');
+            const playerName = document.createElement('p');
+            playerName.innerText = `${player.name}: `;
+            const playerPoints = document.createElement('p');
+            playerPoints.innerText = `${player.points} points`;
+
+            playerDiv.appendChild(playerName);
+            playerDiv.appendChild(playerPoints)
+
+            playersDiv.appendChild(playerDiv);
+        })
+        question_container.appendChild(playersDiv);
+    }
+
+
+
     if(!isHost) {
         // Get current player's rank
         const rank = 1 + all_players.findIndex((player) => player.name == current_player.name);
