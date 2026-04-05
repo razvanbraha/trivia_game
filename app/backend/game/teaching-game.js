@@ -36,15 +36,15 @@ class teachingGame {
     // setting limits as ranges
     static RANGES = {
         ROUNDS: {
-            MIN: 5,
+            MIN: 1,
             MAX: 50
         },
         PREVIEW_TIME: {
-            MIN: 0,
+            MIN: 1,
             MAX: 30,
         },
         DEAD_TIME: {
-            MIN: 0,
+            MIN: 1,
             MAX: 30
         },
         LIVE_TIME: {

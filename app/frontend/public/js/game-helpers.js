@@ -78,13 +78,13 @@ function createLobby(code, start) {
                 <h3>Settings</h3>
 
                 <label class="mt-3">Questions: <span id="questionCount">25</span></label>
-                <input type="range" min="5" max="50" value="25" id="questionSlider" class="form-range">
+                <input type="range" min="1" max="50" value="25" id="questionSlider" class="form-range">
 
                 <label class="mt-3">Question Preview Time: <span id="previewTime">5</span> seconds</label>
-                <input type="range" min="0" max="30" value="5" id="previewSlider" class="form-range">
+                <input type="range" min="1" max="30" value="5" id="previewSlider" class="form-range">
 
                 <label class="mt-3">Answer Preview Time: <span id="deadTime">3</span> seconds</label>
-                <input type="range" min="0" max="30" value="3" id="deadSlider" class="form-range">
+                <input type="range" min="1" max="30" value="3" id="deadSlider" class="form-range">
 
                 <label class="mt-3">Answering Period: <span id="liveTime">10</span> seconds</label>
                 <input type="range" min="1" max="30" value="10" id="liveSlider" class="form-range">
@@ -661,7 +661,27 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         }
 
         if (isHost) {
-            box_side.classList.add('final');
+            document.documentElement.style.setProperty('--cube-scene-size', '16vh');
+            document.documentElement.style.setProperty('--cube-box-size', '8vh');
+
+            const box_container = document.querySelector('.box_container');
+            const playersDiv = document.createElement('div');
+            playersDiv.classList.add('players');
+
+            all_players.forEach((player) => {
+                const playerDiv = document.createElement('div');
+                playerDiv.classList.add('player');
+                const playerName = document.createElement('p');
+                playerName.innerText = `${player.name}: `;
+                const playerPoints = document.createElement('p');
+                playerPoints.innerText = `${player.points} points`;
+
+                playerDiv.appendChild(playerName);
+                playerDiv.appendChild(playerPoints)
+
+                playersDiv.appendChild(playerDiv);
+            })
+            box_container.appendChild(playersDiv);
         }
 
     });
