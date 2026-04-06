@@ -662,15 +662,17 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
     });
 
     if (isHost) {
-        document.documentElement.style.setProperty('--cube-scene-size', '16vh');
-        document.documentElement.style.setProperty('--cube-box-size', '8vh');
-        document.documentElement.style.setProperty('--cube-font-size', '12px');
+        document.documentElement.style.setProperty('--cube-scene-size', '32vh');
+        document.documentElement.style.setProperty('--cube-box-size', '16vh');
+        document.documentElement.style.setProperty('--cube-font-size', '24px');
     }
 
     // Add new elements
     question_container.appendChild(box);
     // Tell script in interactive-box.js that the box exists
     document.dispatchEvent(new Event('boxAdded'));
+
+    /* REMOVE FOR NOW
 
     if(isHost) {
         const playersDiv = document.createElement('div');
@@ -692,7 +694,7 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         question_container.appendChild(playersDiv);
     }
 
-
+    */
 
     if(!isHost) {
         // Get current player's rank
