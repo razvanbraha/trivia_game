@@ -84,7 +84,7 @@
 .cube.show-front  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY(   0deg); }
 .cube.show-right  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY( -90deg); }
 .cube.show-back  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY(-180deg); }
-.cube.show-lef  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY(  90deg); }
+.cube.show-left  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY(  90deg); }
 .cube.show-top  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateX( -90deg); }
 .cube.show-bottom { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateX(  90deg); }
 
