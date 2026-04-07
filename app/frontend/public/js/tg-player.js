@@ -66,10 +66,12 @@ ws_api.support(handler, ws_api.signals.FINAL, (ws, body) => {
 
 let code = localStorage.getItem("room code");
 console.log(`Code: ${code}`);
+let name = localStorage.getItem("player name");
+console.log(`Name: '${code}'`);
 
 const ws = new WebSocket(ws_api.uri);
-
-const body = { code, name: "player 1" };
+// We are letting the backend handle an empty name
+const body = { code, name };
 ws_api.init(ws, ws_api.users.CLIENT, handler, () => {
     ws.expect(ws_api.signals.JOIN, (success) => {
         if(success) {

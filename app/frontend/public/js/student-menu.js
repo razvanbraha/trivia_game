@@ -5,6 +5,7 @@ const launchStudyButton = document.querySelector('#launchStudyButton');
 
 async function joinRoom() {
     const code = document.getElementById("roomCode").value.toUpperCase();
+    const name = document.getElementById("playerName").value;
 
     // check that room is valid
 
@@ -12,6 +13,7 @@ async function joinRoom() {
         .then((res) => {
             if(res.ok) {
                 localStorage.setItem("room code", code);
+                localStorage.setItem("player name", name);
                 window.location.href = "/api/play/teaching/player";
             }
             else {

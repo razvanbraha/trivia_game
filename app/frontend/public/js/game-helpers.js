@@ -488,17 +488,18 @@ function getPlaceText(place, final) {
  * @returns encouragement text ('Keep it up!/Good job!')
  */
 function getEncouragementText(place, final) {
-    const encouragement_texts_ongoing = ['On top of the world!', 'Almost perfect!', 'Nearly there!', 'Keep up the lead!', 'Nice work!'];
+    let idx = place - 1;
+    const encouragement_texts_ongoing = ['On top of the world!', 'Almost perfect!', 'Nearly there!', 'Keep up the lead!', 'Nice work!', 'Keep it up!'];
     const encouragement_texts_final = ['Gold medal!', 'Silver medal!', 'Bronze medal!', 'You are on the podium!', 'You are on the podium!', 'Good game!'];
     let encouragement_text;
-    if(place > 5) {
+    if(idx >= (encouragement_texts_ongoing.length - 1)) {
         // Default is last in array
-        place = 6;
+        idx = encouragement_texts_ongoing.length - 1;
     }
     if(final) {
-        encouragement_text = encouragement_texts_final[place - 1];
+        encouragement_text = encouragement_texts_final[idx];
     } else {
-        encouragement_text = encouragement_texts_ongoing[place - 1];
+        encouragement_text = encouragement_texts_ongoing[idx];
     }
     return encouragement_text;
 }
@@ -701,8 +702,8 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         const rank = 1 + all_players.findIndex((player) => player.name == current_player.name);
 
         const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
-        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(rank, false);
-        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, false);
+        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(rank, true);
+        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, true);
         question_container.appendChild(self_ranking);
     }
     question_container.appendChild(podium);

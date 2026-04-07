@@ -97,7 +97,7 @@ const create = (type) => {
  */
 const join = (ws, body) => {
     const code = body.code;
-    const name = body.name;
+    const name = String(body.name);
     
     // game-type agnostic: only matters to the code that runs the game
     // similarly, the code that runs the game doesn't care what session code
