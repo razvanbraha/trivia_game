@@ -234,7 +234,7 @@ class teachingGame {
         let name_str = nouns[Math.floor(Math.random() * nouns.length)];
 
         // Add 3 random digits
-        for(let i = 0; i < 2; i++) {
+        for(let i = 0; i < 3; i++) {
             name_str += Math.floor(Math.random() * 10);
         }
 
