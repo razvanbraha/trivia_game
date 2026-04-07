@@ -295,18 +295,21 @@ class teachingGame {
     getClassAccuracy(i, correct_idx) {
         // if no students
         if(this.players.length === 0) {
+            console.log("NO PLAYERS");
             return 0;
         }
 
         let correct_cnt = 0;
 
         this.players.forEach((player) => {
-            if(player.answers[i] && player.answers[i] === correct_idx) {
+            const answer = player.answers[i];
+            if(answer !== undefined && Number(answer) === Number(correct_idx)) {
                 correct_cnt++;
             }
         });
 
-        return Math.round((correct_cnt / this.players.length) * 100);
+        const accuracy = Math.round((correct_cnt / this.players.length) * 100);
+        return accuracy;
     }
 
     /**
@@ -373,7 +376,7 @@ class teachingGame {
      * @returns 
      */
     getRankings() {
-        this.players.sort((a, b) => {a.points - b.points});
+        this.players.sort((a, b) => b.points - a.points);
 
         return this.players.map(({ws, ...rest}) => rest);
     }
