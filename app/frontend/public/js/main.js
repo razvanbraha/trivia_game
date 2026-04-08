@@ -13,8 +13,7 @@ export function studentMenu() {
 }
 
 export function loginAsProfessor() {
-    // globalThis.location.href = "/teacher"; ? TODO this may be needed to have shibboleth work
-    globalThis.location.href = "/api/teacher/home";
+    globalThis.location.href = "/teacher";
 }
 
 export function teacherMenu() {
