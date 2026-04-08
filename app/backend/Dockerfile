@@ -12,6 +12,12 @@ COPY shared/ws-api.js ./ws-api.js
 # copy rest of backend source
 COPY app/backend .
 
+RUN if [ -f package.json ]; then \
+      npm install; \
+    else \
+      npm init -y && npm install express mysql2; \
+    fi
+
 EXPOSE 8080
 
 CMD ["nodemon", "server.js"]

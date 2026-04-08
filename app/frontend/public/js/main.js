@@ -8,13 +8,12 @@ and only served via route handlers.
 
 Also, this script needs documentation from whoever wrote it
 */
-
 export function studentMenu() {
     globalThis.location.href = "/api/student/home";
 }
 
 export function loginAsProfessor() {
-    //window.location.href = "../../templates/teacher-login.html";
+    // globalThis.location.href = "/teacher"; ? TODO this may be needed to have shibboleth work
     globalThis.location.href = "/api/teacher/home";
 }
 
