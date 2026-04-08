@@ -2,10 +2,13 @@ FROM node:18
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
-
 COPY . .
+
+RUN if [ -f package.json ]; then \
+      npm install; \
+    else \
+      npm init -y && npm install express mysql2; \
+    fi
 
 EXPOSE 8080
 
