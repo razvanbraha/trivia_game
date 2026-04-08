@@ -14,36 +14,7 @@ const templates_dir = path.join(__dirname, "../templates");
 
 const teacher_page_router = express.Router();
 
-/**
- * Determines if the current user has teacher privileges
- * Checks developer list and shibboleth primary affiliation
- * 
- * @param {Object} req - Express request object
- * @author David Salinas
- * @returns {Boolean} true if user is teacher/authorized, false otherwise
- */
-async function isTeacher(req) {
-    const uid = req.headers["x-shib-uid"];
-    const primary = req.headers["x-shib-primary"]
-
-    const devUsers = ["drsalin2", "wrmungas", "rmaalay", "rkwicken", "rbraha", "clhekkin"];
-    if (devUsers.includes(uid)) {
-        return true;
-    }
-    if (primary == "faculty") {
-        return true;
-    }
-    try {
-        const userArr = await getByUnityId(uid);
-        const user = Array.isArray(userArr) ? userArr[0] : userArr;
-        if(user && user.userPriv) {
-            return true;
-        }
-    } catch (err) {
-        console.error("Error checking user privileges: ", err);
-    }
-    return false;
-}
+const shib_middleware = require('../middleware/shib-middeware');
 
 //--- ROUTES ------------------------------------------------------------------
 
@@ -57,16 +28,7 @@ async function isTeacher(req) {
  * @author David Salinas
  * @returns 403 if user lacks teacher privileges
  */
-teacher_page_router.get("/questions", async (req, res) => {
-    const user = req.headers["x-shib-uid"];
-
-    if (!user) {
-        return res.redirect("/teacher");
-    }
-    if (!(await isTeacher(req))) {
-        return res.status(403).send("You need teacher/TA permission");
-    }
-
+teacher_page_router.get("/questions", shib_middleware, (req, res) => {
     res.sendFile(path.join(templates_dir, "teacher-question-manage.html"));
 });
 
@@ -80,16 +42,7 @@ teacher_page_router.get("/questions", async (req, res) => {
  * @author David Salinas
  * @returns 403 if user lacks teacher privileges
  */
-teacher_page_router.get("/users", async (req, res) => {
-    const user = req.headers["x-shib-uid"];
-
-    if (!user) {
-        return res.redirect("/teacher");
-    }
-    if (!(await isTeacher(req))) {
-        return res.status(403).send("You need teacher/TA permission");
-    }
-    
+teacher_page_router.get("/users", shib_middleware, (req, res) => {
     res.sendFile(path.join(templates_dir, "teacher-user-manage.html"));
 
 });
@@ -105,16 +58,7 @@ teacher_page_router.get("/users", async (req, res) => {
  * @author David Salinas
  * @returns 403 if user lacks teacher privileges
  */
-teacher_page_router.get("/home", async (req, res) => {
-    const user = req.headers["x-shib-uid"];
-
-    if (!user) {
-        return res.redirect("/teacher");
-    }
-    if (!(await isTeacher(req))) {
-        return res.status(403).send("You need teacher/TA permission");
-    }
-
+teacher_page_router.get("/home", shib_middleware, (req, res) => {
     res.sendFile(path.join(templates_dir, "teacher-menu.html"));
 });
 

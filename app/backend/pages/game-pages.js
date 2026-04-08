@@ -13,10 +13,11 @@ const path = require("path");
 const templates_dir = path.join(__dirname, "../templates");
 
 const game_page_router = express.Router();
+const shib_middleware = require("../middleware/shib-middeware");
 
 //--- ROUTES ------------------------------------------------------------------
 
-game_page_router.get("/teaching/host", (req, res) => {
+game_page_router.get("/teaching/host", shib_middleware, (req, res) => {
     res.sendFile(path.join(templates_dir, "tg-host.html"));
 });
 
