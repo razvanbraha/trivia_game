@@ -2,7 +2,15 @@ FROM node:18
 
 WORKDIR /app
 
-COPY . .
+# copy package files
+COPY app/backend/package*.json ./
+RUN npm install && npm install -g nodemon
+
+# copy real protocol.json from shared
+COPY shared/ws-api.js ./ws-api.js
+
+# copy rest of backend source
+COPY app/backend .
 
 RUN if [ -f package.json ]; then \
       npm install; \
@@ -12,4 +20,4 @@ RUN if [ -f package.json ]; then \
 
 EXPOSE 8080
 
-CMD ["node", "server.js"]
+CMD ["nodemon", "server.js"]

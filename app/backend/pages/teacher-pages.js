@@ -10,28 +10,56 @@
 const express = require("express");
 const path = require("path");
 
-const templates_dir = path.join(__dirname, "../../frontend/templates");
+const templates_dir = path.join(__dirname, "../templates");
 
 const teacher_page_router = express.Router();
 
-// TODO add middleware to authenticate via shib before serving any of these
-// pages
+const shib_middleware = require('../middleware/shib-middeware');
 
 //--- ROUTES ------------------------------------------------------------------
 
-teacher_page_router.get("/questions", (req, res) => {
-    res.sendFile(path.join(templates_dir, "question-manage.html"));
+
+/**
+ * Serve Question Management Page
+ * @route GET /teacher/questions
+ * @access Protected (Professor and TA)
+ * @returns HTML page if authorized
+ * @redirects to /teacher if not authenticated
+ * @author David Salinas
+ * @returns 403 if user lacks teacher privileges
+ */
+teacher_page_router.get("/questions", shib_middleware, (req, res) => {
+    res.sendFile(path.join(templates_dir, "teacher-question-manage.html"));
 });
 
-teacher_page_router.get("/users", (req, res) => {
-    res.sendFile(path.join(templates_dir, "user-manage.html"));
+
+/**
+ * Serve User Management Page
+ * @route GET /teacher/users
+ * @access Protected (Professor and TA)
+ * @returns HTML page if authorized
+ * @redirects to /teacher if not authenticated
+ * @author David Salinas
+ * @returns 403 if user lacks teacher privileges
+ */
+teacher_page_router.get("/users", shib_middleware, (req, res) => {
+    res.sendFile(path.join(templates_dir, "teacher-user-manage.html"));
 
 });
 
 // TODO implement pages for these routes
 
-teacher_page_router.get("/home", (req, res) => {
-    res.sendFile(path.join(templates_dir, "teacher-home.html"));
+/**
+ * Serve Teacher Menu Page
+ * @route GET /teacher/home
+ * @access Protected (Professor and TA)
+ * @returns HTML page if authorized
+ * @redirects to /teacher if not authenticated
+ * @author David Salinas
+ * @returns 403 if user lacks teacher privileges
+ */
+teacher_page_router.get("/home", shib_middleware, (req, res) => {
+    res.sendFile(path.join(templates_dir, "teacher-menu.html"));
 });
 
 //--- EXPORTS -----------------------------------------------------------------

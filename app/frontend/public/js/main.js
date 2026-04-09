@@ -9,7 +9,7 @@ and only served via route handlers.
 Also, this script needs documentation from whoever wrote it
 */
 export function studentMenu() {
-    globalThis.location.href = "../../templates/student-menu.html";
+    globalThis.location.href = "/api/student/home";
 }
 
 export function loginAsProfessor() {
@@ -17,19 +17,19 @@ export function loginAsProfessor() {
 }
 
 export function teacherMenu() {
-    globalThis.location.href = "/api/teacher-menu";
+    globalThis.location.href = "/api/teacher/home";
 }
 
 export function questionsManage() {
-    globalThis.location.href = "/api/teacher-question-manage"
+    globalThis.location.href = "/api/teacher/questions";
 }
 
 export function usersManage() {
-    globalThis.location.href = "/api/teacher-user-manage"
+    globalThis.location.href = "/api/teacher/users";
 }
 
 export function home() {
-    globalThis.location.href = "../../index.html";
+    globalThis.location.href = "/api/";
 }
 
 export default {studentMenu, teacherMenu, home, questionsManage, usersManage, loginAsProfessor};

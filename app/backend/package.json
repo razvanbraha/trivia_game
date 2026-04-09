@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --collectCoverage",
     "start": "nodemon -L server.js",
     "generate-docs": "jsdoc --configure .jsdoc.json"
   },

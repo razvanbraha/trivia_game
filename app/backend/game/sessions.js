@@ -8,8 +8,7 @@
  */
 //--- INCLUDE -----------------------------------------------------------------
 
-// TODO require() things
-const {messages} = require("../websocket-server");
+const ws_api = require("../ws-api");
 const {teachingGame} = require("./teaching-game");
 
 //--- CONSTANTS ---------------------------------------------------------------
@@ -21,63 +20,72 @@ const sessionTypes = {
     STUDY: "study"
 };
 
-// Possible code range
-const code_range = 10000;
+// Time until any session automatically expires, regardless of state
+const SESSION_AUTO_EXPIRE_TIME = 30 * 60 * 1000; // 30mins(ms)
+
+// Time between sessions automatically checking for expired sessions
+const SESSION_EXPIRE_CHECK_TIME = 2 * 60 * 1000; // 2mins(ms)
 
 //--- GLOBALS -----------------------------------------------------------------
 
-// list of all open game sessions for the server to keep track of
-const sessions = [];
+// contains all sessions, keyed by code
+const sessions = {};
 
 //--- FUNCTIONS ---------------------------------------------------------------
 
 /**
- * Generates a unique room code
- * @author Connor Hekking
+ * Generates a unique 4-character alphanumeric room code
+ * @author Will Mungas
  */
 function generateRoomCode() {
-    const randomCode = () => Math.floor(Math.random() * code_range);
-    let code = -1;
-    let duplicate = true;
-
-    // Generate random codes until one found which isn't taken
-    while(duplicate) {
-        code = randomCode();
-        duplicate = sessions.some((session) => session.code === code);
+    const str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    // get a single random character from the above string
+    const randomCharacter = () => {
+        return str.charAt(Math.floor(Math.random() * str.length));
     }
 
+    // generate a 4-character unique code string
+    const randomCode = () => {
+        return "" +
+        randomCharacter() + 
+        randomCharacter() + 
+        randomCharacter() +
+        randomCharacter();
+    }
+
+    let code = randomCode();
+    while(code in sessions) {
+        code = randomCode();
+    }
+    
     return code;
 }
-
-/**
- * Creates an object with data common to all game sessions
- * @author Connor Hekking
- */
-const createCommonSessionData = (type) => {
-    return {
-        game_code: generateRoomCode(),
-        game_type: type,
-    };
-};
 
 /**
  * Creates a game session of a given type running on a new thread
  * @author Connor Hekking
  * @return The code of the newly created session
  */
-const createSession = (type) => {
+const create = (type) => {
     //TODO threads not implemented
 
-    let session_data = createCommonSessionData(type);
+    const code = generateRoomCode();
+
+    const data = {
+        code,
+        type,
+        start_time: Date.now(),
+    };
+
     //TODO multiple game types
     if(type === sessionTypes.TEACHING) {
-        sessions.push(new teachingGame(session_data)); 
+        sessions[code] = new teachingGame(data);
+        console.log(`[Sessions]: added new session ${code}`);
     } else {
         return null;
     }
-    
 
-    return session_data.game_code;
+    return code;
 };
 
 /**
@@ -87,58 +95,60 @@ const createSession = (type) => {
  * @param {Object} data the data of the request to create the new session
  * @return true/false whether the creation was successful
  */
-const joinSession = (ws, data) => {
-    const code = data.game_code;
-    const type = data.game_type;
-
-    switch(type) {
-        case sessionTypes.TEACHING:
-            let found_session = false;
-            for(const session of sessions) {
-                if(session.code === code && session.state === teachingGame.STATES.LOBBY) {
-                    session.join(ws);
-                    found_session = true;
-                    break;
-                }
-            }
-            return found_session;
-        case sessionTypes.MULTIPLAYER:
-            // TODO implement
-            return false;
-        default:
-            return false;
+const join = (ws, body) => {
+    const code = body.code;
+    const name = String(body.name);
+    
+    // game-type agnostic: only matters to the code that runs the game
+    // similarly, the code that runs the game doesn't care what session code
+    // the game is hosted at
+    let result = false;
+    if(code in sessions) {
+        sessions[code].join(ws, name);
+        result = true;
     }
+    else {
+        ws.err(`could not find session ${code}`);
+    }
+    ws.respond(ws_api.signals.JOIN, result);
 }
 
-/**
- * Checks if a game session exists with a given code
- * @author Connor Hekking
- * @param {Number} code the code to check
- * @return true/false whether the game session exists
- */
-const sessionExists = (code) => {
-    const exists = sessions.some((session) => 
-        (session.code === code && session.state === teachingGame.STATES.LOBBY)
-    );
-    return exists;
+const exists = (code) => {
+    return code && code in sessions;
 }
 
+
 /**
- * Removes a session from memory
+ * Removes any sessions from memory which are ended, or have gone on too long.
  * @author Connor Hekking
  * @param {teachingGame} session the session to remove
  */
-const removeSession = (session) => {
-    const idx = sessions.findIndex(s => s.code === session.code);
-    if(idx > -1) {
-        sessions.splice(idx, 1);
+const remove = () => {
+    const now = Date.now();
+
+    for(const code in sessions) {
+        const session = sessions[code];
+        if(session.state == teachingGame.STATES.ENDED) {
+            delete sessions[code];
+        } else if(now - session.start_time > SESSION_AUTO_EXPIRE_TIME) {
+            try {
+                // Tell game to clear its own memory
+                session.endGame(null, null);
+            } catch (e) {
+                console.log(`Failed to end expired session: ${e}`);
+            }
+            delete sessions[code];
+        }
     }
 }
 
+//--- ALWAYS RUNNING -----------------------------------------------------------------
+
+const remover = setInterval(remove, SESSION_EXPIRE_CHECK_TIME);
+
 //--- EXPORTS -----------------------------------------------------------------
 
-exports.sessionExists = sessionExists;
+exports.exists = exists;
 // Export create/join for websocket-server to use
-exports.createSession = createSession;
-exports.joinSession = joinSession;
-exports.removeSession = removeSession;
+exports.create = create;
+exports.join = join;

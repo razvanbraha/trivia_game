@@ -157,10 +157,10 @@ const getByID = async (id) => {
 const selectRandQuestions = async (n, categories) => {
     let qry = `SELECT * 
     FROM questions
-    WHERE category IN ${categories}
+    WHERE category IN (?)
     ORDER BY RAND() 
     LIMIT ${n};`
-    const [result] = await con.query(qry);
+    const [result] = await con.query(qry, [categories]);
     return result;
 }
 
