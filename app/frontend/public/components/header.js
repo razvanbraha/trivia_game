@@ -52,6 +52,11 @@ let setButtons = () => {
         dynamicButton2.textContent = "Logout";
         dynamicButton2.removeAttribute('hidden');
     }
+    else if(location.includes('/play')) {
+        dynamicButton2.onclick = location.includes('/host') ? teacherMenu : studentMenu;
+        dynamicButton2.textContent = "Quit";
+        dynamicButton2.removeAttribute('hidden');
+    }
 }
 
 
