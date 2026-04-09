@@ -77,9 +77,11 @@ ws_api.init(ws, ws_api.users.CLIENT, handler, () => {
         if(success) {
             console.log(`Successfully joined ${code}`);
             game_helpers.waitingRoom();
+            game_helpers.addHeaders(code, name);
             return;
+        } else {
+            console.log(`Rejected from ${code}`, "Ouch! Rejection hurts");
         }
-        console.log(`Rejected from ${code}`, "Ouch! Rejection hurts")
     });
     ws.signal(ws_api.signals.JOIN, body)
 });

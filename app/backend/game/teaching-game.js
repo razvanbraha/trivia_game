@@ -217,32 +217,6 @@ class teachingGame {
     }
 
     /**
-     * Gets a random, non-existing name
-     * @return name
-     */
-    getRandomName() {
-        const nouns = [
-  "Dog", "Cow", "Cat", "Horse", "Donkey", "Tiger", "Lion", "Panther", "Leopard", "Cheetah", "Bear", "Elephant", "Turtle", "Tortoise", "Crocodile",
-  "Rabbit", "Porcupine", "Hare", "Hen", "Pigeon", "Albatross", "Crow", "Fish", "Dolphin", "Frog", "Whale", "Alligator", "Eagle", "Squirrel", "Ostrich", "Fox",
-  "Goat", "Jackal", "Emu", "Armadillo", "Eel", "Goose", "Wolf", "Beagle", "Gorilla", "Chimpanzee", "Monkey", "Beaver", "Orangutan", "Antelope", "Bat",
-  "Badger", "Giraffe", "Crab", "Panda", "Hamster", "Cobra", "Shark", "Camel", "Hawk", "Deer", "Chameleon", "Hippopotamus", "Jaguar", "Chihuahua", "Ibex",
-  "Lizard", "Koala", "Kangaroo", "Iguana", "Llama", "Chinchilla", "Dodo", "Jellyfish", "Rhinoceros", "Hedgehog", "Zebra", "Possum", "Wombat", "Bison", "Bull", "Buffalo", 
-  "Sheep", "Meerkat", "Mouse", "Otter", "Sloth", "Owl", "Vulture", "Flamingo", "Racoon", "Mole", "Duck", "Swan", "Lynx", "Elk", "Boar",
-  "Lemur", "Baboon", "Mammoth", "Rat", "Snake", "Peacock"];
-        
-        // Start with random noun
-        let name_str = nouns[Math.floor(Math.random() * nouns.length)];
-
-        // Add 3 random digits
-        for(let i = 0; i < 3; i++) {
-            name_str += Math.floor(Math.random() * 10);
-        }
-
-        // No need to check for duplicates, join will reject in the rare case that there is an overlap
-        return name_str
-    }
-
-    /**
      * Handles user joining the game through a websocket connection
      * @param {WebSocket} ws websocket attempting to join this game
      */
@@ -263,8 +237,10 @@ class teachingGame {
         ws.handler = this.handlers.player;
 
         // Handle empty name
-        if(!name || name === '') {
-            name = this.getRandomName();
+        if(!name || name === '' || name.toLowerCase().trim() === "host") {
+            ws.respond(ws_api.signals.JOIN, false);
+            this.log(`player ${this.players.length} (${name}) join rejected: invalid name`);
+            return;
         }
 
         // Check for name duplicates (ignore case)

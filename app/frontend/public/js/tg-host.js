@@ -198,6 +198,7 @@ fetch("/api/games", fetchData)
                             live: settings.live
                         });
                     });
+                    game_helpers.addHeaders(code, "Host");
                     return;
                 }
                 console.log(`Rejected from ${code}`, "Ouch! Rejection hurts")

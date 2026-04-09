@@ -154,6 +154,25 @@ function waitingRoom() {
     `
 }
 
+function addHeaders(code, name) {
+    const header = document.querySelector("header");
+    const title = header.querySelector("h1");
+
+    // Insert code before title
+    const codeLabel = document.createElement('h6');
+    codeLabel.className = "code-label";
+    codeLabel.classList.add("my-0", "me-5")
+    codeLabel.textContent = `Code: ${code}`;
+    header.insertBefore(codeLabel, title);
+
+    // Insert header after title
+    const nameLabel = document.createElement('h6');
+    nameLabel.className = "name-label";
+    nameLabel.classList.add("my-0", "ms-5")
+    nameLabel.textContent = `${name}`;
+    title.insertAdjacentElement("afterend", nameLabel);
+}
+
 /**
  * @author Will Mungas
  * @description Updates the list of players & attaches their kick buttons
@@ -630,6 +649,16 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
     const podium = template_question_container.querySelector(".podium").cloneNode(true);
     const box = template_question_container.querySelector(".box").cloneNode(true);
 
+
+    // Your/class learning
+    if(isHost) {
+        const learning = template_question_container.querySelector(".class-learning").cloneNode(true);
+        question_container.appendChild(learning);
+    } else {
+        const learning = template_question_container.querySelector(".your-learning").cloneNode(true);
+        question_container.appendChild(learning);
+    }
+
     // Setup Podium
     for (let idx = 0; idx < 5; idx++) {
         const column = podium.querySelector(`.position-${idx + 1}`);
@@ -662,40 +691,14 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         }
     });
 
-    if (isHost) {
-        document.documentElement.style.setProperty('--cube-scene-size', '32vh');
-        document.documentElement.style.setProperty('--cube-box-size', '16vh');
-        document.documentElement.style.setProperty('--cube-font-size', '24px');
-    }
+    document.documentElement.style.setProperty('--cube-scene-size', '32vh');
+    document.documentElement.style.setProperty('--cube-box-size', '16vh');
+    document.documentElement.style.setProperty('--cube-font-size', '24px');
 
     // Add new elements
     question_container.appendChild(box);
     // Tell script in interactive-box.js that the box exists
     document.dispatchEvent(new Event('boxAdded'));
-
-    /* REMOVE FOR NOW
-
-    if(isHost) {
-        const playersDiv = document.createElement('div');
-        playersDiv.classList.add('players');
-
-        all_players.forEach((player) => {
-            const playerDiv = document.createElement('div');
-            playerDiv.classList.add('player');
-            const playerName = document.createElement('p');
-            playerName.innerText = `${player.name}: `;
-            const playerPoints = document.createElement('p');
-            playerPoints.innerText = `${player.points} points`;
-
-            playerDiv.appendChild(playerName);
-            playerDiv.appendChild(playerPoints)
-
-            playersDiv.appendChild(playerDiv);
-        })
-        question_container.appendChild(playersDiv);
-    }
-
-    */
 
     if(!isHost) {
         // Get current player's rank
@@ -725,6 +728,7 @@ export default {
     clearContent,
     createLobby,
     waitingRoom,
+    addHeaders,
     updatePlayers,
     getSettings,
     createQuestion,
