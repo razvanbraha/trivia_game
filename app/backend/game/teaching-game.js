@@ -222,7 +222,8 @@ class teachingGame {
      */
     join(ws, name) {
         if (this.state !== teachingGame.STATES.LOBBY) {
-            ws.err("Game already started.");
+            ws.respond(ws_api.signals.JOIN, false);
+            this.log(`player ${this.players.length} (${name}) join rejected: invalid name`);
             return;
         }
 
@@ -498,7 +499,8 @@ class teachingGame {
                 num: i + 1,
                 preview: this.settings.preview,
                 dead: this.settings.dead,
-                live: this.settings.live
+                live: this.settings.live,
+                rounds: this.settings.rounds
             }
         );
 

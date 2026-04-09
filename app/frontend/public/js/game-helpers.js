@@ -256,10 +256,12 @@ function resetTimer(countdown, timerStart) {
 
 /**
  * Pulls 
- * @param {*} text 
- * @param {*} prev preview time before answers will be sent
+ * @param {*} text Text of the question
+ * @param {*} prev preview time before answers will be received
+ * @param {*} num Question number
+ * @param {*} rounds Number of rounds(questions)
  */
-function createQuestion(text, prev) {
+function createQuestion(text, prev, num, rounds) {
     const template_div = document.createElement('div');
 
     fetch('/public/templates/question-template.html')
@@ -273,7 +275,7 @@ function createQuestion(text, prev) {
             // Tell script in interactive-box.js that the cube exists
             document.dispatchEvent(new Event('boxAdded'));
         }
-        showQuestion(text, prev);
+        showQuestion(text, prev, num, rounds);
     });
 
 
@@ -286,8 +288,10 @@ function createQuestion(text, prev) {
  * 
  * @param {String} questionText Text of the question
  * @param {Number} timerStart Start time of timer (preview time)
+ * @param {Number} num Question number
+ * @param {Number} rounds Number of rounds(questions)
  */
-function showQuestion(questionText, timerStart) {
+function showQuestion(questionText, timerStart, num, rounds) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
@@ -301,15 +305,18 @@ function showQuestion(questionText, timerStart) {
     const question_container = template_question_container.cloneNode(false);
 
     // Clone new elements
+    const question_number = template_question_container.querySelector(".question-number").cloneNode(true);
     const next_question = template_question_container.querySelector(".next-question").cloneNode(true);
     const question_text = template_question_container.querySelector(".question-text").cloneNode(true);
     const countdown = template_question_container.querySelector(".countdown").cloneNode(true);
 
     // Edit elements
+    question_number.querySelector('h5').innerText = `Question ${num}/${rounds}`;
     question_text.querySelector('p').innerText = questionText;
     resetTimer(countdown, timerStart);
 
     // Add new elements
+    question_container.appendChild(question_number);
     question_container.appendChild(next_question);
     question_container.appendChild(question_text);
     question_container.appendChild(countdown);

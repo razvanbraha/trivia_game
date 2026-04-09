@@ -72,7 +72,7 @@ ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
     }
     current_state = game_states.QUESTION_SERVED;
 
-    game_helpers.createQuestion(body.text, body.preview);
+    game_helpers.createQuestion(body.text, body.preview, body.num, body.rounds);
 });
 
 ws_api.support(handler, ws_api.signals.CHOICES,  (ws, body) => {
