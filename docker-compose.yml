@@ -31,14 +31,18 @@ services:
       - "80"
 
   db:
-    image: mysql:8.0
+    image: mariadb:latest
     container_name: trivia-db
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     volumes:
-      - mysql-data:/var/lib/mysql
+    # mount persistent data under database/data
+      - "./database/data:/var/lib/mysql"
+    # mount our schema setup file to be executed when the container is created
+      - "./database/schema:/docker-entrypoint-initdb.d"
     ports:
+    # allow a database client (MySQL Workbench, for example) on the host machine access into the container
       - "3306:3307"
 
   apacheshib:
