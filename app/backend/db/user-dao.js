@@ -29,7 +29,6 @@ const addUser = async (body) => {
     let qry = `INSERT INTO users (unityID, questionPriv, userPriv) VALUES (?, ?, ?)`;
 
     const result = await db.query(qry, data);
-    console.log("Add user query result: ", result);
     return result.insertId;
 }
 
@@ -53,7 +52,6 @@ const updateUser = async (body, id) => {
                WHERE userID = ?`;
 
     const result = await db.query(qry, data);
-    console.log("Update user query result: ", result);
     return result.affectedRows;
 }
 
@@ -67,7 +65,6 @@ const updateUser = async (body, id) => {
 const deleteUser = async (id) => {
     let qry = `DELETE FROM users WHERE userID = ?`;
     const result = await db.query(qry, [id]);
-    console.log("Delete user query result: ", result);
     return result.affectedRows;
 }
 
@@ -80,12 +77,12 @@ const deleteUser = async (id) => {
 const getAllUser = async () => {
     let qry = `SELECT * FROM users`;
     const results = await db.query(qry);
-    console.log("Get all users query results: ", results);
     return results;
 }
 
 /**
- * Retreive users from database with matching unityID.
+ * Retreive users from database with matching unityID. If there is more than one,
+ * this is an error for the caller to handle
  * @author Riley Wickens & Razvan Braha
  * @param {Number} unityId - unity ID of user to retreive
  * @returns all users with matching unity id
@@ -94,11 +91,7 @@ const getAllUser = async () => {
 const getByUnityId = async (unityId) => {
     let qry = `SELECT * FROM users WHERE unityID = ?`;
     const results = await db.query(qry, [unityId]);
-    console.log("Get user by unity id results: ", results);
-
-    // TODO some verification
-
-    return [results];
+    return results;
 }
 
 /**
@@ -111,7 +104,6 @@ const getByUnityId = async (unityId) => {
 const getByID = async (id) => {
     let qry = `SELECT * FROM users WHERE userID = ?`;
     const results = await db.query(qry, [id]);
-    console.log("Get user by id results: ", results);
 
     // TODO some verification
 
