@@ -1,4 +1,4 @@
-USE trivia-db;
+USE trivia;
 
 CREATE TABLE IF NOT EXISTS questions (
     questionID INT AUTO_INCREMENT PRIMARY KEY,
