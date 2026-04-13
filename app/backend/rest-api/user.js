@@ -12,7 +12,7 @@
 
 const express = require('express');
 const path = require("node:path");
-const validateUser = require('../db_queries/user-validation')
+const validateUser = require('../db/user-validation')
 const {
     addUser,
     updateUser,
@@ -20,7 +20,7 @@ const {
     getAllUser,
     getByUnityId,
     getByID
-} = require('../db_queries/user-db')
+} = require('../db/user-dao')
 
 //Router Setup
 const router = express.Router();

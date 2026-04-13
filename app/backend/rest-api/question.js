@@ -1,6 +1,6 @@
 const express = require('express')
 const path = require("node:path");
-const validateQuestion = require('../db_queries/question-validation.js');
+const validateQuestion = require('../db/question-validation');
 const {
     addQuestion,
     updateQuestion,
@@ -8,7 +8,7 @@ const {
     getAllQuestion,
     getByCategory,
     getByID
-} = require('../db_queries/questions-db.js');
+} = require('../db/question-dao');
 
 //Router setup
 const router = express.Router();
