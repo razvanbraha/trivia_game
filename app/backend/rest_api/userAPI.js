@@ -29,6 +29,7 @@ router.use(express.urlencoded({ extended: true }));
 
 //Templates Folder
 const templatesFolder = path.join(__dirname, '../../frontend/templates');
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 /**
  * Get users from database, all or by id/unityId if provided
@@ -38,7 +39,7 @@ const templatesFolder = path.join(__dirname, '../../frontend/templates');
  * @returns status OK & json list of users
  * @throws Error 500 if unable to connect with users db
  */
-router.get('/', async (req, res) => {
+router.get('/populate', async (req, res) => {
     try {
         let qry = structuredClone(req.query)
         let users;
@@ -66,12 +67,16 @@ router.get('/', async (req, res) => {
  * @throws Error 400 if invalid user data
  * @throws Error 500 if unable to connect with user db
  */
-router.post('/', async (req, res) => {
+router.post('/create', async (req, res) => {
     try {
+        const { adminPassword } = req.body;
+        if(adminPassword !== ADMIN_PASSWORD) {
+            return res.status(403).json({ error: "You do not have permissions to do this"});
+        }
         if (validateUser(req.body)) {
             await addUser(req.body);
             console.log("Received Data:", req.body);
-            res.redirect('/templates/teacher-user-manage.html');
+            res.status(201).json({ message: "User added"});
         } else {
             res.status(400).json({error: "Unable to add user"});
         }
@@ -83,13 +88,36 @@ router.post('/', async (req, res) => {
 
 /**
  * Delete user from database
- * @author Razvan Braha
- * @param {Object} req.body.userID - request body contains id of user to delete
- * @returns status OK
- * @throws Error 500 if unable to connect with user db or user doesn't exist
+ * @author Razvan Braha & David Salinas
+ * @route DELETE /api/users/delete
+ * @param {Object} req.body.userID - ID of user to delete
+ * @param {Object} req.body.unityID - unityID of user to delete
+ * @param {String} req.body.adminPassword - admin password for authorization
+ * @returns {200} if deletion successful
+ * @returns {403} if:
+ *  - admin password is incorrect
+ *  - user attempts to delete themselves
+ *  - target user has user privileges (protected user)
+ * @throws {500} if database operation fails
  */
-router.delete('/', async (req, res) => {
+router.delete('/delete', async (req, res) => {
     try {
+        const currentUser = req.headers["x-shib-uid"];
+        const { userID, unityID, adminPassword } = req.body;
+
+        if(adminPassword !== ADMIN_PASSWORD) {
+            return res.status(403).json({ error: "You do not have permissions to do this"});
+        }
+        if(unityID === currentUser) {
+            return res.status(403).json({ error: "You cannot delete yourself"});
+        }
+        const targetUserArr = await getByID(userID);
+        const targetUser = Array.isArray(targetUserArr) ? targetUserArr[0] : targetUserArr;
+        if(targetUser && targetUser.userPriv) {
+            if(adminPassword !== ADMIN_PASSWORD) {
+                return res.status(403).json({ error: "You cannot delete a user with user privileges"});
+            }
+        }
         await deleteUser(req.body.userID);
         console.log("Delete confirmed:", req.body.userID);
         res.sendStatus(200);
@@ -100,18 +128,43 @@ router.delete('/', async (req, res) => {
 });
 
 /**
- * Update existing user
- * @author Razvan Braha
- * @param {Object} req.body - request body contains new data for user
- * @param {Object} req.body.userId - request body contains id of user to update
- * @returns status OK & redirect to user page
- * @throws Error 500 if unable to connect with user db or user doesn't exist
+ * Update existing user in database
+ * @author Razvan Braha & David Salinas
+ * @route PUT /api/users/update
+ * @param {Object} req.body - request body contains updated user data
+ * @param {Number} req.body.userID - ID of user to update
+ * @param {String} req.body.unityID - updated unity ID
+ * @param {Boolean} req.body.questionPriv - updated question privilege
+ * @param {Boolean} req.body.userPriv - updated user privilege
+ * @param {String} req.body.adminPassword - admin password for authorization
+ * @returns {200} JSON success message if update succeeds
+ * @returns {403} if:
+ *  - admin password is incorrect
+ *  - user attempts to modify themselves
+ *  - target user has user privileges (protected user)
+ * @throws {500} if database operation fails
  */
-router.put('/', async (req, res) => {
+router.put('/update', async (req, res) => {
     try {
-        await updateUser(req.body, req.body.userId);
-        console.log("Update confirmed:", req.body.userId);
-        res.redirect('/templates/teacher-user-manage.html');
+        const currentUser = req.headers["x-shib-uid"];
+        const { userID, unityID, adminPassword } = req.body;
+        if(adminPassword !== ADMIN_PASSWORD) {
+            return res.status(403).json({ error: "You do not have permissions to do this"});
+        }
+        if(unityID === currentUser) {
+            return res.status(403).json({ error: "You cannot modify yourself"});
+        }
+        const targetUserArr = await getByID(userID);
+        const targetUser = Array.isArray(targetUserArr) ? targetUserArr[0] : targetUserArr;
+        if(targetUser && targetUser.userPriv) {
+            if(adminPassword !== ADMIN_PASSWORD) {
+                return res.status(403).json({ error: "You cannot delete a user with user privileges"});
+            }
+        }
+
+        await updateUser(req.body, req.body.userID);
+        console.log("Update confirmed:", req.body.userID);
+        res.status(200).json({ message: "User updated" });
     } catch (err) {
         console.log(err);
         res.status(500).json({error: "Unable to update user"})

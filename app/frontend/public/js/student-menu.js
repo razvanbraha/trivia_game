@@ -4,26 +4,27 @@ const launchMultiplayerButton = document.querySelector('#launchMultiplayerButton
 const launchStudyButton = document.querySelector('#launchStudyButton');
 
 async function joinRoom() {
-    const code = document.getElementById("roomCode").value;
-    const name = prompt("Enter your name");
+    const code = document.getElementById("roomCode").value.toUpperCase();
+    const name = document.getElementById("playerName").value;
 
-    if (!code || !name) return;
+    // check that room is valid
 
-    const res = await fetch("/api/room/join", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ code, name })
-    });
-
-    if (res.ok) {
-        alert("Joined room!");
-    } else {
-        alert("Room not found");
-    }
+    fetch(`/api/games/${code}`)
+        .then((res) => {
+            if(res.ok) {
+                localStorage.setItem("room code", code);
+                localStorage.setItem("player name", name);
+                window.location.href = "/api/play/teaching/player";
+            }
+            else {
+                console.log(res);
+                console.error(`Session does not exist for ${code}`);
+            }
+        });
 }
 
 function launchMultiplayer() {
-    window.location.href = "../../templates/mg-host.html";
+    window.location.href = "/api/play/multi/host";
 }
 
 function launchStudy() {

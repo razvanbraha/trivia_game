@@ -9,9 +9,12 @@
  */ 
 //--- INCLUDE -----------------------------------------------------------------
 
-const {messages, sendWebSocketMessage, closeWebsocket, sendError} = require("../websocket-server");
-const {removeSession} = require("./sessions");
+// include ws_api as an ES module
+const ws_api = require("../ws-api");
+
+const utils = require('./utils');
 const questionsDB = require("../db_queries/questions-db");
+
 
 //--- OBJECT ---------------------------------------------------------------
 // Declare this file as an object to be able to use multiple instances of it
@@ -24,54 +27,87 @@ class teachingGame {
         SHOW_QUESTION: 2, // state of each turn when game reveals the question
         SHOW_ANSWERS: 3, // state of each turn when game reveals answer choices
         RECEIVE_RESPONSES: 4, // state of each turn when game accepts responses
-        AWAIT_NEXT: 5, // state of each turn when game waits for teacher to proceed & shows player progress
-        FINAL: 6, // final state: game shows final results & waits for game to end
-        ENDED: 7, // After final state, game is closed out
+        AWAIT_CONTINUE: 5, // state of each turn when game waits for teacher to proceed to show player progress
+        AWAIT_NEXT: 6, // state of each turn when game waits for teacher to proceed to next question
+        FINAL: 7, // final state: game shows final results & waits for game to end
+        ENDED: 8, // After final state, game is closed out
     }
+
+    // setting limits as ranges
+    static RANGES = {
+        ROUNDS: {
+            MIN: 1,
+            MAX: 50
+        },
+        PREVIEW_TIME: {
+            MIN: 1,
+            MAX: 30,
+        },
+        DEAD_TIME: {
+            MIN: 1,
+            MAX: 30
+        },
+        LIVE_TIME: {
+            MIN: 1,
+            MAX: 30
+        },
+        CATEGORIES: {
+            MIN: 1,
+            MAX: 6
+        }
+    }
+        
+    // other internal settings
+
+    static NO_ANSWER_NUM = -1;
+    static BASE_QUESTION_POINTS = 1000;
+    static AUTO_CONTINUE_TIMER = 120; // 2 mins
+    static AUTO_NEXTROUND_TIMER = 60; // 1 mins
+    static AUTO_CLOSE_TIMER = 300; // 5 mins
 
     //--- STATE DATA -----------------------------------------------------------------
 
     // Given by sessions
     code = null; // Game join code
-    host = null; // the host WebSocket connection
+    
     type = null; // Type of game (should be "teaching")
+    start_time = null; // Start time of the game(for auto-closing)
 
     state = 0; // the current state
-    players = []; // list of player WebSocket connections
     questions = []; // List of questions to be used by the game
-    current_question_idx = 0; // Index of current question in game(increment on "CONTINUE")
-    answers = new Map(); // Map{socket(player): List(answer #)} - list indicies correspond to questions list
-    // -1 = no answer
-    points = new Map(); // Map{socket(player): Number}
-    current_correct_answer_number = -1; // Correct answer number (1/2/3/4)
+
+    // not sure if this is really necessary either
+    round_idx = 0;
     
     answering_start_time = null; // Date() of the time when the answering period/"live time" started
 
     signalContinue = null; // Function to resolve the promise making the main game flow(serveQuestions) wait for CONTINUE
     // Effectively, calling signalContinue() allows the main flow to continue with the next question
 
-    // Game settings 
-    MAX_QUESTIONS = 50;
-    MIN_QUESTIONS = 5;
-    NUM_CATEGORIES = 6;
-    MAX_PREVIEW_TIME = 30;
-    MIN_PREVIEW_TIME = 0;
-    MAX_DEAD_TIME = 30;
-    MIN_DEAD_TIME = 0;
-    MAX_LIVE_TIME = 30;
-    MIN_LIVE_TIME = 1;
-    NO_ANSWER_NUM = -1;
-    BASE_QUESTION_POINTS = 1000;
+    signalNextRound = null; // Same idea as signalContinue
 
-    AUTO_CONTINUE_TIMER = 120; // 2 mins
-    AUTO_CLOSE_TIMER = 300; // 5 mins
+    // user-visible settings
+    settings = {
+        rounds: 0, // how many questions to send 
+        categories: [], // which categories to pull from
+        preview: 0, // question preview time
+        dead: 0, // question dead time
+        live: 0, // question live time
+    };
 
-    num_questions = 0;
-    categories = [];
-    preview_time = 0;
-    dead_time = 0;
-    live_time = 0;
-
+    // client-related
+    host = null; // the host WebSocket connection
+    // list of players, each storing: name, websocket, points
+    // {ws, name, points, List(answer idx)}
+    // order of list is implicitly the player ranks
+    players = []; 
+    
+    // signal handler: map of signal names to functions with the signature
+    // (ws, body) => void to handle the signal
+    handlers = {
+        host: {},
+        player: {}
+    };
 
     //--- FUNCTIONS ---------------------------------------------------------------
 
@@ -81,140 +117,209 @@ class teachingGame {
      * @param {} data common session data
      */
     constructor(data) {
-        this.code = data.game_code;
-        this.type = data.game_type;
+        this.code = data.code;
+        this.type = data.type;
         this.state = teachingGame.STATES.LOBBY;
-    }
+        this.start_time = data.start_time;
 
-    sendAll(message) {
-        if(this.host) {
-            sendWebSocketMessage(this.host, message);
-        }
-        this.players.forEach((player) => {
-            sendWebSocketMessage(player, message);
+        // teacher (host) - can send START, KICK and CONTINUE
+        ws_api.support(this.handlers.host, ws_api.signals.START, (ws, body) => {
+            if (this.state === teachingGame.STATES.LOBBY) {
+                this.startGame(body);
+            } 
+            else {
+                ws.err("Game has already started.");
+            }
+        });
+
+        ws_api.support(this.handlers.host, ws_api.signals.KICK, (ws, body) => {
+            const player = this.players.find((p) => p.name === body.name);
+            
+            let success = false;
+            if(player) {
+                this.players.splice(this.players.indexOf(player), 1);
+
+                player.ws.kill("Kicked by host");
+                this.log(`kicked player '${body.name}'`);
+
+                success = true;
+            }
+
+            ws.respond(ws_api.signals.KICK, success);
+            if(!success) {
+                const err = `Could not find player '${body.name}'`;
+                this.log(err);
+                this.sendAll(
+                    ws_api.signals.ERR, 
+                    { err: err }
+                );
+            }
+        });
+
+        ws_api.support(this.handlers.host, ws_api.signals.CONTINUE, (ws, body) => {
+            if (this.state === teachingGame.STATES.AWAIT_CONTINUE) {
+                this.signalContinue();
+            } else if (this.state === teachingGame.STATES.FINAL && ws === this.host) {
+                this.endGame(ws, body);
+            } else if(ws !== this.host) {
+                ws.signal(ws_api.signals.ERR, {err: "Only host can continue."});
+            } else if(this.state === teachingGame.STATES.ENDED) {
+                ws.signal(ws_api.signals.ERR, {err: "Game has already ended."});
+            }
+        });
+
+        ws_api.support(this.handlers.host, ws_api.signals.NEXTROUND, (ws, body) => {
+            if (this.state === teachingGame.STATES.AWAIT_NEXT) {
+                this.signalNextRound();
+            } else if(ws !== this.host) {
+                ws.signal(ws_api.signals.ERR, {err: "Only host can continue."});
+            } else if(this.state === teachingGame.STATES.ENDED) {
+                ws.signal(ws_api.signals.ERR, {err: "Game has already ended."});
+            }
+        });
+
+        // students (players) - only signal needed is answer
+        ws_api.support(this.handlers.player, ws_api.signals.ANSWER, (ws, body) => {
+            this.registerAnswer(ws, body);
+            ws.signal(ws_api.signals.ACK, { msg: `received your answer (${body.num})`});
         });
     }
 
     /**
-     * Handles processing an incoming WebSocket message from a user, validates
-     * message format on our protocol
-     * @param {WebSocket} socket Websocket which sent the request
-     * @param {Object} message Message object containing the request
+     * Logs an error for the session
+     * @param {*} err 
      */
-    receiveMessage(socket, message) {
-        try {
-            const type = message.type;
+    error(err) {
+        this.log(`ERROR: ${err}`);
+    }
 
-            // Handle all messages
-            switch(type) {
-                case (messages.START):
-                    if (this.state === teachingGame.STATES.LOBBY && socket === this.host) {
-                        this.startGame(socket, message);
-                    } else if(socket !== this.host) {
-                        sendError(socket, "Only host can contiinue.");
-                    } else {
-                        sendError(socket, "Game has already started.");
-                    }
-                    break;
-                case (messages.ANSWER):
-                    if (this.state === teachingGame.STATES.RECEIVE_RESPONSES && socket !== this.host) {
-                        this.registerAnswer(socket, message);
-                    } else if(socket === this.host) {
-                        sendError(socket, "Host cannot submit an answer.");
-                    } else {
-                        sendError(socket, "Game is not accepting answers.");
-                    }
-                    break;
-                case (messages.CONTINUE):
-                    if (this.state === teachingGame.STATES.AWAIT_NEXT && socket === this.host) {
-                        this.advanceQuestion(socket, message);
-                    } else if (this.state === teachingGame.STATES.FINAL && socket === this.host) {
-                        this.endGame(socket, message);
-                    } else if(socket !== this.host) {
-                        sendError(socket, "Only host can continue.");
-                    } else if(this.state === teachingGame.STATES.ENDED) {
-                        sendError(socket, "Game has already ended.");
-                    }
-                    else {
-                        sendError(socket, "Game has already started.");
-                    }
-                    break;
-                default:
-                    sendError(socket, "Message type is invalid.");
-                    break;
-            }
-        } catch (error) {
-            sendError(socket, "Message format is invalid.");
+    /**
+     * Logs a message for the session
+     * @param {*} msg 
+     */
+    log(msg) {
+        console.log(`[Session ${this.code}]: ${msg}`);
+    }
+
+    /**
+     * @author Connor Hekking, Will Mungas
+     * @description sends a signal to all connected websockets
+     * @param sig signal type (must be from ws_api.signals)
+     * @param body body of the signal (must be an object with valid fields)
+     */
+    sendAll(sig, body) {
+        if(this.host) {
+            this.host.signal(sig, body);
         }
+        for(const player of this.players) {
+            player.ws.signal(sig, body);
+        }
+    }
+
+    /**
+     * Gets a random, non-existing name
+     * @return name
+     */
+    getRandomName() {
+        const nouns = [
+  "Dog", "Cow", "Cat", "Horse", "Donkey", "Tiger", "Lion", "Panther", "Leopard", "Cheetah", "Bear", "Elephant", "Turtle", "Tortoise", "Crocodile",
+  "Rabbit", "Porcupine", "Hare", "Hen", "Pigeon", "Albatross", "Crow", "Fish", "Dolphin", "Frog", "Whale", "Alligator", "Eagle", "Squirrel", "Ostrich", "Fox",
+  "Goat", "Jackal", "Emu", "Armadillo", "Eel", "Goose", "Wolf", "Beagle", "Gorilla", "Chimpanzee", "Monkey", "Beaver", "Orangutan", "Antelope", "Bat",
+  "Badger", "Giraffe", "Crab", "Panda", "Hamster", "Cobra", "Shark", "Camel", "Hawk", "Deer", "Chameleon", "Hippopotamus", "Jaguar", "Chihuahua", "Ibex",
+  "Lizard", "Koala", "Kangaroo", "Iguana", "Llama", "Chinchilla", "Dodo", "Jellyfish", "Rhinoceros", "Hedgehog", "Zebra", "Possum", "Wombat", "Bison", "Bull", "Buffalo", 
+  "Sheep", "Meerkat", "Mouse", "Otter", "Sloth", "Owl", "Vulture", "Flamingo", "Racoon", "Mole", "Duck", "Swan", "Lynx", "Elk", "Boar",
+  "Lemur", "Baboon", "Mammoth", "Rat", "Snake", "Peacock"];
         
+        // Start with random noun
+        let name_str = nouns[Math.floor(Math.random() * nouns.length)];
+
+        // Add 3 random digits
+        for(let i = 0; i < 3; i++) {
+            name_str += Math.floor(Math.random() * 10);
+        }
+
+        // No need to check for duplicates, join will reject in the rare case that there is an overlap
+        return name_str
     }
 
     /**
      * Handles user joining the game through a websocket connection
-     * @param {WebSocket} socket
+     * @param {WebSocket} ws websocket attempting to join this game
      */
-    join(socket) {
+    join(ws, name) {
         if (this.state !== teachingGame.STATES.LOBBY) {
-            sendError(socket, "Game already started.");
+            ws.err("Game already started.");
             return;
         }
 
-        socket.handler = this.receiveMessage.bind(this);
-
-        // First join = host, later joins = player
+        // First joinee is host, all others are players
         if(this.host === null) {
-            this.host = socket;
+            ws.handler = this.handlers.host;
+            this.host = ws;
+            this.log("host joined");
+            this.host.respond(ws_api.signals.JOIN, true);
+            return;
+        }
+        ws.handler = this.handlers.player;
+
+        // Handle empty name
+        if(!name || name === '') {
+            name = this.getRandomName();
+        }
+
+        // Check for name duplicates (ignore case)
+        const duplicate_name = undefined !==  (this.players.find(player => player.name.toLowerCase() == name.toLowerCase()));
+        if(duplicate_name) {
+            ws.respond(ws_api.signals.JOIN, false);
+            this.log(`player ${this.players.length} (${name}) join rejected: duplicate name`);
             return;
         }
 
-        // Add player entries to data
-        this.players.push(socket);
-        this.answers.set(socket, []);
-        this.points.set(socket, 0);
+        this.players.push({name, ws, points: 0, answers: []});
+        this.log(`player ${this.players.length} (${name}) joined`);
+        ws.respond(ws_api.signals.JOIN, true);
+        this.host.signal(ws_api.signals.JOINEE, {name});
     }
 
     /**
-     * Checks if the game settings
-     * @param {WebSocket} socket Websocket making the request. Used for sending errors
-     * @param {Number} num_questions Number of questions in the game
-     * @param {Array} categories Array of numbers corresponding to categories included in the game
-     * @param {Number} preview_time Time the question text is shown but not answers
-     * @param {Number} dead_time Time the answers are shown but not answerable
-     * @param {Number} live_time Time the question is live for answers
+     * Checks if the game settings are in valid ranges
+     * @param {*} settings grouping of settings to validate
      * @returns true/false if the settings are valid
      */
-    validateSettings(socket, num_questions, categories, preview_time, dead_time, live_time) {
+    validateSettings(settings) {
         let valid = true;
-        if(num_questions > this.MAX_QUESTIONS || num_questions < this.MIN_QUESTIONS) {
-            sendError(socket, "Invalid setting: number of questions.");
-            valid = false;
-        }
-        if(preview_time > this.MAX_PREVIEW_TIME || preview_time < this.MIN_PREVIEW_TIME) {
-            sendError(socket, "Invalid setting: preview time.");
-            valid = false;
-        }
-        if(dead_time > this.MAX_DEAD_TIME || dead_time < this.MIN_DEAD_TIME) {
-            sendError(socket, "Invalid setting: dead time.");
-            valid = false;
-        }
-        if(live_time > this.MAX_LIVE_TIME || live_time < this.MIN_LIVE_TIME) {
-            sendError(socket, "Invalid setting: live time.");
-            valid = false;
-        }
-        if(categories.length > this.NUM_CATEGORIES || categories.length < 1){
-            sendError(socket, "Invalid setting: categories.");
-            valid = false;
-        }
-        categories.forEach((categoryNum) => {
-            if(categoryNum > this.NUM_CATEGORIES || categoryNum < 1){
-                sendError(socket, "Invalid setting: categories.");
-                valid = false;
-                return;
+        try {
+            const inRange = (a, range) => {
+                return a <= range.MAX && a >= range.MIN;
             }
-        });
-        // Check duplicates
-        if(new Set(categories).size !== categories.length) {
-            sendError(socket, "Invalid setting: categories.");
+            if(!inRange(settings.rounds, teachingGame.RANGES.ROUNDS)) {
+                this.host.err( "Invalid setting: number of questions.");
+                valid = false;
+            }
+            if(!inRange(settings.preview, teachingGame.RANGES.PREVIEW_TIME)) {
+                this.host.err( "Invalid setting: preview time.");
+                valid = false;
+            }
+            if(!inRange(settings.dead, teachingGame.RANGES.DEAD_TIME)) {
+                this.host.err( "Invalid setting: dead time.");
+                valid = false;
+            }
+            if(!inRange(settings.live, teachingGame.RANGES.LIVE_TIME)) {
+                this.host.err( "Invalid setting: live time.");
+                valid = false;
+            }
+            if(!inRange(settings.categories.length, teachingGame.RANGES.CATEGORIES)) {
+                this.host.err( "Invalid setting: categories.");
+                valid = false;
+            }
+            // Check duplicates
+            if(new Set(settings.categories).size !== settings.categories.length) {
+                this.host.err( "Invalid setting: categories.");
+                valid = false;
+            }
+        } catch(e) {
+            this.host.err(`Error reading settings: ${e.message}`);
+            this.log(e.stack);
             valid = false;
         }
 
@@ -222,225 +327,179 @@ class teachingGame {
     }
 
     /**
-     * Shuffles array randomly using
-     * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
-     * @param {Array} array Array to be shuffled
+     * Returns class accuracy percent for a given question
+     * @param {Number} i Index of the current round/question
+     * @param {Number} correct_idx Correct answer index (0-3)
      */
-    static shuffle(array) {
-        let currentIndex = array.length;
-
-        // While there remain elements to shuffle
-        while (currentIndex != 0) {
-
-            // pick a remaining element
-            let randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex--;
-
-            // and swap it with the current element
-            [array[currentIndex], array[randomIndex]] = [
-            array[randomIndex], array[currentIndex]];
+    getClassAccuracy(i, correct_idx) {
+        // if no students
+        if(this.players.length === 0) {
+            console.log("NO PLAYERS");
+            return 0;
         }
+
+        let correct_cnt = 0;
+
+        this.players.forEach((player) => {
+            const answer = player.answers[i];
+            if(answer !== undefined && Number(answer) === Number(correct_idx)) {
+                correct_cnt++;
+            }
+        });
+
+        const accuracy = Math.round((correct_cnt / this.players.length) * 100);
+        return accuracy;
     }
 
     /**
-     * Returns rankings of players, including their number rank and points value associated to their websocket.
-     * @returns Map{Websocket: {rank: Number, points: Number}} (nested)
+     * Returns category accuracy for a specific player or for the whole class
+     * @param {Object} player Player to get category accuracy for, or null for the whole class
+     * @returns List of category accuracies as a percent and category answer ratios. 
+     * List({category_num, accuracy, num_correct, num_questions})
      */
-    getRankings() {
-       const rankings = new Map();
-       const rankings_list = [];
-
-       this.players.forEach((player) => {
-            rankings_list.push({
-                "player": player,
-                "points": this.points.get(player),
+    getCategoryAccuracy(player) {
+        let players;
+        if(player) {
+            players = [player];
+        } else {
+            players = this.players;
+        }
+        const category_accuracy = [];
+        for(let i = 0; i < 6; i++) {
+            category_accuracy.push({
+                category_num: i+1, 
+                accuracy: 0, 
+                num_correct: 0, 
+                num_questions: 0
             });
-       });
+        }
 
-       // Sort list in descending order of points
-       rankings_list.sort((a, b) => {
-            return b.points - a.points;
-       });
+        // Tally answers
+        for(let i = 0; i < this.questions.length; i++) {
+            const category_stat = category_accuracy[this.questions[i].category - 1];
+            players.forEach((p) => {
+                // num_questions will be #questions x #players which is fine.
+                category_stat.num_questions += 1;
+                if(i < p.answers.length) {
+                    if(this.questions[i].correct_idx === p.answers[i]) {
+                        category_stat.num_correct += 1;
+                    }
+                }
+            });
+        }
 
-       // Add the rankings value
-       rankings_list.forEach((entry, index) => {
-            entry.rank = index + 1;
+        // Calculate accuracy
+        category_accuracy.forEach((category_stat) => {
+            // Leave at 0% if no questions in category
+            if(category_stat.num_questions !== 0) {
+                category_stat.accuracy = Math.round((category_stat.num_correct / category_stat.num_questions) * 100);
+            }
         });
 
-       // Reformat
-       rankings_list.forEach((ranking) => {
-            rankings.set(ranking.player, {
-                "rank": ranking.rank,
-                "points": ranking.points,
-            });
-       });
 
-       return rankings;
+        return category_accuracy;
+    }
+
+    // Returns player without ws field
+    getSanitizedPlayer(player) {
+        return {
+            name: player.name, 
+            points: player.points, 
+            answers: player.answers
+        };
+    }
+
+    /**
+     * Sorts players by points earned, then returns players without the websocket
+     * @author Will Mungas
+     * @returns 
+     */
+    getRankings() {
+        this.players.sort((a, b) => b.points - a.points);
+
+        return this.players.map(({ws, ...rest}) => rest);
     }
 
     /**
      * Configures settings from message, gets list of questions from database,
      * and sends out the first question.
-     * @param {WebSocket} socket Host websocket which initiated the request
-     * @param {Object} message Message object containing the request
+     * @param {Object} settings settings passed in by host
      */
-    async startGame(socket, message) {
-        const num_questions = message.num_questions;
-        const categories = message.categories;
-        const preview_time = message.preview_time;
-        const dead_time = message.dead_time;
-        const live_time = message.live_time;
-
-        const valid = this.validateSettings(socket, num_questions, categories, preview_time, dead_time, live_time);
-        if(!valid) {
-            return; // Do nothing
+    async startGame(settings) {
+        if(!this.validateSettings(settings)) {
+            this.host.signal(ws_api.signals.ERR, { err: "Invalid settings." })
+            return;
         }
-        this.num_questions = num_questions;
-        this.categories = categories;
-        this.preview_time = preview_time;
-        this.dead_time = dead_time;
-        this.live_time = live_time;
+        this.settings = settings;
 
         // Load questions & error check
+        let db_questions;
         try {
-            this.questions = await questionsDB.selectRandQuestions(categories, num_questions);
+            db_questions = await questionsDB.selectRandQuestions(settings.rounds, settings.categories);
         } catch (e) {
-            this.sendAll({
-                "type": messages.ERROR,
-                "message": "Questions could not be loaded succcessfully.",
-            });
+            this.sendAll(
+                ws_api.signals.ERR, 
+                { err: "Questions could not be loaded succcessfully." }
+            );
         }
-        
-        if(this.questions.length < count) {
-            this.sendAll({
-                "type": messages.ERROR,
-                "message": "Not enough questions in Database. Expect unstable behavior.",
-            });
+        if(db_questions.length < settings.rounds) {   
+            this.sendAll(
+                ws_api.signals.ERR, 
+                { err: `Not enough questions in Database. Need ${settings.rounds}, has ${this.questions.length}` }
+            );
         }
+
+        console.log("Test, contents of first question pulled from db:", db_questions[0]);
+
+        // pre-sort and save correct indices
+        this.questions = db_questions.map((question) => {
+            const choices = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
+            utils.shuffle(choices);
+            const correct_idx = choices.indexOf(question.corrAnswer);
+            return { text: question.question, choices, correct_idx, category: question.category };
+        });
 
         // Start main game flow
-        this.serveQuestions();
+        this.runGame();
     }
 
-    static delay(time) {
-        return new Promise(resolve => setTimeout(resolve, time));
-    }
 
     /**
-     * Contains the main game flow of serving questions and answers, and managing delays.
+     * @author Connor Hekking, Will Mungas
+     * @description Contains the main game flow of serving questions and answers, and managing delays.
      * See "Teaching Game Flow" https://drive.google.com/file/d/1Ot5iEwynpoNxzL3qfV24YOHXDSmfGL-P/view?usp=sharing
      */
-    async serveQuestions() {
-        let allRankings = null; // Declare for later use
-        while(this.current_question_idx  < this.num_questions) {
-            // Send QUESTION to host & players
-            this.sendAll({
-                "type": messages.QUESTION,
-                "question_text": this.questions[this.current_question_idx].question,
-                "question_number": this.current_question_idx + 1,
-                "num_questions": this.num_questions,
-            });
+    async runGame() {
+        // used only in here: set a delay of a given number of milliseconds
+        const delay = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) };
 
-            this.state = teachingGame.STATES.SHOW_QUESTION;
-
-            // Delay 1 - Show question
-            await teachingGame.delay(1000 * this.preview_time);
-
-            // Send CHOICES to host & players
-            const question = this.questions[this.current_question_idx];
-            const correct_answer = question.corrAnswer;
-            const choices_list = [question.corrAnswer, question.incorrONE, question.incorrTWO, question.incorrTHREE];
-            teachingGame.shuffle(choices_list);
-            this.current_correct_answer_number = choices_list.indexOf(correct_answer) + 1;
-
-            this.sendAll({
-                "type": messages.CHOICES,
-                "answer_choices": choices_list,
-            });
-
-            this.state = teachingGame.STATES.SHOW_ANSWERS;
-
-            // Delay 2 - Show Answers
-            await teachingGame.delay(1000 * this.dead_time);
-
-            // Send READY
-            this.sendAll({
-                "type": messages.READY,
-            });
-
-            this.state = teachingGame.STATES.RECEIVE_RESPONSES;
-
-            // Delay 3 - Accept Answers
-            this.answering_start_time = new Date();
-            await teachingGame.delay(1000 * this.live_time);
-
-            // Fill in incorrect response(-1) for players who didn't answer
-            this.players.forEach((player) => {
-                if(this.answers.get(player)[this.current_question_idx] === undefined) {
-                    this.answers.get(player)[this.current_question_idx] = this.NO_ANSWER_NUM;
-                }
-                // Don't need to add any points
-            });
-
-
-            // Send CLOSE
-            allRankings = this.getRankings();
-            sendWebSocketMessage(this.host, {
-                "type": messages.CLOSE,
-                "correct_answer_number": this.current_correct_answer_number,
-                "current_player": null,
-                "other_players": Array.from(allRankings.values()),
-            });
-            this.players.forEach((player) => {
-                // Get other players
-                const other_players = Array.from(allRankings) // Convert to array [[Websocket, {rank: Number, points: Number}], ...]
-                                    .filter((entry) => entry[0] !== player) // Filter out this player
-                                    .map(([ws, stats]) => stats); // Then map to a new array with just the data
-
-                sendWebSocketMessage(player, {
-                    "type": messages.CLOSE,
-                    "correct_answer_number": this.current_correct_answer_number,
-                    "current_player": allRankings.get(player),
-                    "other_players": other_players,
-                });
-            });
-
-            this.state = teachingGame.STATES.AWAIT_NEXT;
-
-            // Wait for CONTINUE (advanceQuestion)
-            await this.waitForContinue();
-
-            // Increment question index
-            this.current_question_idx = this.current_question_idx + 1;
+        // run the set number of rounds
+        for(let i = 0; i < this.settings.rounds; i++) {
+            await this.runRound(i, delay);
+            await this.waitForNextRound();
         }
 
-        // Send RESULTS
-        allRankings = this.getRankings();
-            sendWebSocketMessage(this.host, {
-                "type": messages.RESULTS,
-                "correct_answer_number": this.current_correct_answer_number,
-                "current_player": null,
-                "other_players": Array.from(allRankings.values()),
-            });
-            this.players.forEach((player) => {
-                // Get other players
-                const other_players = Array.from(allRankings) // Convert to array [[Websocket, {rank: Number, points: Number}], ...]
-                                    .filter((entry) => entry[0] !== player) // Filter out this player
-                                    .map(([ws, stats]) => stats); // Then map to a new array with just the data
+        // Send FINAL
+        const allRankings = this.getRankings();
 
-                sendWebSocketMessage(player, {
-                    "type": messages.RESULTS,
-                    "correct_answer_number": this.current_correct_answer_number,
-                    "current_player": allRankings.get(player),
-                    "other_players": other_players,
-                });
+        this.host.signal(ws_api.signals.FINAL, {
+            data_you: null,
+            data_all: allRankings,
+            category_accuracy: this.getCategoryAccuracy(null),
+        });
+        this.players.forEach((player) => {
+            player.ws.signal(ws_api.signals.FINAL, {
+                data_you: this.getSanitizedPlayer(player),
+                data_all: allRankings,
+                category_accuracy: this.getCategoryAccuracy(player),
             });
+        });
 
         this.state = teachingGame.STATES.FINAL;
 
         // Now wait till CONTINUE to end game
 
-        await teachingGame.delay(1000 * this.AUTO_CLOSE_TIMER);
+        await delay(1000 * teachingGame.AUTO_CLOSE_TIMER);
 
         // If game not closed yet, do it manually
         if(this.state === teachingGame.STATES.FINAL) {
@@ -449,43 +508,133 @@ class teachingGame {
     }
 
     /**
-     * Registers a player's answer in the game state.
-     * @param {WebSocket} socket Player websocket which initiated the request
-     * @param {Object} message Message object containing the request
+     * Runs a single round of the game
+     * @param {*} i round index (round number is i + 1)
+     * @param {*} delay function that sets delays as a Promise
      */
-    registerAnswer(socket, message) {
-        const answer_number = message.answer_number;
+    async runRound(i, delay) {
+        this.round_idx = i;
+        // Send QUESTION to host & players
+        this.sendAll(
+            ws_api.signals.QUESTION, 
+            {
+                text: this.questions[i].text,
+                num: i + 1,
+                preview: this.settings.preview,
+                dead: this.settings.dead,
+                live: this.settings.live
+            }
+        );
 
-        // Check invalid answer number
-        if(answer_number > 4 || answer_number < 1) {
-            sendError(socket, "Invalid answer number.");
+        this.state = teachingGame.STATES.SHOW_QUESTION;
+
+        // Delay 1 - Show question
+        await delay(1000 * this.settings.preview);
+
+        // Send CHOICES to host & players
+        const choices = this.questions[i].choices;
+        this.sendAll(ws_api.signals.CHOICES, {choices});
+
+        this.state = teachingGame.STATES.SHOW_ANSWERS;
+
+        // Delay 2 - Show Answers
+        await delay(1000 * this.settings.dead);
+
+        // Send READY
+        this.sendAll(ws_api.signals.READY, {});
+
+        this.state = teachingGame.STATES.RECEIVE_RESPONSES;
+
+        // Delay 3 - Accept Answers
+        this.answering_start_time = new Date();
+        await delay(1000 * this.settings.live);
+
+        // Fill in incorrect response(-1) for players who didn't answer
+        this.players.forEach((player) => {
+            if(player.answers[i] === undefined) {
+                player.answers[i] = ws_api.choices.NONE;
+            }
+            // Don't need to add any points - player did not answer
+            // players who answered already have their points from registerAnswer
+        });
+
+        // Send DONE
+        const correct_idx = this.questions[i].correct_idx;
+        const class_accuracy_percent = this.getClassAccuracy(i, correct_idx);
+        this.host.signal(ws_api.signals.DONE, {
+            correct_idx,
+            data_you: null,
+            class_accuracy_percent,
+        });
+        this.players.forEach((player) => {
+            player.ws.signal(ws_api.signals.DONE, {
+                correct_idx,
+                data_you: this.getSanitizedPlayer(player),
+                class_accuracy_percent: null,
+            });
+        });
+
+        this.state = teachingGame.STATES.AWAIT_CONTINUE;
+
+        // Wait for CONTINUE
+        await this.waitForContinue();
+
+        // Send RESULTS
+        const allRankings = this.getRankings();
+        this.host.signal(ws_api.signals.RESULTS, {
+            data_you: null,
+            data_all: allRankings,
+            category_accuracy: this.getCategoryAccuracy(null),
+        });
+        this.players.forEach((player) => {
+            player.ws.signal(ws_api.signals.RESULTS, {
+                data_you: this.getSanitizedPlayer(player),
+                data_all: allRankings,
+                category_accuracy: this.getCategoryAccuracy(player),
+            });
+        });
+
+        this.state = teachingGame.STATES.AWAIT_NEXT;
+    }
+
+    /**
+     * Registers a player's answer in the game state.
+     * @param {WebSocket} ws Player websocket which initiated the request
+     * @param {Object} body Message object containing the request
+     */
+    registerAnswer(ws, body) {
+        // do not allow answers outside of answer window
+        if(!this.state === teachingGame.STATES.RECEIVE_RESPONSES) {
+            ws.err("Too late!");
+            return;
+        }
+        const player = this.players.find((p) => p.ws === ws);
+        // Do not allow multiple answers
+        if (player.answers[this.round_idx] !== undefined) {
+            ws.err( "Multiple answer submissions not allowed.");
             return;
         }
 
-        // Stop duplicate answers
-        if (this.answers.get(socket)[this.current_question_idx] !== undefined) {
+        const choice = body.idx;
+
+        // Check invalid answer number
+        if(choice !== ws_api.choices.NONE && (choice < ws_api.choices.MIN || choice > ws_api.choices.MAX)) {
+            ws.err( "Invalid answer number.");
             return;
-        } 
+        }
 
         // Register answer
-        this.answers.get(socket)[this.current_question_idx] = answer_number;
+        player.answers[this.round_idx] = choice;
         // Add points
-        if (answer_number === this.current_correct_answer_number) {
+        if (choice === this.questions[this.round_idx].correct_idx) {
             const elapsed_time = new Date() - this.answering_start_time;
             const elapsed_seconds = elapsed_time / 1000; // Date() is in milliseconds
 
             // Points = ratio of elapsed time to live time, multiplied by the base number of points
-            let points = ((this.live_time - elapsed_seconds) / this.live_time) * this.BASE_QUESTION_POINTS;
+            let points = ((this.settings.live - elapsed_seconds) / this.settings.live) * teachingGame.BASE_QUESTION_POINTS;
             points = Math.round(points); // Round to integer
 
-            if(points < 0) {
-                // Timed out, no points
-                points = 0;
-                // Set no answer because answer did not come in time
-                this.answers.get(socket)[this.current_question_idx] = this.NO_ANSWER_NUM;
-            }
-
-            this.points.set(socket, this.points.get(socket) + points);
+            player.points += points;
         }
     }
 
@@ -504,56 +653,54 @@ class teachingGame {
             const timeout = setTimeout(() => {
                 this.signalContinue = null;
                 resolve();
-            }, this.AUTO_CONTINUE_TIMER * 1000);
+            }, teachingGame.AUTO_CONTINUE_TIMER * 1000);
         });
     }
 
     /**
-     * Signals main game flow to send out next question.
-     * @param {WebSocket} socket Host websocket which initiated the request
-     * @param {Object} message Message object containing the request
+     * Called by main flow to wait for CONTINUE signal
+     * @returns A promise waiting for something to call signalContinue()
      */
-    advanceQuestion(socket, message) {
-        if (this.signalContinue) {
-            this.signalContinue();
-            this.signalContinue = null; // Reset
-        } else {
-            sendError(socket, "Cannot send next question");
-        }
+    waitForNextRound() {
+        return new Promise(resolve => {
+            this.signalNextRound = () => {
+                clearTimeout(timeout);
+                resolve();
+            };
+
+            // In case host disconnects, auto-continue
+            const timeout = setTimeout(() => {
+                this.signalNextRound = null;
+                resolve();
+            }, teachingGame.AUTO_NEXTROUND_TIMER * 1000);
+        });
     }
 
     
 
     /**
-     * Sends out DONE signal then closes all connections
-     * @param {WebSocket} socket Host websocket which initiated the request
+     * Sends out GAMEOVER signal then closes all connections
+     * @param {WebSocket} ws Host websocket which initiated the request
      * @param {Object} message Message object containing the request
      */
-    endGame(socket, message) {
+    endGame(ws, message) {
+        //TODO this needs to be adjusted once rest of file done
+
         // Close host
-        sendWebSocketMessage(this.host, {
-            "type": messages.DONE,
-        });
-        closeWebsocket(this.host, 0, "Game finished.");
+        this.host.signal(ws_api.signals.GAMEOVER, {});
+        this.host.kill("Game finished");
         // Close players
         this.players.forEach((player) => {
-            sendWebSocketMessage(player, {
-                "type": messages.DONE,
-            });
-            closeWebsocket(player, 0, "Game finished.");
+            player.ws.signal(ws_api.signals.GAMEOVER, {});
+            player.ws.kill("Game finished.");
         });
 
         this.state = teachingGame.STATES.ENDED;
 
         // Cleanup memory
         this.host.handler = null;
-        this.players.forEach((player) => {player.handler = null});
         this.players = [];
         this.questions = [];
-        this.answers.clear();
-        this.points.clear();
-
-        removeSession(this);
     }
 }
 

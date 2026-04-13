@@ -1,0 +1,125 @@
+<!-- Use games.css with this-->
+
+<template id="game-ui-template">
+    <main id="question-container">
+        <!-- Will put combinations of the following game ui items here-->
+        <section class="next-question game-ui-item">
+            <div class="next-question-container">
+                <p>Next Question!</p>
+            </div>
+        </section>
+        <section class="question-text game-ui-item">
+            <div class="question-text-container state-answer-display">
+                <p>Question Text...</p>
+            </div>
+        </section>
+        <section class="answer-choices game-ui-item">
+            <div class="answer-choice-container preview container-choice-one"><p class="answer-choice choice-one">Choice 1(unselectable, preview time)</p></div>
+            <div class="answer-choice-container preview container-choice-two"><p class="answer-choice choice-two">Choice 2(unselectable, preview time)</p></div>
+            <div class="answer-choice-container preview container-choice-three"><p class="answer-choice choice-three">Choice 3(unselectable, preview time)</p></div>
+            <div class="answer-choice-container preview container-choice-four"><p class="answer-choice choice-four">Choice 4(unselectable, preview time)</p></div>
+        </section>
+        <section class="BLA game-ui-item">
+            <!-- Don't clone this -->
+            <!-- This is how correct/incorrect/unpicked answers will be indicated once revealed -->
+           <div class="answer-choice-container container-choice-one correct"><p class="answer-choice choice-one">Choice 1 (correct)</p></div>
+            <div class="answer-choice-container container-choice-two unpicked"><p class="answer-choice choice-two">Choice 2 (unpicked)</p></div>
+            <div class="answer-choice-container container-choice-three unpicked"><p class="answer-choice choice-three">Choice 3 (unpicked)</p></div>
+            <div class="answer-choice-container container-choice-four incorrect"><p class="answer-choice choice-four"></p>Choice 4 (incorrect)</div>
+        </section>
+        <section class="countdown game-ui-item">
+            <div class="round-time-bar-background">
+                <div class="round-time-bar" style="--duration: 8;">
+                    <div></div>
+                </div>
+            </div>
+        </section>
+        <section class="correct-prompt game-ui-item">
+            <div class="correct-prompt-container">
+                <p>Correct!</p>
+            </div>
+        </section>
+        <section class="incorrect-prompt game-ui-item">
+           <div class="incorrect-prompt-container">
+                <p>Incorrect</p>
+            </div>
+        </section>
+        <section class="question-class-accuracy game-ui-item">
+            <p>40% Class Accuracy!</p>
+        </section>
+
+        <!-- Leaderboard stuff -->
+        <section class="self-ranking game-ui-item">
+            <p>You are in 0th place!</p>
+            <p>Keep it up!</p>
+        </section>
+        <section class="small-leaderboard game-ui-item">
+            <div class="medal-winner"><div class="first-medal medal">1</div><p>1st Place: Player with 200 points</p></div>
+            <div class="medal-winner"><div class="second-medal medal">2</div><p>2nd Place: Player with 150 points</p></div>
+            <div class="medal-winner"><div class="third-medal medal">3</div><p>3rd Place: Player with 100 points</p></div>
+            <p>4th Place: Player with 75 points</p>
+            <p>5th Place: Player with 50 points</p>
+        </section>
+        <section class="next-question-btn game-ui-item">
+            <button class="next-question-btn-btn">Next question</button>
+        </section>
+
+        <!-- End leaderboard stuff -->
+        <section class="your-learning game-ui-item">
+            <p>Your Learning</p>
+        </section>
+        <section class="box">
+                    <p class="box_label">Move the cube with arrow keys or by clicking!</p>
+                    <div class="box_container">
+                        <div class="scene">
+                            <div class="cube show-front">
+                                <div class="cube__face cube__face--front"><p class="cube_face_label">History & Evolution</p><p class="cube_face_stats">0/0 0% accuracy</p></div>
+                                <div class="cube__face cube__face--back"><p class="cube_face_label">Technical Aspects/Engineering</p><p class="cube_face_stats">0/0 0% accuracy</p></div>
+                                <div class="cube__face cube__face--right"><p class="cube_face_label">Sustainability</p><p class="cube_face_stats">0/0 0% accuracy</p></div>
+                                <div class="cube__face cube__face--left"><p class="cube_face_label">Consumerism & Ethics</p><p class="cube_face_stats">0/0 0% accuracy</p></div>
+                                <div class="cube__face cube__face--top"><p class="cube_face_label">End-of-life & Data</p><p class="cube_face_stats">0/0 0% accuracy</p></div>
+                                <div class="cube__face cube__face--bottom"><p class="cube_face_label">Logistics & Distribution</p><p class="cube_face_stats">0/0 0% accuracy</p></div>
+                            </div>
+                        </div>
+                    </div>
+        </section>
+        <section class="self-ranking game-ui-item">
+            <p>You are in 0th place!</p>
+            <p>Keep it up!</p>
+        </section>
+        <section class="new-game-btn game-ui-item">
+            <button class="new-game-btn-btn" onclick="">New Game</button>
+        </section>
+        <section class="podium game-ui-item">
+            <div class="position position-4">
+                <p class="winner-text winner-text-4">Player 4</p>
+                <div class="pillar four"><div class="points-text points-text-4">300 Points</div></div>
+            </div>
+            <div class="position position-2">
+                <div class="medal-winner winner-text">
+                    <div class="second-medal medal">2</div>
+                    <p class="winner-text-2">Player 2</p>
+                </div>
+                <div class="pillar two"><div class="points-text points-text-2">300 Points</div></div>
+            </div>
+            <div class="position position-1">
+                <div class="medal-winner winner-text">
+                    <div class="first-medal medal">1</div>
+                    <p class="winner-text-1">Player 1</p>
+                </div>
+                <div class="pillar one"><div class="points-text points-text-1">300 Points</div></div>
+            </div>
+            <div class="position position-3">
+                <div class="medal-winner winner-text">
+                    <div class="third-medal medal">3</div>
+                    <p class="winner-text-3">Player 3</p>
+                </div>
+                <div class="pillar three"><div class="points-text points-text-3">300 Points</div></div>
+            </div>
+            <div class="position position-5">
+                <p class="winner-text winner-text-5">Player 5</p>
+                <div class="pillar five"><div class="points-text points-text-5">300 Points</div></div>
+            </div>
+        </section>
+    </main>
+</template>

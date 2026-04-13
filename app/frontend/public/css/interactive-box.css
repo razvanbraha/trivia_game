@@ -1,0 +1,94 @@
+:root {
+    --front-percentage: 0%;
+    --right-percentage: 0%;
+    --back-percentage: 0%;
+    --left-percentage: 0%;
+    --top-percentage: 0%;
+    --bottom-percentage: 0%;
+
+    --cube-scene-size: 36vh;
+    --cube-box-size: 18vh;
+    --cube-font-size: 30px;
+}
+
+
+
+.cube_container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: all-scroll;
+}
+
+.c {
+    width: 20rem !important;
+    height: 20rem !important;
+}
+
+.box_container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    gap: 15px;
+}
+
+.scene {
+  width: var(--cube-scene-size);
+  height: var(--cube-scene-size);
+  perspective: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cube {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(-1 * var(--cube-box-size)));
+  transition: transform 1s;
+}
+
+.cube__face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  font-weight: 500;
+  font-size: var(--cube-font-size);
+  opacity: 100%;
+  text-align: center;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid black;
+}
+
+.cube_face_label, .cube_face_stats {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Source: https://3dtransforms.desandro.com/cube */
+.cube__face--front  { background: linear-gradient(0deg, red, var(--front-percentage), white); transform: rotateY(  0deg) translateZ(var(--cube-box-size));}
+.cube__face--right  { background: linear-gradient(0deg, blue, var(--right-percentage),white); transform: rotateY( 90deg) translateZ(var(--cube-box-size));}
+.cube__face--back   { background: linear-gradient(0deg, green, var(--back-percentage), white); transform: rotateY(180deg) translateZ(var(--cube-box-size));}
+.cube__face--left   { background: linear-gradient(0deg, gold, var(--left-percentage), white); transform: rotateY(-90deg) translateZ(var(--cube-box-size));}
+.cube__face--top   { background: linear-gradient(0deg, magenta, var(--top-percentage), white); transform: rotateX( 90deg) translateZ(var(--cube-box-size)); }
+.cube__face--bottom { background: linear-gradient(0deg, orange, var(--bottom-percentage), white); transform: rotateX(-90deg) translateZ(var(--cube-box-size));}
+
+.cube.show-front  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY(   0deg); }
+.cube.show-right  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY( -90deg); }
+.cube.show-back  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY(-180deg); }
+.cube.show-left  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY(  90deg); }
+.cube.show-top  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateX( -90deg); }
+.cube.show-bottom { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateX(  90deg); }
+
+.box_label {
+    text-align: center;
+    margin-bottom: 5vh;
+}

@@ -8,30 +8,28 @@ and only served via route handlers.
 
 Also, this script needs documentation from whoever wrote it
 */
-
 export function studentMenu() {
-    globalThis.location.href = "../../templates/student-menu.html";
+    globalThis.location.href = "/api/student/home";
 }
 
 export function loginAsProfessor() {
-    //window.location.href = "../../templates/teacher-login.html";
-    globalThis.location.href = "../../templates/teacher-menu.html";
+    globalThis.location.href = "/teacher";
 }
 
 export function teacherMenu() {
-    globalThis.location.href = "../../templates/teacher-menu.html";
+    globalThis.location.href = "/api/teacher/home";
 }
 
 export function questionsManage() {
-    globalThis.location.href = "../../templates/teacher-question-manage.html";
+    globalThis.location.href = "/api/teacher/questions";
 }
 
 export function usersManage() {
-    globalThis.location.href = "../../templates/teacher-user-manage.html";
+    globalThis.location.href = "/api/teacher/users";
 }
 
 export function home() {
-    globalThis.location.href = "../../index.html";
+    globalThis.location.href = "/api/";
 }
 
 export default {studentMenu, teacherMenu, home, questionsManage, usersManage, loginAsProfessor};
