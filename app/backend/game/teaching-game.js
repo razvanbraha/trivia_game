@@ -492,6 +492,7 @@ class teachingGame {
                 data_you: this.getSanitizedPlayer(player),
                 data_all: allRankings,
                 category_accuracy: this.getCategoryAccuracy(player),
+                questions: this.questions
             });
         });
 

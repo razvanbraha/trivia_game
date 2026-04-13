@@ -130,7 +130,7 @@ ws_api.support(handler, ws_api.signals.FINAL,  (ws, body) => {
     }
     current_state = game_states.FINAL_RESULTS_SERVED;
 
-    game_helpers.showEndLeaderboard(body.data_you, body.data_all, true, body.category_accuracy);
+    game_helpers.showEndLeaderboard(body.data_you, body.data_all, true, body.category_accuracy, null);
     
 });
 

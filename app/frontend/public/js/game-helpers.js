@@ -616,7 +616,7 @@ function showLeaderboard(current_player, all_players, isHost, category_accuracy,
  * @param {List} category_accuracy Category statistics in form List({category_num, accuracy, num_correct, num_questions})
  * @returns cloneable object containing the body of the leaderboard page 
  */
-function showEndLeaderboard(current_player, all_players, isHost, category_accuracy) {
+function showEndLeaderboard(current_player, all_players, isHost, category_accuracy, questions) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
@@ -705,6 +705,16 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(rank, true);
         self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, true);
         question_container.appendChild(self_ranking);
+
+        const downloadBtn = document.createElement("button");
+        downloadBtn.innerText = "Download My Stats";
+        downloadBtn.classList.add("btn", "btn-success", "mt-3");
+
+        downloadBtn.addEventListener("click", () => {
+            downloadStats(current_player, category_accuracy, all_players, questions);
+        });
+
+        question_container.appendChild(downloadBtn);
     }
     question_container.appendChild(podium);
     if(isHost) {
@@ -712,7 +722,91 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         const new_game_btn = template_question_container.querySelector(".new-game-btn").cloneNode(true);
         new_game_btn.addEventListener("click", () => globalThis.location.reload());
         question_container.appendChild(new_game_btn);
+
+        const downloadBtn = document.createElement("button");
+        downloadBtn.innerText = "Download Class Stats";
+        downloadBtn.classList.add("btn", "btn-success", "mt-3");
+
+        downloadBtn.addEventListener("click", () => {
+            downloadStats(null, category_accuracy, all_players, null, true);
+        });
+
+        question_container.appendChild(downloadBtn);
     }
+}
+
+/**
+ * Generates and downloads a text file containing game statistics.
+ * Supports both individual player stats (for each player) and class stats (for host).
+ * 
+ * @param {Object|null} player Player object (null if user is host)
+ * @param {Array} category_accuracy List of category statistics
+ * @param {Array} all_players List of all players
+ * @param {Array|null} questions List of questions (null if user is host)
+ * @param {Boolean} [isHost=false] Whether the download is for the host
+ */
+function downloadStats(player, category_accuracy, all_players, questions, isHost = false) {
+    let text = '';
+
+    if (!isHost) {
+        const rank = 1 + all_players.findIndex(p => p.name === player.name);
+
+        text += `Game Results for ${player.name}\n`;
+        text += `----------------------------------\n`;
+        text += `Rank: ${rank}\n`;
+        text += `Points: ${player.points}\n`;
+        text += `Questions Answered: ${player.answers.length}\n\n`;
+
+        const categories = {};
+
+        questions.forEach((q, idx) => {
+            const cat = q.category;
+
+            if (!categories[cat]) {
+                categories[cat] = [];
+            }
+
+            const studentAnswerIdx = player.answers[idx];
+            const studentAnswer = studentAnswerIdx !== -1 ? q.choices[studentAnswerIdx] : "No Answer";
+            const correctAnswer = q.choices[q.correct_idx];
+
+            categories[cat].push({
+                question: q.text,
+                studentAnswer,
+                correctAnswer
+            });
+        });
+
+        for (const cat in categories) {
+            text += `\nCategory ${cat}\n`;
+            text += `--------------------------\n`;
+
+            categories[cat].forEach((q, i) => {
+                text += `Q${i + 1}: ${q.question}\n`;
+                text += `Your Answer: ${q.studentAnswer}\n`;
+                text += `Correct Answer: ${q.correctAnswer}\n\n`;
+            });
+        }
+    } else {
+        text += `Class Results\n`;
+        text += `----------------------------------\n`;
+        text += `Total Players: ${all_players.length}\n\n`;
+    }
+
+    text += `\nCategory Performance Summary:\n`;
+    category_accuracy.forEach(cat => {
+        text += `Category ${cat.category_num}: ${cat.accuracy}% (${cat.num_correct}/${cat.num_questions})\n`;
+    });
+
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = isHost ? `class_stats.txt` : `${player.name}_detailed_stats.txt`;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
 }
 
 // TODO add functions to create question text, create answer choices, etc
@@ -733,5 +827,6 @@ export default {
     answersClickable,
     showCorrectAnswer,
     showLeaderboard,
-    showEndLeaderboard
+    showEndLeaderboard,
+    downloadStats
 }
