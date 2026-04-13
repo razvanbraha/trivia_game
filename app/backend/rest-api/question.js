@@ -25,7 +25,7 @@ const templatesFolder = path.join(__dirname, '../../frontend/templates');
  * @returns status OK & json list of questions
  * @throws Error 500 if unable to connect with questions db
  */
-router.get('/populate', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         let qry = structuredClone(req.query)
         let questions;
@@ -51,7 +51,7 @@ router.get('/populate', async (req, res) => {
  * @throws Error 400 if invalid question data
  * @throws Error 500 if unable to connect with questions db
  */
-router.post('/create', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const err = validateQuestion(req.body);
         if (err.length === 0) {
@@ -74,7 +74,7 @@ router.post('/create', async (req, res) => {
  * @returns status OK
  * @throws Error 500 if unable to connect with questions db
  */
-router.delete('/delete', async (req, res) => {
+router.delete('/', async (req, res) => {
     try {
         await deleteQuestion(req.body.questionId);
         console.log("Delete confirmed:", req.body.questionId);
@@ -93,7 +93,7 @@ router.delete('/delete', async (req, res) => {
  * @returns status OK & json list of questions
  * @throws Error 500 if unable to connect with questions db
  */
-router.put('/update', async (req, res) => {
+router.put('/', async (req, res) => {
     try {
         if (validateQuestion(req.body.questionData)) {
             await updateQuestion(req.body.questionData, req.body.questionId);

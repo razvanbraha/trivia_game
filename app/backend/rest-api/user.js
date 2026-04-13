@@ -39,7 +39,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
  * @returns status OK & json list of users
  * @throws Error 500 if unable to connect with users db
  */
-router.get('/populate', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         let qry = structuredClone(req.query)
         let users;
@@ -67,7 +67,7 @@ router.get('/populate', async (req, res) => {
  * @throws Error 400 if invalid user data
  * @throws Error 500 if unable to connect with user db
  */
-router.post('/create', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const { adminPassword } = req.body;
         if(adminPassword !== ADMIN_PASSWORD) {
@@ -100,7 +100,7 @@ router.post('/create', async (req, res) => {
  *  - target user has user privileges (protected user)
  * @throws {500} if database operation fails
  */
-router.delete('/delete', async (req, res) => {
+router.delete('/', async (req, res) => {
     try {
         const currentUser = req.headers["x-shib-uid"];
         const { userID, unityID, adminPassword } = req.body;
@@ -144,7 +144,7 @@ router.delete('/delete', async (req, res) => {
  *  - target user has user privileges (protected user)
  * @throws {500} if database operation fails
  */
-router.put('/update', async (req, res) => {
+router.put('/', async (req, res) => {
     try {
         const currentUser = req.headers["x-shib-uid"];
         const { userID, unityID, adminPassword } = req.body;
