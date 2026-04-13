@@ -45,7 +45,8 @@ const updateQuestion = async (body, id) => {
         SET question= ? , corrAnswer = ?, incorrONE = ?, incorrTWO = ?, incorrTHREE = ?, category = ?, isAI = ?
         WHERE questionID = ?`;
 
-    const [result] = await db.query(qry, data);
+    const result = await db.query(qry, data);
+
     return result.affectedRows;
 }
 
@@ -58,7 +59,7 @@ const updateQuestion = async (body, id) => {
  */
 const deleteQuestion = async (id) => {
     let qry = `DELETE FROM questions WHERE questionID = ?`;
-    let [result] = await db.query(qry, [id]);
+    let result = await db.query(qry, [id]);
     return result.affectedRows;
 }
 
@@ -70,8 +71,8 @@ const deleteQuestion = async (id) => {
  */
 const getAllQuestion = async () => {
     let qry = `SELECT * FROM questions`;
-    const [result] = await db.query(qry);
-    return result;
+    const results = await db.query(qry);
+    return results;
 }
 
 /**
@@ -83,8 +84,8 @@ const getAllQuestion = async () => {
  */
 const getByCategory = async (category) => {
     let qry = `SELECT * FROM questions WHERE category = ?`;
-    const [result] = await db.query(qry, [category]);
-    return result;
+    const results = await db.query(qry, [category]);
+    return results;
 }
 
 /**
@@ -96,8 +97,8 @@ const getByCategory = async (category) => {
  */
 const getByID = async (id) => {
     let qry = `SELECT * FROM questions WHERE questionID = ?`;
-    const[result] = await db.query(qry, [id]);
-    return result[0] || null;
+    const results = await db.query(qry, [id]);
+    return results.length === 1 ? results[0] : null;
 }
 
 /**
@@ -114,8 +115,8 @@ const selectRandQuestions = async (n, categories) => {
     WHERE category IN (?)
     ORDER BY RAND() 
     LIMIT ${n};`
-    const [result] = await db.query(qry, [categories]);
-    return result;
+    const results = await db.query(qry, [categories]);
+    return results;
 }
 
 module.exports = {

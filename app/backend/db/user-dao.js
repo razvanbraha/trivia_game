@@ -28,7 +28,8 @@ const addUser = async (body) => {
     let data = [unityID, questionPrivBool ? 1 : 0, userPrivBool ? 1: 0];
     let qry = `INSERT INTO users (unityID, questionPriv, userPriv) VALUES (?, ?, ?)`;
 
-    const [result] = await db.query(qry, data);
+    const result = await db.query(qry, data);
+    console.log("Add user query result: ", result);
     return result.insertId;
 }
 
@@ -51,7 +52,8 @@ const updateUser = async (body, id) => {
                SET unityID = ?, questionPriv = ?, userPriv = ? 
                WHERE userID = ?`;
 
-    const [result] = await db.query(qry, data);
+    const result = await db.query(qry, data);
+    console.log("Update user query result: ", result);
     return result.affectedRows;
 }
 
@@ -64,7 +66,8 @@ const updateUser = async (body, id) => {
  */
 const deleteUser = async (id) => {
     let qry = `DELETE FROM users WHERE userID = ?`;
-    let [result] = await db.query(qry, [id]);
+    const result = await db.query(qry, [id]);
+    console.log("Delete user query result: ", result);
     return result.affectedRows;
 }
 
@@ -76,8 +79,9 @@ const deleteUser = async (id) => {
  */
 const getAllUser = async () => {
     let qry = `SELECT * FROM users`;
-    const [result] = await db.query(qry);
-    return result;
+    const results = await db.query(qry);
+    console.log("Get all users query results: ", results);
+    return results;
 }
 
 /**
@@ -89,8 +93,12 @@ const getAllUser = async () => {
  */
 const getByUnityId = async (unityId) => {
     let qry = `SELECT * FROM users WHERE unityID = ?`;
-    const [result] = await db.query(qry, [unityId]);
-    return result;
+    const results = await db.query(qry, [unityId]);
+    console.log("Get user by unity id results: ", results);
+
+    // TODO some verification
+
+    return [results];
 }
 
 /**
@@ -102,8 +110,12 @@ const getByUnityId = async (unityId) => {
  */
 const getByID = async (id) => {
     let qry = `SELECT * FROM users WHERE userID = ?`;
-    const [result] = await db.query(qry, [id]);
-    return result;
+    const results = await db.query(qry, [id]);
+    console.log("Get user by id results: ", results);
+
+    // TODO some verification
+
+    return [results];
 }
 
 module.exports = {
