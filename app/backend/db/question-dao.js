@@ -25,7 +25,7 @@ const addQuestion = async (body) => {
     let data = [question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category, ai];
     let qry = `INSERT INTO questions (question, corrAnswer, incorrONE, incorrTWO, incorrTHREE, category, isAI) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-    const [result] = await db.query(qry, data);
+    const result = await db.query(qry, data);
     return result.insertId;
 }
 
