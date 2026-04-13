@@ -1,62 +1,16 @@
-const path = require('node:path');
-let mysql = require('mysql2/promise');
-require('dotenv').config();
-
-// Initialize database connection
-let con;
-
-async function connectWithRetry(config, retries = 10, delay = 3000) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            console.log(`Attempting DB connection (${i + 1}/${retries})...`);
-            return await mysql.createConnection(config);
-        } catch (err) {
-            console.log("Database not ready, retrying...");
-            await new Promise(res => setTimeout(res, delay));
-        }
-    }
-    throw new Error("Could not connect to MySQL after multiple attempts.");
-}
-
+//--- HEADER ------------------------------------------------------------------
 /**
- * Setup Questions database & table if none exists.
- * @author Riley Wickens & Razvan Braha
- * @throws {err} if connection/query fails
+ * @file user-dao.js
+ * 
+ * @description provides functions to add users to the database
+ * 
+ * @author Will Mungas, Riley Wickens, Razvan Braha
  */
-const setupQuestions = async () => {
+//--- IMPORTS -----------------------------------------------------------------
 
-    // Create db if needed
-    const rootCon = await connectWithRetry({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD
-    });
+const db = require('./db');
 
-    await rootCon.query('CREATE DATABASE IF NOT EXISTS trivia');
-    await rootCon.end();
-
-    // connect with db
-    con = await connectWithRetry({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
-    });
-
-    // Create table if it doesn't exist
-    const createTableSql = 
-        `CREATE TABLE IF NOT EXISTS questions (
-        questionID INT AUTO_INCREMENT PRIMARY KEY,
-        question VARCHAR(255) NOT NULL,
-        corrAnswer VARCHAR(255) NOT NULL,
-        incorrONE VARCHAR(255) NOT NULL,
-        incorrTWO VARCHAR(255) NOT NULL,
-        incorrTHREE VARCHAR(255) NOT NULL,
-        category INT NOT NULL,
-        isAI BOOLEAN NOT NULL DEFAULT FALSE)`;
-
-    await con.query(createTableSql);
-}
+//--- FUNCTIONS ---------------------------------------------------------------
 
 /**
  * Add question to database.
@@ -71,7 +25,7 @@ const addQuestion = async (body) => {
     let data = [question, correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3, category, ai];
     let qry = `INSERT INTO questions (question, corrAnswer, incorrONE, incorrTWO, incorrTHREE, category, isAI) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-    const [result] = await con.query(qry, data);
+    const [result] = await db.query(qry, data);
     return result.insertId;
 }
 
@@ -91,7 +45,7 @@ const updateQuestion = async (body, id) => {
         SET question= ? , corrAnswer = ?, incorrONE = ?, incorrTWO = ?, incorrTHREE = ?, category = ?, isAI = ?
         WHERE questionID = ?`;
 
-    const [result] = await con.query(qry, data);
+    const [result] = await db.query(qry, data);
     return result.affectedRows;
 }
 
@@ -104,7 +58,7 @@ const updateQuestion = async (body, id) => {
  */
 const deleteQuestion = async (id) => {
     let qry = `DELETE FROM questions WHERE questionID = ?`;
-    let [result] = await con.query(qry, [id]);
+    let [result] = await db.query(qry, [id]);
     return result.affectedRows;
 }
 
@@ -116,7 +70,7 @@ const deleteQuestion = async (id) => {
  */
 const getAllQuestion = async () => {
     let qry = `SELECT * FROM questions`;
-    const [result] = await con.query(qry);
+    const [result] = await db.query(qry);
     return result;
 }
 
@@ -129,7 +83,7 @@ const getAllQuestion = async () => {
  */
 const getByCategory = async (category) => {
     let qry = `SELECT * FROM questions WHERE category = ?`;
-    const [result] = await con.query(qry, [category]);
+    const [result] = await db.query(qry, [category]);
     return result;
 }
 
@@ -142,7 +96,7 @@ const getByCategory = async (category) => {
  */
 const getByID = async (id) => {
     let qry = `SELECT * FROM questions WHERE questionID = ?`;
-    const[result] = await con.query(qry, [id]);
+    const[result] = await db.query(qry, [id]);
     return result[0] || null;
 }
 
@@ -160,7 +114,7 @@ const selectRandQuestions = async (n, categories) => {
     WHERE category IN (?)
     ORDER BY RAND() 
     LIMIT ${n};`
-    const [result] = await con.query(qry, [categories]);
+    const [result] = await db.query(qry, [categories]);
     return result;
 }
 
