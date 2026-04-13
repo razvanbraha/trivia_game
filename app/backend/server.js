@@ -11,19 +11,19 @@ const student_pages = require("./pages/student-pages");
 const game_pages = require("./pages/game-pages");
 
 // API route handlers
-const dbAPI = require('./rest_api/dbAPI');
-const userAPI = require('./rest_api/userAPI');
-const gameAPI = require('./rest_api/gameAPI');
-const geminiAPI = require('./rest_api/geminiAPI');
-const roomAPI = require("./rest_api/roomAPI");
+const dbAPI = require('./rest-api/question');
+const userAPI = require('./rest-api/user');
+const gameAPI = require('./rest-api/game');
+const geminiAPI = require('./rest-api/gemini');
+const roomAPI = require("./rest-api/room");
 
 // game and websocket functions
 const sessions = require('./game/sessions');
 const ws_api = require('./ws-api');
 
-const { getByUnityId } = require('./db_queries/user-db')
-const { setupQuestions } = require("./db_queries/questions-db");
-const { setupUsers } = require('./db_queries/user-db')
+const { setupQuestions } = require("./db/questions-dao");
+const { setupUsers, getByUnityId } = require('./db/user-dao');
+// ^^ where is the second import here used?? 
 
 
 // key routes
