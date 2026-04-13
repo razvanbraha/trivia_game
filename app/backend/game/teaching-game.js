@@ -13,7 +13,7 @@
 const ws_api = require("../ws-api");
 
 const utils = require('./utils');
-const questionsDB = require("../db_queries/questions-db");
+const questionDAO = require("../db/question-dao");
 
 
 //--- OBJECT ---------------------------------------------------------------
@@ -435,7 +435,7 @@ class teachingGame {
         // Load questions & error check
         let db_questions;
         try {
-            db_questions = await questionsDB.selectRandQuestions(settings.rounds, settings.categories);
+            db_questions = await questionDAO.selectRandQuestions(settings.rounds, settings.categories);
         } catch (e) {
             this.sendAll(
                 ws_api.signals.ERR, 
