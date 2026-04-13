@@ -21,11 +21,6 @@ const roomAPI = require("./rest-api/room");
 const sessions = require('./game/sessions');
 const ws_api = require('./ws-api');
 
-const { setupQuestions } = require("./db/questions-dao");
-const { setupUsers, getByUnityId } = require('./db/user-dao');
-// ^^ where is the second import here used?? 
-
-
 // key routes
 const templates_dir = path.join(__dirname, "../frontend/templates");
 const static_dir = path.join(__dirname, "../frontend/public");
@@ -84,22 +79,11 @@ function setupWSS(server) {
 // Create http server that can be shared by express router AND websocket
 const server = http.createServer(app);
 
-async function startServer() {
-    setupQuestions()
-    .then(() => setupUsers())
-    .then(() => server.listen(PORT, () => {
-        console.log(`Server running at http://localhost:${PORT}`)
-        setupWSS(server);
-    }))
-    .catch((err) => {
-        console.error("Startup failed:", err);
-        process.exit(1);
-    })
-}
-
-
 // For testing - only start if running main(no need to start server if testing)
 if (require.main === module) {
-    startServer();
+    server.listen(PORT, () => {
+        console.log(`Server running at http://localhost:${PORT}`)
+        setupWSS(server);
+    });
 }
 
