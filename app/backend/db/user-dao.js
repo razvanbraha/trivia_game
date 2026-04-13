@@ -107,7 +107,6 @@ const getByID = async (id) => {
 }
 
 module.exports = {
-    setupUsers,
     addUser,
     updateUser, 
     deleteUser,

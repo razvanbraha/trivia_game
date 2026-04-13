@@ -119,7 +119,6 @@ const selectRandQuestions = async (n, categories) => {
 }
 
 module.exports = {
-    setupQuestions,
     addQuestion,
     updateQuestion,
     deleteQuestion,
