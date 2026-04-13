@@ -50,7 +50,7 @@ form.addEventListener("submit", async (e) => {
         adminPassword
     };
 
-    const res = await fetch("/api/users/create", {
+    const res = await fetch("/api/users", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -82,7 +82,7 @@ editForm.addEventListener("submit", async (e) => {
     const adminPassword = prompt("Enter admin password:");
     if (!adminPassword) return;
 
-    const res = await fetch("/api/users/update", {
+    const res = await fetch("/api/users", {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
@@ -125,7 +125,7 @@ function clearUsers() {
 async function populateUsers() {
     clearUsers();
 
-    const res = await fetch("/api/users/populate");
+    const res = await fetch("/api/users");
     if (res.status !== 200) {
         const error = await res.json();
         console.log(error);
@@ -148,7 +148,7 @@ async function populateUsers() {
             const adminPassword = prompt("Enter admin password:");
             if (!adminPassword) return;
 
-            const res = await fetch("/api/users/delete", {
+            const res = await fetch("/api/users", {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json"
