@@ -10,7 +10,12 @@
  */
 //--- IMPORTS -----------------------------------------------------------------
 
-const mariadb = require('mariadb');
+// Some bs to work around latest mariadb requiring usage of ESM, which
+// breaks node building everything else since the rest of the app uses CommonJS
+// modules like a good node app should.
+//
+// JavaScript modularization is hell.
+let mariadb;
 
 //--- INTERNAL ----------------------------------------------------------------
 
@@ -23,7 +28,13 @@ let pool = null;
  * 
  * @author Will Mungas
  */
-function connect() {
+async function connect() {
+    // Dynamically load the module if it hasn't been loaded yet
+    // See comment in IMPORTS section
+    if (!mariadb) {
+        mariadb = await import('mariadb');
+    }
+
     if(!pool) {
         pool = mariadb.createPool({
             host: process.env.DB_HOST,
@@ -43,7 +54,7 @@ function connect() {
  * 
  * @author Will Mungas
  */
-function close() {
+async function close() {
     if(pool) {
         pool.end();
         pool = null;
@@ -58,8 +69,8 @@ function close() {
  * @param {*} query SQL query with parameters escaped with '?'
  * @param {*} params array of parameters to insert
  */
-function query(query, params = "") {
-    const pool = connect();
+async function query(query, params = "") {
+    const pool = await connect();
     return pool.query(query, params).catch(e => {
         console.log(e);
         throw e;
@@ -69,7 +80,5 @@ function query(query, params = "") {
 //--- EXPORT ------------------------------------------------------------------
 
 module.exports = {
-    connect, 
-    query,
-    close
+    query
 };
