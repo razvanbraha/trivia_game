@@ -1,5 +1,13 @@
 USE trivia;
 
+CREATE TABLE IF NOT EXISTS users (
+    userID INT AUTO_INCREMENT PRIMARY KEY,
+    unityID VARCHAR(255) NOT NULL,
+    note VARCHAR(255) NOT NULL,
+    questionPriv BOOLEAN NOT NULL DEFAULT FALSE,
+    userPriv BOOLEAN NOT NULL DEFAULT FALSE
+);
+
 CREATE TABLE IF NOT EXISTS questions (
     questionID INT AUTO_INCREMENT PRIMARY KEY,
     question VARCHAR(255) NOT NULL,
@@ -8,12 +16,16 @@ CREATE TABLE IF NOT EXISTS questions (
     incorrTWO VARCHAR(255) NOT NULL,
     incorrTHREE VARCHAR(255) NOT NULL,
     category INT NOT NULL,
+    -- creatorID INT REFERENCES users(userID), -- could be useful?
     isAI BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TABLE IF NOT EXISTS users (
-    userID INT AUTO_INCREMENT PRIMARY KEY,
-    unityID VARCHAR(255) NOT NULL,
-    questionPriv BOOLEAN NOT NULL DEFAULT FALSE,
-    userPriv BOOLEAN NOT NULL DEFAULT FALSE
-);
+INSERT into users 
+    (unityID, note, questionPriv, userPriv)
+VALUES
+    ('wrmungas', 'developer', TRUE, TRUE),
+    ('drsalin2', 'developer', TRUE, TRUE),
+    ('rkwicken', 'developer', TRUE, TRUE),
+    ('rmaalay', 'developer', TRUE, TRUE),
+    ('clhekkin', 'developer', TRUE, TRUE),
+    ('rbraha', 'developer', TRUE, TRUE),
