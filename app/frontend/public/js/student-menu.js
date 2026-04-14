@@ -28,7 +28,7 @@ function launchMultiplayer() {
 }
 
 function launchStudy() {
-    alert("To be implemented");
+    window.location.href = "/api/play/study";
 }
 
 joinRoomButton.onclick = joinRoom;
