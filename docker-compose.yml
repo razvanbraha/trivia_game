@@ -13,7 +13,8 @@ services:
     # anonymous volume to protect containers node_modules (prevents host node_modules from overwriting)
       - /app/node_modules 
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - .env
     ports:
@@ -34,7 +35,7 @@ services:
     image: mariadb:latest
     container_name: trivia-db
     restart: unless-stopped
-    env_file:
+    env_file: 
       - .env
     volumes:
     # mount persistent data under database/data
@@ -44,6 +45,11 @@ services:
     ports:
     # allow a database client (MySQL Workbench, for example) on the host machine access into the container
       - "3307:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   apacheshib:
     image: dockerhub.csc.ncsu.edu/ignacioxd/apacheshib-proxy
