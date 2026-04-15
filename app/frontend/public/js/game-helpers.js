@@ -17,6 +17,15 @@
 // Reference for template(from question-template.html) once it is loaded into DOM
 let template_question_container;
 
+const CATEGORY_NAMES = {
+    1: "History & Evolution",
+    2: "Technical Aspects & Engineering",
+    3: "Sustainability",
+    4: "Consumerism & Ethics",
+    5: "End-of-Life & Data",
+    6: "Logistics & Distribution"
+};
+
 //--- FUNCTIONS ---------------------------------------------------------------
 
 /**
@@ -616,7 +625,7 @@ function showLeaderboard(current_player, all_players, isHost, category_accuracy,
  * @param {List} category_accuracy Category statistics in form List({category_num, accuracy, num_correct, num_questions})
  * @returns cloneable object containing the body of the leaderboard page 
  */
-function showEndLeaderboard(current_player, all_players, isHost, category_accuracy, questions) {
+function showEndLeaderboard(current_player, all_players, isHost, category_accuracy, questions, question_accuracies) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
@@ -728,7 +737,7 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         downloadBtn.classList.add("btn", "btn-success", "mt-3");
 
         downloadBtn.addEventListener("click", () => {
-            downloadStats(null, category_accuracy, all_players, null, true);
+            downloadStats(null, category_accuracy, all_players, questions, true, question_accuracies);
         });
 
         question_container.appendChild(downloadBtn);
@@ -745,7 +754,7 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
  * @param {Array|null} questions List of questions (null if user is host)
  * @param {Boolean} [isHost=false] Whether the download is for the host
  */
-function downloadStats(player, category_accuracy, all_players, questions, isHost = false) {
+function downloadStats(player, category_accuracy, all_players, questions, isHost = false, question_accuracies = []) {
     let text = '';
 
     if (!isHost) {
@@ -791,11 +800,22 @@ function downloadStats(player, category_accuracy, all_players, questions, isHost
         text += `Class Results\n`;
         text += `----------------------------------\n`;
         text += `Total Players: ${all_players.length}\n\n`;
+
+        text += `Question Accuracy:\n`;
+        question_accuracies.forEach((acc, idx) => {
+            const questionText = questions && questions[idx] ? questions[idx].text : `Question ${idx + 1}`;
+            const correctAnswer = questions[idx].choices[questions[idx].correct_idx];
+            
+            text += `\nQ${idx + 1}: ${questionText}\n`;
+            text += `Correct Answer: ${correctAnswer}\n`;
+            text += `Accuracy: ${acc}%\n`;
+        });
     }
 
     text += `\nCategory Performance Summary:\n`;
     category_accuracy.forEach(cat => {
-        text += `Category ${cat.category_num}: ${cat.accuracy}% (${cat.num_correct}/${cat.num_questions})\n`;
+        const categoryName = CATEGORY_NAMES[cat.category_num] || `Category ${cat.category_num}`;
+        text += `${categoryName}: ${cat.accuracy}% (${cat.num_correct}/${cat.num_questions})\n`;
     });
 
     const blob = new Blob([text], { type: "text/plain" });

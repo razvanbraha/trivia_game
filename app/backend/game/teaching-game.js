@@ -75,6 +75,7 @@ class teachingGame {
 
     state = 0; // the current state
     questions = []; // List of questions to be used by the game
+    question_accuracies = []; //List of question accuracy percentages use by the game
 
     // not sure if this is really necessary either
     round_idx = 0;
@@ -486,6 +487,8 @@ class teachingGame {
             data_you: null,
             data_all: allRankings,
             category_accuracy: this.getCategoryAccuracy(null),
+            questions: this.questions,
+            question_accuracies: this.question_accuracies
         });
         this.players.forEach((player) => {
             player.ws.signal(ws_api.signals.FINAL, {
@@ -562,6 +565,7 @@ class teachingGame {
         // Send DONE
         const correct_idx = this.questions[i].correct_idx;
         const class_accuracy_percent = this.getClassAccuracy(i, correct_idx);
+        this.question_accuracies[i] = class_accuracy_percent;
         this.host.signal(ws_api.signals.DONE, {
             correct_idx,
             data_you: null,
