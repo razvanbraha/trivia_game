@@ -65,12 +65,13 @@ const init_handler = {};
 ws_api.support(init_handler, ws_api.signals.JOIN, (ws, body) => sessions.join(ws, body));
 
 function setupWSS(server) {
-    const wss = new WebSocketServer({ server: server });
+    const wss = new WebSocketServer({ server });
 
     wss.on("connection", (ws) => {
         console.log("received incoming ws connection");
         ws_api.init(ws, ws_api.users.SERVER, init_handler, null);
     });
+    
     console.log(`Websocket server running`);
 }
 

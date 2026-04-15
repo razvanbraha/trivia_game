@@ -199,7 +199,7 @@ const signals = {
 }
 
 // websocket connection uri
-const uri = "ws://127.0.0.1:8080";
+const uri = "ws://" + process.env.WS_URL + ":8080";
 
 //--- HELPERS ------------------------------------------------------------------
 
