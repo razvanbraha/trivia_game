@@ -31,6 +31,11 @@
                     </section>
 
                     <section>
+                        <label for="note">Notes:</label>
+                        <input type="text" id="note" name="note"/>
+                    </section>
+
+                    <section>
                         <label for="questionPriv">Question Privilege:</label>
                         <input type="checkbox" id="questionPriv" name="questionPriv"/>
 
@@ -61,6 +66,11 @@
                     </div>
 
                     <div class="mb-2">
+                        <label>Note:</label>
+                        <input type="text" id="editNote" class="form-control" required>
+                    </div>
+
+                    <div class="mb-2">
                         <label>Question Privilege:</label>
                         <input type="checkbox" id="editQuestionPriv">
                     </div>
@@ -80,6 +90,7 @@
     <template id="userDisplayTemplate">
         <h2 class="unityID"></h2>
         <p class="userID"></p>
+        <p class="note"></p>
         <p class="questionPriv"></p>
         <p class="userPriv"></p>
     </template>

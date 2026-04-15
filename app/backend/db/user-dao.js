@@ -20,13 +20,13 @@ const db = require('./db');
  * @throws {err} if connection/query fails
  */
 const addUser = async (body) => {
-    const {unityID, questionPriv, userPriv} = body;
+    const {unityID, note, questionPriv, userPriv} = body;
 
     const questionPrivBool = questionPriv === "on" || questionPriv === true || questionPriv === 1;
     const userPrivBool = userPriv === "on" || userPriv === true || userPriv === 1;
 
     let data = [unityID, questionPrivBool ? 1 : 0, userPrivBool ? 1: 0];
-    let qry = `INSERT INTO users (unityID, questionPriv, userPriv) VALUES (?, ?, ?)`;
+    let qry = `INSERT INTO users (unityID, note, questionPriv, userPriv) VALUES (?, ?, ?, ?)`;
 
     const result = await db.query(qry, data);
     return result.insertId;

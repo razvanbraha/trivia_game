@@ -11,6 +11,7 @@ const editForm = document.querySelector("#editUserForm");
 
 const editUserID = document.querySelector("#editUserID");
 const editUnityID = document.querySelector("#editUnityID");
+const editNote = document.querySelector('#editNote');
 const editQuestionPriv = document.querySelector("#editQuestionPriv");
 const editUserPriv = document.querySelector("#editUserPriv");
 
@@ -45,6 +46,7 @@ form.addEventListener("submit", async (e) => {
 
    const data = {
         unityID: document.querySelector("#unityID").value,
+        note: document.querySelector("#note").value,
         questionPriv: document.querySelector("#questionPriv").checked,
         userPriv: document.querySelector("#userPriv").checked,
         adminPassword
@@ -138,8 +140,9 @@ async function populateUsers() {
 
         userInstance.querySelector(".userID").textContent = `User ID: ${user.userID}`;
         userInstance.querySelector(".unityID").textContent = `Unity ID: ${user.unityID}`;
-        userInstance.querySelector(".questionPriv").textContent = `Question Privelage: ${user.questionPriv ? "Yes" : "No"}`;
-        userInstance.querySelector(".userPriv").textContent = `User Privelage: ${user.userPriv ? "Yes" : "No"}`;
+        userInstance.querySelector(".note").textContent = `Note: ${user.note}`;
+        userInstance.querySelector(".questionPriv").textContent = `Question Privilege: ${user.questionPriv ? "Yes" : "No"}`;
+        userInstance.querySelector(".userPriv").textContent = `User Privilege: ${user.userPriv ? "Yes" : "No"}`;
 
         const deleteButton = document.createElement("button");
         deleteButton.className = "btn btn-danger";
@@ -183,6 +186,7 @@ async function populateUsers() {
 
             editUserID.value = user.userID;
             editUnityID.value = user.unityID;
+            editNote.value = user.note;
             editQuestionPriv.checked = user.questionPriv;
             editUserPriv.checked = user.userPriv;
 
