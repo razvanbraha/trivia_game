@@ -22,14 +22,27 @@ const db = require('./db');
 const addUser = async (body) => {
     const {unityID, note, questionPriv, userPriv} = body;
 
-    const questionPrivBool = questionPriv === "on" || questionPriv === true || questionPriv === 1;
-    const userPrivBool = userPriv === "on" || userPriv === true || userPriv === 1;
+    // first check that the user does not already exist in the system - no duplicates
+    const chk_qry = `SELECT * FROM users WHERE unityID = ?`;
+    
+    return db.query(chk_qry, [unityID]).then(result => {
+        if(result.length !== 0) {
+            throw new Error("User already exists!");
+        }
 
-    let data = [unityID, questionPrivBool ? 1 : 0, userPrivBool ? 1: 0];
-    let qry = `INSERT INTO users (unityID, note, questionPriv, userPriv) VALUES (?, ?, ?, ?)`;
+        const questionPrivBool = questionPriv === "on" || questionPriv === true || questionPriv === 1;
+        const userPrivBool = userPriv === "on" || userPriv === true || userPriv === 1;
 
-    const result = await db.query(qry, data);
-    return result.insertId;
+        const data = [unityID, note, questionPrivBool ? 1 : 0, userPrivBool ? 1: 0];
+        const qry = `INSERT INTO users (unityID, note, questionPriv, userPriv) VALUES (?, ?, ?, ?)`;
+
+        return db.query(qry, data);
+        
+        
+    })
+    .then(result => {
+        return result.insertId;
+    });
 }
 
 /**
@@ -41,14 +54,14 @@ const addUser = async (body) => {
  * @throws {err} if connection/query fails
  */
 const updateUser = async (body, id) => {
-    const {unityID, questionPriv, userPriv} = body;
+    const {questionPriv, userPriv} = body;
 
     const questionPrivBool = questionPriv === "on" || questionPriv === true || questionPriv === 1;
     const userPrivBool = userPriv === "on" || userPriv === true || userPriv === 1;
 
     let data = [unityID, questionPrivBool ? 1 : 0, userPrivBool ? 1 : 0, id];
     let qry = `UPDATE users
-               SET unityID = ?, questionPriv = ?, userPriv = ? 
+               SET questionPriv = ?, userPriv = ? 
                WHERE userID = ?`;
 
     const result = await db.query(qry, data);

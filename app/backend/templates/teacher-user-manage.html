@@ -12,87 +12,88 @@
 </head>
 <body>
     <header-component></header-component>
-    <div class="container-fluid main-container">
-        <div class="row h-100">
-            <div class="col-md-6 left-panel d-flex flex-column justify-content-center align-items-center text-center">
-                <h2 class="text-white display-5 fw-bold">User List</h2>
-                <button id="open-popup" class="btn btn-dark px-5">Users</button>
 
+    <main class="container-fluid main-container row h-100">
+        <section id="userListPanel" class="col-md-6 left-panel d-flex flex-column p-4 overflow-auto vh-100 overflow-y-auto">
+            <h3 class="text-white display-5 fw-bold mb-4 text-center">Existing Users</h2>
+
+            <div id="userListContent" class="w-100">
+                <!-- dynamically populated by JS -->
             </div>
-                        
+        </section>
 
-            <div class="col-md-6 right-panel d-flex flex-column justify-content-center align-items-center text-center gap-4">
-                <h2 class="text-white fw-bold">Add User</h2>
-                <form id="userForm" class="form-container">
+        <section id="addUserPanel" class="col-md-6 right-panel d-flex flex-column justify-content-center align-items-center text-center gap-4">
+            <h2 class="text-white fw-bold">Create New User</h2>
 
-                    <section>
-                        <label for="unityID">Unity ID:</label>
-                        <input type="text" id="unityID" name="unityID" minlength="1" maxlength="8" required/>
-                    </section>
+            <form id="userForm" class="form-container w-75 bg-white p-4 rounded shadow-sm">
+                <div class="mb-3 text-start">
+                    <label for="unityID" class="form-label text-black fw-bold">Unity ID:</label>
+                    <input type="text" id="unityID" name="unityID" class="form-control border-secondary" minlength="1" maxlength="8" required/>
+                </div>
 
-                    <section>
-                        <label for="note">Notes:</label>
-                        <input type="text" id="note" name="note"/>
-                    </section>
+                <div class="mb-3 text-start">
+                    <label for="note" class="form-label text-black fw-bold">Note:</label>
+                    <input type="text" id="note" name="note" class="form-control border-secondary"/>
+                </div>
 
-                    <section>
-                        <label for="questionPriv">Question Privilege:</label>
-                        <input type="checkbox" id="questionPriv" name="questionPriv"/>
-
-                        <label for="userPriv">User Privilege:</label>
-                        <input type="checkbox" id="userPriv" name="userPriv"/>
-                    </section>
-
-                    <input type="submit" value="Submit"/>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="popup" id="popup">  
-        <button class="btn btn-danger" id="close-popup">Close</button>
-
-        <div class="popup-container">
-            <div id="user-list"></div>
-            <div id="edit-user-container" class="mt-4" style="display:none;">
-                <h3>Edit User</h3>
-
-                <form id="editUserForm">
-                    <input type="hidden" id="editUserID">
-
-                    <div class="mb-2">
-                        <label>Unity ID:</label>
-                        <input type="text" id="editUnityID" class="form-control" required>
+                <div class="mb-4 text-start">
+                    
+                    <div class="d-flex align-items-center mb-2">
+                        <input type="checkbox" id="questionPriv" name="questionPriv" 
+                            class="form-check-input border-secondary m-0" 
+                            style="width: 20px; height: 20px; flex-shrink: 0;">
+                        <label class="text-black ms-2 mb-0" for="questionPriv" style="cursor: pointer;">
+                            Question Privilege
+                        </label>
                     </div>
 
-                    <div class="mb-2">
-                        <label>Note:</label>
-                        <input type="text" id="editNote" class="form-control" required>
+                    <div class="d-flex align-items-center">
+                        <input type="checkbox" id="userPriv" name="userPriv" 
+                            class="form-check-input border-secondary m-0" 
+                            style="width: 20px; height: 20px; flex-shrink: 0;">
+                        <label class="text-black ms-2 mb-0" for="userPriv" style="cursor: pointer;">
+                            User Privilege
+                        </label>
                     </div>
 
-                    <div class="mb-2">
-                        <label>Question Privilege:</label>
-                        <input type="checkbox" id="editQuestionPriv">
-                    </div>
+                </div>
 
-                    <div class="mb-2">
-                        <label>User Privilege:</label>
-                        <input type="checkbox" id="editUserPriv">
-                    </div>
-
-                    <button type="submit" class="btn btn-success">Save</button>
-                    <button type="button" id="cancelEdit" class="btn btn-secondary">Cancel</button>
-                </form>
-            </div>
-        </div>
-    </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary px-4">Submit</button>
+                </div>
+            </form>
+        </section>
+    </main>
 
     <template id="userDisplayTemplate">
-        <h2 class="unityID"></h2>
-        <p class="userID"></p>
-        <p class="note"></p>
-        <p class="questionPriv"></p>
-        <p class="userPriv"></p>
+        <div class="user-card border p-3 mb-3 bg-light rounded text-dark text-start">
+            <h4 class="unityID"></h4>
+            <p class="userID text-muted small"></p>
+            <p class="note mb-1"></p>
+            <p class="privileges mb-2 small italic"></p>
+            <div class="button-group">
+                <button class="btn btn-warning btn-sm edit-btn">Edit</button>
+                <button class="btn btn-danger btn-sm delete-btn">Delete</button>
+            </div>
+        </div>
+    </template>
+
+    <template id="userEditTemplate">
+        <div class="user-card border p-3 mb-3 bg-white rounded text-dark text-start">
+            <form class="edit-user-form">
+                <h4 class="edit-unity-label"></h4>
+                <div class="mb-2">
+                    <label class="form-label small">Note:</label>
+                    <input type="text" class="form-control form-control-sm edit-note-input">
+                </div>
+                <div class="mb-2">
+                    <label><input type="checkbox" class="edit-q-priv"> Question Priv</label>
+                    <label class="ms-2"><input type="checkbox" class="edit-u-priv"> User Priv</label>
+                </div>
+                <button type="submit" class="btn btn-success btn-sm">Save</button>
+                <button type="button" class="btn btn-secondary btn-sm cancel-btn">Cancel</button>
+            </form>
+        </div>
     </template>
 </body>
 </html>
