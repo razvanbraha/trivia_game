@@ -172,10 +172,11 @@ fetch("/api/games", fetchData)
         if(!code) {
             throw new Error("Did not receive code from server");
         }
-        console.log(`Game created with code ${code}; initiating Websocket connection`)
-        
+
         // initiate websocket connection to this code
-        ws = new WebSocket(ws_api.uri);
+        const ws_url = `ws://${window.location.host}`;
+        console.log(`Game created with code ${code}; initiating Websocket connection to ${ws_url}`);
+        ws = new WebSocket(ws_url);
 
         // setup socket with handler
         ws_api.init(ws, ws_api.users.CLIENT, handler, () => {
