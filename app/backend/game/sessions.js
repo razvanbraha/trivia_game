@@ -81,6 +81,7 @@ const create = (type) => {
     if(type === sessionTypes.TEACHING) {
         sessions[code] = new teachingGame(data);
         console.log(`[Sessions]: added new session ${code}`);
+        console.log(`[Sessions]: all sessions: `, Object.keys(sessions));
     } else {
         return null;
     }
@@ -98,8 +99,6 @@ const create = (type) => {
 const join = (ws, body) => {
     const code = body.code;
     const name = String(body.name);
-
-    console.log("Currently open sessions: ", Object.keys(sessions));
     
     // game-type agnostic: only matters to the code that runs the game
     // similarly, the code that runs the game doesn't care what session code
