@@ -441,12 +441,14 @@ class teachingGame {
                 ws_api.signals.ERR, 
                 { err: "Questions could not be loaded succcessfully." }
             );
+            return;
         }
         if(db_questions.length < settings.rounds) {   
             this.sendAll(
                 ws_api.signals.ERR, 
                 { err: `Not enough questions in Database. Need ${settings.rounds}, has ${this.questions.length}` }
             );
+            return;
         }
 
         console.log("Test, contents of first question pulled from db:", db_questions[0]);
