@@ -97,36 +97,22 @@
 }
 
 .correctAnswer {
-    grid-area: corr;
-    background-color: rgb(159, 214, 75);
-    width:  100%;
-    height: 100%;
-    border-top-left-radius: 5px;
+    background-color: #d4edda;
+    color: #155724;
 }
 
-.wrongAnswer1 {
-    grid-area: wrong1;
-    background-color: rgb(233, 80, 80);
-    width:  100%;
-    height: 100%;
-    border-top-right-radius: 5px;
+.wrongAnswer1, .wrongAnswer2, .wrongAnswer3 {
+    background-color: #f8d7da;
+    color: #721c24;
 }
 
-.wrongAnswer2 {
-    grid-area: wrong2;
-    background-color: rgb(233, 80, 80);
-    width:  100%;
-    height: 100%;
-    border-bottom-left-radius: 5px;
+/* Custom Scrollbar for Questions */
+#questionListContent::-webkit-scrollbar {
+    width: 6px;
 }
-
-.wrongAnswer3 {
-    grid-area: wrong3;
-    text-align: center;
-    background-color: rgb(233, 80, 80);
-    border-bottom-right-radius: 5px;
-    width:  100%;
-    height: 100%;
+#questionListContent::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
 }
 
 .category {
