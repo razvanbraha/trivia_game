@@ -15,16 +15,16 @@
     <header-component style="flex-shrink: 0;"></header-component>
 
     <main class="row g-0 flex-grow-1 overflow-hidden" style="min-height: 0;">
-        <section id="questionListPanel" class="col-md-6 h-100 d-flex flex-column panel-left p-0">
+        <section id="questionListPanel" class="col-md-6 h-100 d-flex flex-column left-panel p-0">
             <h2 class="text-white py-4 text-center mb-0">Existing Questions</h2>
             <div id="questionListContent" class="overflow-y-auto flex-grow-1 px-4 pb-4">
-                </div>
+            </div>
         </section>
 
-        <section id="addQuestionPanel" class="col-md-6 h-100 d-flex flex-column overflow-y-auto panel-right p-4 bg-light">
+        <section id="addQuestionPanel" class="col-md-6 h-100 d-flex flex-column overflow-y-auto right-panel p-4">
             
             <div class="bg-white p-4 rounded shadow-sm mb-4">
-                <h3 class="text-black fw-bold mb-3">Generate with AI</h3>
+                <h3 class="text-black fw-bold mb-3">Fill with AI</h3>
                 <form id="aiForm" class="d-flex gap-2">
                     <input type="text" id="aiPrompt" name="aiPrompt" class="form-control" placeholder="Describe the question topic..." required/>
                     <button type="submit" class="btn btn-dark">Generate</button>
@@ -72,7 +72,7 @@
     </main>
 
     <template id="questionDisplayTemplate">
-        <div class="questionDisplayContainer mb-3 p-3 rounded shadow-sm">
+        <div class="questionDisplayContainer mb-3 p-3 d-flex flex-column rounded shadow-sm">
             <h4 class="question text-dark"></h4>
             <div class="answers-grid mt-2">
                 <div class="correctAnswer p-2 rounded small mb-1"></div>
@@ -80,6 +80,7 @@
                 <div class="wrongAnswer2 p-2 rounded small mb-1"></div>
                 <div class="wrongAnswer3 p-2 rounded small"></div>
             </div>
+            <p class="ai text-muted small"></p>
             <div class="mt-3 d-flex justify-content-between align-items-center">
                 <span class="badge bg-secondary category-label"></span>
                 <div class="btn-group">
