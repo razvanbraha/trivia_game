@@ -30,7 +30,7 @@ ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
         times = { preview: body.preview, dead: body.dead, live: body.live }
     }
     // display the question text
-    game_helpers.createQuestion(body.text, times.preview);
+    game_helpers.createQuestion(body.text, times.preview, body.num, body.rounds);
 });
 
 ws_api.support(handler, ws_api.signals.CHOICES, (ws, body) => {
@@ -77,9 +77,12 @@ ws_api.init(ws, ws_api.users.CLIENT, handler, () => {
         if(success) {
             console.log(`Successfully joined ${code}`);
             game_helpers.waitingRoom();
+            game_helpers.addHeaders(code, name);
             return;
+        } else {
+            console.log(`Rejected from ${code}`, "Ouch! Rejection hurts");
+            window.location.href = "/api/student/home";
         }
-        console.log(`Rejected from ${code}`, "Ouch! Rejection hurts")
     });
     ws.signal(ws_api.signals.JOIN, body)
 });

@@ -154,6 +154,25 @@ function waitingRoom() {
     `
 }
 
+function addHeaders(code, name) {
+    const header = document.querySelector("header");
+    const title = header.querySelector("h1");
+
+    // Insert code before title
+    const codeLabel = document.createElement('h6');
+    codeLabel.className = "code-label";
+    codeLabel.classList.add("my-0", "me-5")
+    codeLabel.textContent = `Code: ${code}`;
+    header.insertBefore(codeLabel, title);
+
+    // Insert header after title
+    const nameLabel = document.createElement('h6');
+    nameLabel.className = "name-label";
+    nameLabel.classList.add("my-0", "ms-5")
+    nameLabel.textContent = `${name}`;
+    title.insertAdjacentElement("afterend", nameLabel);
+}
+
 /**
  * @author Will Mungas
  * @description Updates the list of players & attaches their kick buttons
@@ -237,10 +256,12 @@ function resetTimer(countdown, timerStart) {
 
 /**
  * Pulls 
- * @param {*} text 
- * @param {*} prev preview time before answers will be sent
+ * @param {*} text Text of the question
+ * @param {*} prev preview time before answers will be received
+ * @param {*} num Question number
+ * @param {*} rounds Number of rounds(questions)
  */
-function createQuestion(text, prev) {
+function createQuestion(text, prev, num, rounds) {
     const template_div = document.createElement('div');
 
     fetch('/public/templates/question-template.html')
@@ -254,7 +275,7 @@ function createQuestion(text, prev) {
             // Tell script in interactive-box.js that the cube exists
             document.dispatchEvent(new Event('boxAdded'));
         }
-        showQuestion(text, prev);
+        showQuestion(text, prev, num, rounds);
     });
 
 
@@ -267,8 +288,10 @@ function createQuestion(text, prev) {
  * 
  * @param {String} questionText Text of the question
  * @param {Number} timerStart Start time of timer (preview time)
+ * @param {Number} num Question number
+ * @param {Number} rounds Number of rounds(questions)
  */
-function showQuestion(questionText, timerStart) {
+function showQuestion(questionText, timerStart, num, rounds) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
@@ -282,15 +305,18 @@ function showQuestion(questionText, timerStart) {
     const question_container = template_question_container.cloneNode(false);
 
     // Clone new elements
+    const question_number = template_question_container.querySelector(".question-number").cloneNode(true);
     const next_question = template_question_container.querySelector(".next-question").cloneNode(true);
     const question_text = template_question_container.querySelector(".question-text").cloneNode(true);
     const countdown = template_question_container.querySelector(".countdown").cloneNode(true);
 
     // Edit elements
+    question_number.querySelector('h5').innerText = `Question ${num}/${rounds}`;
     question_text.querySelector('p').innerText = questionText;
     resetTimer(countdown, timerStart);
 
     // Add new elements
+    question_container.appendChild(question_number);
     question_container.appendChild(next_question);
     question_container.appendChild(question_text);
     question_container.appendChild(countdown);
@@ -630,6 +656,16 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
     const podium = template_question_container.querySelector(".podium").cloneNode(true);
     const box = template_question_container.querySelector(".box").cloneNode(true);
 
+
+    // Your/class learning
+    if(isHost) {
+        const learning = template_question_container.querySelector(".class-learning").cloneNode(true);
+        question_container.appendChild(learning);
+    } else {
+        const learning = template_question_container.querySelector(".your-learning").cloneNode(true);
+        question_container.appendChild(learning);
+    }
+
     // Setup Podium
     for (let idx = 0; idx < 5; idx++) {
         const column = podium.querySelector(`.position-${idx + 1}`);
@@ -662,40 +698,14 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
         }
     });
 
-    if (isHost) {
-        document.documentElement.style.setProperty('--cube-scene-size', '32vh');
-        document.documentElement.style.setProperty('--cube-box-size', '16vh');
-        document.documentElement.style.setProperty('--cube-font-size', '24px');
-    }
+    document.documentElement.style.setProperty('--cube-scene-size', '32vh');
+    document.documentElement.style.setProperty('--cube-box-size', '16vh');
+    document.documentElement.style.setProperty('--cube-font-size', '24px');
 
     // Add new elements
     question_container.appendChild(box);
     // Tell script in interactive-box.js that the box exists
     document.dispatchEvent(new Event('boxAdded'));
-
-    /* REMOVE FOR NOW
-
-    if(isHost) {
-        const playersDiv = document.createElement('div');
-        playersDiv.classList.add('players');
-
-        all_players.forEach((player) => {
-            const playerDiv = document.createElement('div');
-            playerDiv.classList.add('player');
-            const playerName = document.createElement('p');
-            playerName.innerText = `${player.name}: `;
-            const playerPoints = document.createElement('p');
-            playerPoints.innerText = `${player.points} points`;
-
-            playerDiv.appendChild(playerName);
-            playerDiv.appendChild(playerPoints)
-
-            playersDiv.appendChild(playerDiv);
-        })
-        question_container.appendChild(playersDiv);
-    }
-
-    */
 
     if(!isHost) {
         // Get current player's rank
@@ -725,6 +735,7 @@ export default {
     clearContent,
     createLobby,
     waitingRoom,
+    addHeaders,
     updatePlayers,
     getSettings,
     createQuestion,

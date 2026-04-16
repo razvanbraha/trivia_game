@@ -120,7 +120,8 @@ const signals = {
             "num",
             "preview",
             "dead",
-            "live"
+            "live", 
+            "rounds"
         ]
     },
     // sent by the server to give clients the answer choices available for a question
