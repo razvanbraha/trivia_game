@@ -29,7 +29,7 @@ const shib_middleware = require('../middleware/shib-middeware');
  * @returns 403 if user lacks teacher privileges
  */
 teacher_page_router.get("/questions", shib_middleware, (req, res) => {
-    res.sendFile(path.join(templates_dir, "teacher-question-manage.html"));
+    res.sendFile(path.join(templates_dir, "menu-question.html"));
 });
 
 
@@ -43,7 +43,7 @@ teacher_page_router.get("/questions", shib_middleware, (req, res) => {
  * @returns 403 if user lacks teacher privileges
  */
 teacher_page_router.get("/users", shib_middleware, (req, res) => {
-    res.sendFile(path.join(templates_dir, "teacher-user-manage.html"));
+    res.sendFile(path.join(templates_dir, "menu-user.html"));
 
 });
 
@@ -59,7 +59,7 @@ teacher_page_router.get("/users", shib_middleware, (req, res) => {
  * @returns 403 if user lacks teacher privileges
  */
 teacher_page_router.get("/home", shib_middleware, (req, res) => {
-    res.sendFile(path.join(templates_dir, "teacher-menu.html"));
+    res.sendFile(path.join(templates_dir, "dash-teacher.html"));
 });
 
 //--- EXPORTS -----------------------------------------------------------------
