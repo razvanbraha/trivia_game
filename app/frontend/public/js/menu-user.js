@@ -26,11 +26,12 @@ function renderUserDisplay(container, user) {
     container.innerHTML = "";
     const instance = displayTemplate.content.cloneNode(true);
 
-    instance.querySelector(".unityID").textContent = user.unityID;
+    
     instance.querySelector(".userID").textContent = `ID: ${user.userID}`;
-    instance.querySelector(".note").textContent = user.note || "No notes.";
-    instance.querySelector(".privileges").textContent = 
-        `Privileges: Question [${user.questionPriv ? '✓' : '✗'}] User: [${user.userPriv ? '✓' : '✗'}]`;
+    instance.querySelector(".unityID").textContent = user.unityID;
+    instance.querySelector(".note").textContent = user.note || "(none)";
+    instance.querySelector(".u-priv").textContent = `[${user.questionPriv ? '✓' : '✗'}] Question`;
+    instance.querySelector(".q-priv").textContent = `[${user.userPriv ? '✓' : '✗'}] User`;
 
     instance.querySelector(".edit-btn").onclick = () => renderUserEdit(container, user);
     
@@ -44,6 +45,7 @@ function renderUserEdit(container, user) {
     container.innerHTML = "";
     const instance = editTemplate.content.cloneNode(true);
 
+    instance.querySelector(".userID").textContent = `ID: ${user.userID}`;
     instance.querySelector(".edit-unity-label").textContent = `Editing: ${user.unityID}`;
     const noteInput = instance.querySelector(".edit-note-input");
     const qPriv = instance.querySelector(".edit-q-priv");

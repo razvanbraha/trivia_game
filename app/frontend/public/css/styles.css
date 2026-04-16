@@ -93,3 +93,43 @@ button:hover {
     text-align: left;
     width: 75%;
 }
+
+/* Styling for scrollbar in users page - from Gemini */
+
+/* Target only the scrollable content area */
+#userListContent {
+    /* Firefox support */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+}
+
+/* Chrome, Edge, and Safari support */
+#userListContent::-webkit-scrollbar {
+    width: 8px; /* Width of the entire scrollbar */
+}
+
+#userListContent::-webkit-scrollbar-track {
+    background: transparent; /* Makes the track invisible */
+}
+
+#userListContent::-webkit-scrollbar-thumb {
+    background-color: rgba(211, 211, 211, 0.5); /* Light grey with 50% transparency */
+    border-radius: 10px;       /* Makes it look like a pill */
+    border: 2px solid transparent; /* Acts as padding around the thumb */
+}
+
+#userListContent::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.8); /* Brightens when hovered */
+}
+
+/* additional: make scrollbar disappear when not hovered */
+
+/* Initially hide the thumb color */
+#userListContent::-webkit-scrollbar-thumb {
+    background-color: transparent;
+}
+
+/* Show it when hovering over the panel */
+#userListPanel:hover #userListContent::-webkit-scrollbar-thumb {
+    background-color: rgba(211, 211, 211, 0.5);
+}
