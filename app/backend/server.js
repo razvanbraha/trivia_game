@@ -25,8 +25,8 @@ const ws_api = require('./ws-api');
 const templates_dir = path.join(__dirname, "../frontend/templates");
 const static_dir = path.join(__dirname, "../frontend/public");
 
-// port to run on 
-const PORT = 8080;
+// internal port to run on 
+const PORT = process.env.BACKEND_PORT;
 
 //--- START APP ---------------------------------------------------------------
 
@@ -84,7 +84,7 @@ const server = http.createServer(app);
 // For testing - only start if running main(no need to start server if testing)
 if (require.main === module) {
     server.listen(PORT, () => {
-        console.log(`Server running at http://localhost:${PORT}`)
+        console.log(`Server running on internal port ${PORT}`);
         setupWSS(server);
     });
 }
