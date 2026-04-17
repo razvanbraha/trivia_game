@@ -1,11 +1,11 @@
 See also (link to user guide), (link to deployment guide)
 # Contents
-* [Required Technologies](#required-technologies)
+* [Project Technologies](#project-technologies)
   * [Developer tools](#developer-tools)
-  * [Environment](#environment)
-  * [AI integration](#ai-integration)
   * [Local Deployment](#local-deployment)
 * [Design Overview](#design-overview)
+	* [High Level](high-level)
+	* [Docker](docker)
 * [Shibboleth](#shibboleth)
 * [Page structure](#page-structure)
 * [API Calls](#api-calls)
@@ -27,19 +27,6 @@ Recommended
 	* [Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker)
 	* [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
 * Familiarity with basic docker commands
-## Environment(TODO RENAME)
-
-The Sustainable Box Trivia game('the application') consists of several containers all run in **Docker** containers. Therefore the following environment requires no setup other than what is handled by Docker.
-
-The application uses [apacheshib](https://github.com/ncstate-csc/apacheshib), a preconfigured docker image which acts as a [reverse proxy](https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/). This receives all external requests before routing them internally within the docker compose stack. The image also allows the application to verify user identity with NCSU's shibboleth service when necessary.
-
-The 'backend' is primarily coded in **Javascript**, using **Node JS**. The API is made accessible via an **Express** server. We also use a **websocket** server in parallel, in order to handle communication associated with gameplay.
-
-The database is a **mysql** instance (TODO update once will finishes changes)
-
-The 'frontend' serves css and client side js from an nginx web server.
-
-Our project also integrates Gemini ai in order to assist teachers with question generation.
 ## Local Deployment
 
 ### Development environment
@@ -69,9 +56,23 @@ Then copy the newly created key into .env like `GEMINI_KEY=AIzaSyCL-2g2AQ.....`.
 This is all you need to do to setup the AI integration, however, the number of requests will be fairly limited with a free account. If you would like to increase the limit, you may Set up Billing on the same API key you just created.
 ### Run project on docker
 # Design Overview
+## High Level
 (High level design diagram)
 
+## Docker
 (docker-compose.yml image)
+
+The Sustainable Box Trivia game('the application') consists of several containers all run in **Docker** containers. Therefore the following environment requires no setup other than what is handled by Docker.
+
+The application uses [apacheshib](https://github.com/ncstate-csc/apacheshib), a preconfigured docker image which acts as a [reverse proxy](https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/). This receives all external requests before routing them internally within the docker compose stack. The image also allows the application to verify user identity with NCSU's shibboleth service when necessary.
+
+The 'backend' is primarily coded in **Javascript**, using **Node JS**. The API is made accessible via an **Express** server. We also use a **websocket** server in parallel, in order to handle communication associated with gameplay.
+
+The database is a **mysql** instance (TODO update once will finishes changes)
+
+The 'frontend' serves css and client side js from an nginx web server.
+
+Our project also integrates Gemini ai in order to assist teachers with question generation.
 # Repository structure 
 	app
 		backend
