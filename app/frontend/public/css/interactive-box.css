@@ -74,12 +74,12 @@
 }
 
 /* Source: https://3dtransforms.desandro.com/cube */
-.cube__face--front  { background: linear-gradient(0deg, red var(--front-percentage), white calc(100% - var(--front-percentage))); transform: rotateY(  0deg) translateZ(var(--cube-box-size));}
-.cube__face--right  { background: linear-gradient(0deg, blue var(--right-percentage),white calc(100% - var(--right-percentage))); transform: rotateY( 90deg) translateZ(var(--cube-box-size));}
-.cube__face--back   { background: linear-gradient(0deg, green var(--back-percentage), white calc(100% - var(--back-percentage))); transform: rotateY(180deg) translateZ(var(--cube-box-size));}
-.cube__face--left   { background: linear-gradient(0deg, gold var(--left-percentage), white calc(100% - var(--left-percentage))); transform: rotateY(-90deg) translateZ(var(--cube-box-size));}
-.cube__face--top   { background: linear-gradient(0deg, magenta var(--top-percentage), white calc(100% - var(--top-percentage))); transform: rotateX( 90deg) translateZ(var(--cube-box-size)); }
-.cube__face--bottom { background: linear-gradient(0deg, orange var(--bottom-percentage), white calc(100% - var(--bottom-percentage))); transform: rotateX(-90deg) translateZ(var(--cube-box-size));}
+.cube__face--front  { background: linear-gradient(0deg, red, red var(--front-percentage), white var(--front-percentage), white); transform: rotateY(  0deg) translateZ(var(--cube-box-size));}
+.cube__face--right  { background: linear-gradient(0deg, blue, blue var(--right-percentage),white var(--right-percentage), white); transform: rotateY( 90deg) translateZ(var(--cube-box-size));}
+.cube__face--back   { background: linear-gradient(0deg, green, green var(--back-percentage), white var(--back-percentage), white); transform: rotateY(180deg) translateZ(var(--cube-box-size));}
+.cube__face--left   { background: linear-gradient(0deg, gold, gold var(--left-percentage), white var(--left-percentage), white); transform: rotateY(-90deg) translateZ(var(--cube-box-size));}
+.cube__face--top   { background: linear-gradient(0deg, magenta, magenta var(--top-percentage), white var(--top-percentage), white); transform: rotateX( 90deg) translateZ(var(--cube-box-size)); }
+.cube__face--bottom { background: linear-gradient(0deg, orange, orange var(--bottom-percentage), white var(--bottom-percentage), white); transform: rotateX(-90deg) translateZ(var(--cube-box-size));}
 
 .cube.show-front  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY(   0deg); }
 .cube.show-right  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY( -90deg); }
