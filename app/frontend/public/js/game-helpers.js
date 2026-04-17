@@ -649,10 +649,6 @@ function showLeaderboard(current_player, all_players, isHost, category_accuracy,
                 stats_label.innerText = `Category Unselected`;
             } else {
                 document.documentElement.style.setProperty(colors[idx], category_accuracy[idx].accuracy + '%');
-                if (category_accuracy[idx].accuracy > 50) {
-                    box_side.style.color = 'white';
-                }
-
                 stats_label.innerText = `${category_stat.num_correct}/${category_stat.num_questions} ${category_stat.accuracy}% accuracy`;
             }
         });
@@ -717,9 +713,6 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
             stats_label.innerText = `Category Unselected`;
         } else {
             document.documentElement.style.setProperty(colors[idx], category_accuracy[idx].accuracy + '%');
-            if (category_accuracy[idx].accuracy > 50) {
-                box_side.style.color = 'white';
-            }
             stats_label.innerText = `${category_stat.num_correct}/${category_stat.num_questions} ${category_stat.accuracy}% accuracy`;
         }
     });
