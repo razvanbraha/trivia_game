@@ -37,7 +37,7 @@ game_page_router.get("/multi/player", (req, res) => {
 });
 
 game_page_router.get("/study", (req, res) => {
-    res.sendFile(path.join(templates_dir, "sg-player.html"));
+    res.sendFile(path.join(templates_dir, "sg-host.html"));
 });
 
 //--- EXPORTS -----------------------------------------------------------------

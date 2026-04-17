@@ -88,7 +88,7 @@ async function startServer() {
     setupQuestions()
     .then(() => setupUsers())
     .then(() => server.listen(PORT, () => {
-        console.log(`Server running at http://localhost:${PORT}`)
+        console.log(`Server running at http://localhost`)
         setupWSS(server);
     }))
     .catch((err) => {
