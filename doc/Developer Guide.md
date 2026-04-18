@@ -68,7 +68,7 @@ The application uses [apacheshib](https://github.com/ncstate-csc/apacheshib), a 
 
 The 'backend' is primarily coded in **Javascript**, using **Node JS**. The API is made accessible via an **Express** server. We also use a **websocket** server in parallel, in order to handle communication associated with gameplay.
 
-The database is a **mysql** instance (TODO update once will finishes changes)
+The database is a **mysql** instance holding user and question data, accessible inside docker to the 'backend'.
 
 The 'frontend' serves css and client side js from an nginx web server.
 
