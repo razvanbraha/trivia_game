@@ -223,7 +223,7 @@ class teachingGame {
     join(ws, name) {
         if (this.state !== teachingGame.STATES.LOBBY) {
             ws.respond(ws_api.signals.JOIN, false);
-            this.log(`player ${this.players.length} (${name}) join rejected: invalid name`);
+            this.log(`player ${this.players.length} (${name}) join rejected: game already started`);
             return;
         }
 

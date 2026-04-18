@@ -1,6 +1,6 @@
 //--- HEADER ------------------------------------------------------------------
 /**
- * @file host.js
+ * @file sg-host.js
  * 
  * @author Will Mungas, Riley Wickens
  * 
@@ -9,7 +9,7 @@
  */
 //--- INCLUDE -----------------------------------------------------------------
 
-const ws_api = globalThis.ws_api;
+const ws_api = window.ws_api;
 import game_helpers from "./study-game-helpers.js";
 
 //--- SETUP -------------------------------------------------------------------
@@ -53,7 +53,7 @@ ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
     }
     current_state = game_states.QUESTION_SERVED;
 
-    game_helpers.createQuestion(body.text, body.preview);
+    game_helpers.createQuestion(body.text, body.preview, body.num, body.rounds);
 });
 
 ws_api.support(handler, ws_api.signals.CHOICES,  (ws, body) => {
@@ -157,7 +157,9 @@ fetch("/api/games", fetchData)
         console.log(`Game created with code ${code}; initiating Websocket connection`)
         
         // initiate websocket connection to this code
-        ws = new WebSocket(ws_api.uri);
+        const ws_url = `wss://${window.location.host}/api/`;
+        console.log(`Game created with code ${code}; initiating Websocket connection to ${ws_url}`);
+        ws = new WebSocket(ws_url);
 
         // setup socket with handler
         ws_api.init(ws, ws_api.users.CLIENT, handler, () => {

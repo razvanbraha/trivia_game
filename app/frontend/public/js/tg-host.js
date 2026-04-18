@@ -1,6 +1,6 @@
 //--- HEADER ------------------------------------------------------------------
 /**
- * @file host.js
+ * @file tg-host.js
  * 
  * @author Will Mungas
  * 
