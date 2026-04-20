@@ -787,7 +787,8 @@ function downloadStats(player, category_accuracy, all_players, questions, isHost
         });
 
         for (const cat in categories) {
-            text += `\nCategory ${cat}\n`;
+            const categoryName = CATEGORY_NAMES[cat] || `Category ${cat}`;
+            text += `\n${categoryName}\n`;
             text += `--------------------------\n`;
 
             categories[cat].forEach((q, i) => {
@@ -801,15 +802,34 @@ function downloadStats(player, category_accuracy, all_players, questions, isHost
         text += `----------------------------------\n`;
         text += `Total Players: ${all_players.length}\n\n`;
 
-        text += `Question Accuracy:\n`;
-        question_accuracies.forEach((acc, idx) => {
-            const questionText = questions && questions[idx] ? questions[idx].text : `Question ${idx + 1}`;
-            const correctAnswer = questions[idx].choices[questions[idx].correct_idx];
-            
-            text += `\nQ${idx + 1}: ${questionText}\n`;
-            text += `Correct Answer: ${correctAnswer}\n`;
-            text += `Accuracy: ${acc}%\n`;
+        const categories = {};
+
+        questions.forEach((q, idx) => {
+            const cat = q.category;
+
+            if (!categories[cat]) {
+                categories[cat] = [];
+            }
+
+            categories[cat].push({
+                question: q.text,
+                correctAnswer: q.choices[q.correct_idx],
+                accuracy: question_accuracies[idx]
+            });
         });
+
+        for (const cat in categories) {
+            const categoryName = CATEGORY_NAMES[cat] || `Category ${cat}`;
+
+            text += `\n${categoryName}\n`;
+            text += `--------------------------\n`;
+
+            categories[cat].forEach((q, i) => {
+                text += `Q${i + 1}: ${q.question}\n`;
+                text += `Correct Answer: ${q.correctAnswer}\n`;
+                text += `Class Accuracy: ${q.accuracy}%\n\n`;
+            });
+        }
     }
 
     text += `\nCategory Performance Summary:\n`;
