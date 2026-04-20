@@ -82,10 +82,12 @@ const create = (type) => {
     if(type === sessionTypes.TEACHING) {
         sessions[code] = new teachingGame(data);
         console.log(`[Sessions]: added new teaching game session ${code}`);
+        console.log(`[Sessions]: all sessions: `, Object.keys(sessions));
     }
     else if (type === sessionTypes.STUDY) {
         sessions[code] = new studyGame(data);
         console.log(`[Sessions]: added new study game session ${code}`);
+        console.log(`[Sessions]: all sessions: `, Object.keys(sessions));
     } else {
         return null;
     }

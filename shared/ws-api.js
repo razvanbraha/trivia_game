@@ -199,9 +199,6 @@ const signals = {
     },
 }
 
-// websocket connection uri
-const uri = "ws://127.0.0.1:8080";
-
 //--- HELPERS ------------------------------------------------------------------
 
 /**
@@ -444,7 +441,6 @@ const support = (handler, signal, action) => {
 const ws_api = {
     init, 
     support,
-    uri,
     signals,
     choices,
     games,

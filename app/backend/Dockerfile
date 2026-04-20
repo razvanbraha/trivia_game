@@ -15,7 +15,7 @@ COPY app/backend .
 RUN if [ -f package.json ]; then \
       npm install; \
     else \
-      npm init -y && npm install express mysql2; \
+      npm init -y && npm install express mariadb; \
     fi
 
 EXPOSE 8080

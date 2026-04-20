@@ -13,7 +13,7 @@
 const ws_api = require("../ws-api");
 
 const utils = require('./utils');
-const questionsDB = require("../db_queries/questions-db");
+const questionDAO = require("../db/question-dao");
 
 
 //--- OBJECT ---------------------------------------------------------------
@@ -93,7 +93,7 @@ class studyGame {
     };
 
     // client-related
-    host = null; // the host WebSocket connection
+    host = null; // the host connection in format:
     // {ws, name, points, List(answer idx)}
     
     // signal handler: map of signal names to functions with the signature
@@ -188,6 +188,7 @@ class studyGame {
      */
     join(ws, name) {
         if (this.state !== studyGame.STATES.LOBBY) {
+            ws.respond(ws_api.signals.JOIN, false);
             ws.err("Game already started.");
             return;
         }
@@ -333,7 +334,7 @@ class studyGame {
         // Load questions & error check
         let db_questions;
         try {
-            db_questions = await questionsDB.selectRandQuestions(settings.rounds, settings.categories);
+            db_questions = await questionDAO.selectRandQuestions(settings.rounds, settings.categories);
         } catch (e) {
             this.sendAll(
                 ws_api.signals.ERR, 
@@ -411,7 +412,8 @@ class studyGame {
                 num: i + 1,
                 preview: this.settings.preview,
                 dead: this.settings.dead,
-                live: this.settings.live
+                live: this.settings.live,
+                rounds: this.settings.rounds
             }
         );
 

@@ -13,7 +13,7 @@
 const ws_api = require("../ws-api");
 
 const utils = require('./utils');
-const questionsDB = require("../db_queries/questions-db");
+const questionDAO = require("../db/question-dao");
 
 
 //--- OBJECT ---------------------------------------------------------------
@@ -223,7 +223,7 @@ class teachingGame {
     join(ws, name) {
         if (this.state !== teachingGame.STATES.LOBBY) {
             ws.respond(ws_api.signals.JOIN, false);
-            this.log(`player ${this.players.length} (${name}) join rejected: invalid name`);
+            this.log(`player ${this.players.length} (${name}) join rejected: game already started`);
             return;
         }
 
@@ -412,18 +412,20 @@ class teachingGame {
         // Load questions & error check
         let db_questions;
         try {
-            db_questions = await questionsDB.selectRandQuestions(settings.rounds, settings.categories);
+            db_questions = await questionDAO.selectRandQuestions(settings.rounds, settings.categories);
         } catch (e) {
             this.sendAll(
                 ws_api.signals.ERR, 
                 { err: "Questions could not be loaded succcessfully." }
             );
+            return;
         }
         if(db_questions.length < settings.rounds) {   
             this.sendAll(
                 ws_api.signals.ERR, 
-                { err: `Not enough questions in Database. Need ${settings.rounds}, has ${this.questions.length}` }
+                { err: `Not enough questions in Database. Need ${settings.rounds}, has ${db_questions.length}` }
             );
+            return;
         }
 
         console.log("Test, contents of first question pulled from db:", db_questions[0]);
