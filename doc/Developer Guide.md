@@ -1,4 +1,6 @@
-See also (link to user guide), (link to deployment guide)
+For info on how to use our application, see (link to user guide).
+
+For info on how to deploy this application to a server, see (link to deployment guide).
 # Contents
 * [Project Technologies](#project-technologies)
   * [Developer tools](#developer-tools)
@@ -15,6 +17,9 @@ See also (link to user guide), (link to deployment guide)
 	* [Code and Usage](#code-and-usage)
 * [Database Structure](#database-structure)
 * [Testing](#testing)
+	* [Setup Tests](#setup-tests)
+	* [Run Tests](#run-tests)
+	* [Writing Tests](#writing-tests)
 
 # Project Technologies
 ## Developer tools
@@ -22,6 +27,8 @@ Required
 * [git](https://git-scm.com/install/)
 * [Docker desktop](https://www.docker.com/products/docker-desktop/)
 * [Visual Studio Code](https://code.visualstudio.com/)
+Required for Testing
+* [Node JS - LTS 24](https://nodejs.org/en/download)
 Recommended
 * VS Code extensions
 	* [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
@@ -63,7 +70,7 @@ This is all you need to do to setup the AI integration, however, the number of r
 ![](./img/high_level_design.png)
 
 ## Docker
-See [/docker-compose.yml](/docker-compose.yml)
+See [docker-compose.yml](/docker-compose.yml)
 
 The Sustainable Box Trivia game('the application') consists of several containers all run in **Docker** containers. Therefore the following environment requires no setup other than what is handled by Docker.
 
@@ -112,8 +119,24 @@ Upon returning from the login page, any requests made by the browser will now co
 
 # API Calls
 
+All API calls are routed through an [express](https://expressjs.com/en/guide/routing.html) server, which then are subdivided into several different routers. 
 
+All routes below are prepended by \<host\>/api/
+![](./img/api-code-1.png)
 
+Pages are served by the paths `/teacher`, `/student`, and `/play` (aside from index.html). Details on these pages and their scripts can be found in [Frontend Structure](#frontend-structure). 
+
+API routes are served by the routes `/questions`, `/users`, `/ai`, and `/games`.
+
+Overview of API:
+* GET/POST/PUT/DELETE /api/questions - CRUD operations for questions
+* GET/POST/PUT/DELETE /api/users - CRUD operations for users
+* POST /api/ai/gemini - Prompt gemini AI for question generation
+* GET /api/games/:code - Check if game session exists
+	* Used before opening websocket 
+* POST /api/games/ - Create a game session
+
+All the API routes are well documented, so refer to those files in `/app/backend/rest-api/` for more details.
 # Web sockets
 Our websocket protocol is handled primarily by the file ws-api.js, which is copied via docker into both the frontend web server and backend. This provides an interface that the rest of the scripts interact with, as an extension of the base javascript websockets.
 
@@ -280,3 +303,32 @@ expect(A, action) - send(A) - respond(A) - action(success)
 # Database Structure
 
 # Testing
+
+## Setup Tests
+
+Note that testing is done locally(not using docker) and as such, [Node JS - LTS 24](https://nodejs.org/en/download) is required. 
+
+Before running tests, navigate(in a terminal) to 
+
+`/app/backend/` 
+
+and run
+
+`npm install`
+
+to install all required dependencies, including Jest, our testing framework.
+
+## Run Tests
+
+To run the test script, run(inside `/app/backend`)
+
+`npm test`
+
+This runs a script configured in package.json which runs the tests and generates a coverage reports.
+## Writing Tests
+
+Tests exist in the test folder `/app/backend/tests`. 
+
+Since testing is currently done without docker, note that database tests must mock the returns from database queries.
+
+For more info on how to write tests, see [Jest Docs](https://jestjs.io/docs/getting-started).
