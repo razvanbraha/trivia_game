@@ -29,10 +29,6 @@ Recommended
 * Familiarity with basic docker commands
 ## Local Deployment
 
-### Development environment
-
-vscode, docker
-
 ### Clone Repository
 
 Use [git](https://git-scm.com/install/) to clone this repository by typing in `git clone <URL>` with a terminal inside your preferred project folder.
@@ -42,9 +38,13 @@ For info on how to do this, see [GitHub Docs](https://docs.github.com/en/reposit
 
 In the root of the repository, copy the `.env.template` file into a `.env` file at the same location.
 
-(TODO PIC OF .env.template)
+![../.env.template](./img/env_template.png)
 
-Inside the new `.env`, most of the variables are configured for you. However, you will need to set (TODO)
+Inside the new `.env`, most of the variables are configured for you. However, you will need to set MYSQL_ROOT_PASSWORD, SERVER_NAME, GEMINI_KEY, and ADMIN_PASSWORD.
+
+MYSQL_ROOT_PASSWORD can be any arbitrary password, but make ADMIN_PASSWORD something you will remember, as it will be required to add/edit/delete users in the system.
+
+SERVER_NAME should be localhost for local development, for deployment see [the deployment guide.](#)
 ### AI integration
 
 This is not required to add questions manually, but without a valid API key, question generation will cause errors if used.
@@ -57,10 +57,10 @@ This is all you need to do to setup the AI integration, however, the number of r
 ### Run project on docker
 # Design Overview
 ## High Level
-(High level design diagram)
+![](./img/high_level_design.png)
 
 ## Docker
-(docker-compose.yml image)
+See [/docker-compose.yml](/docker-compose.yml)
 
 The Sustainable Box Trivia game('the application') consists of several containers all run in **Docker** containers. Therefore the following environment requires no setup other than what is handled by Docker.
 
@@ -97,6 +97,7 @@ Our project also integrates Gemini ai in order to assist teachers with question 
 # API Calls
 
 # Web sockets
+Note that some signals in ws-api.js are unused, but all the used signals are documented in 
 
 # Database Structure
 
