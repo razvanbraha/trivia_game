@@ -98,7 +98,7 @@ Our project also integrates Gemini ai in order to assist teachers with question 
 
 # Web sockets
 Note that some signals in ws-api.js are unused, but all the used signals are documented in 
-
+![](./img/websockets.png)
 # Database Structure
 
 # Testing
