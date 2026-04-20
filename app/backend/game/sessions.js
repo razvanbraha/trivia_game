@@ -10,6 +10,7 @@
 
 const ws_api = require("../ws-api");
 const {teachingGame} = require("./teaching-game");
+const {studyGame} = require("./study-game");
 
 //--- CONSTANTS ---------------------------------------------------------------
 
@@ -80,7 +81,13 @@ const create = (type) => {
     //TODO multiple game types
     if(type === sessionTypes.TEACHING) {
         sessions[code] = new teachingGame(data);
-        console.log(`[Sessions]: added new session ${code}`);
+        console.log(`[Sessions]: added new teaching game session ${code}`);
+        console.log(`[Sessions]: all sessions: `, Object.keys(sessions));
+    }
+    else if (type === sessionTypes.STUDY) {
+        sessions[code] = new studyGame(data);
+        console.log(`[Sessions]: added new study game session ${code}`);
+        console.log(`[Sessions]: all sessions: `, Object.keys(sessions));
     } else {
         return null;
     }
@@ -129,6 +136,9 @@ const remove = () => {
     for(const code in sessions) {
         const session = sessions[code];
         if(session.state == teachingGame.STATES.ENDED) {
+            delete sessions[code];
+        }
+        else if(session.state == studyGame.STATES.ENDED) {
             delete sessions[code];
         } else if(now - session.start_time > SESSION_AUTO_EXPIRE_TIME) {
             try {

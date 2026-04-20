@@ -1,16 +1,16 @@
 //--- HEADER ------------------------------------------------------------------
 /**
- * @file tg-host.js
+ * @file sg-host.js
  * 
- * @author Will Mungas
+ * @author Will Mungas, Riley Wickens
  * 
- * Script to run on the host version of the teaching game page
+ * Script to run on the host version of the Study game page
  *  
  */
 //--- INCLUDE -----------------------------------------------------------------
 
 const ws_api = window.ws_api;
-import game_helpers from "./game-helpers.js";
+import game_helpers from "./study-game-helpers.js";
 
 //--- SETUP -------------------------------------------------------------------
 
@@ -29,11 +29,9 @@ const game_states = {
 let current_state = game_states.LOBBY;
 
 let code;
-let players = [];
 let ws;
 
 // user-visible settings
-//TODO: Need to change minimum settings, shouldn't be able to set time to 0 seconds, & shouldn't be able to start game with no players
 let settings = {
     rounds: 0, // how many questions to send 
     categories: [], // which categories to pull from
@@ -47,23 +45,6 @@ let settings = {
 
 // signal handler object: maps signal ids to a handler function
 let handler = {};
-
-function kick(name) {
-    ws.expect(ws_api.signals.KICK, (success) => {
-        console.log(success ? `Kicked ${name}` : `Failed to kick ${name}`);
-        if(success) {
-            players.splice(players.indexOf(name), 1);
-            game_helpers.updatePlayers(players, kick);
-        }
-    });
-    ws.signal(ws_api.signals.KICK, {name});
-}
-
-ws_api.support(handler, ws_api.signals.JOINEE, (ws, body) => {
-    players.push(body.name);
-    console.log(`Player ${body.name} joined; players:`, players);
-    game_helpers.updatePlayers(players, kick);
-});
 
 ws_api.support(handler, ws_api.signals.QUESTION, (ws, body) => {
     if(current_state != game_states.WAITING && current_state != game_states.RESULTS_SERVED) {
@@ -91,8 +72,10 @@ ws_api.support(handler, ws_api.signals.READY,  (ws, body) => {
         ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
     }
     current_state = game_states.RESPONSE_LIVE;
-
-    game_helpers.answersClickable(settings.live, true, null);
+    //Change to false
+    game_helpers.answersClickable(settings.live, (idx) => {
+        ws.signal(ws_api.signals.ANSWER, {idx});
+    });
 });
 
 ws_api.support(handler, ws_api.signals.DONE,  (ws, body) => {
@@ -102,10 +85,9 @@ ws_api.support(handler, ws_api.signals.DONE,  (ws, body) => {
     }
     current_state = game_states.RESPONSE_CLOSED;
 
-    // TODO put function in button callbacks? may need to reorder the file
-    game_helpers.showCorrectAnswer(-1, body.correct_idx, true, () => {
+    game_helpers.showCorrectAnswer(body.data_you.answers.at(-1), body.correct_idx, () => {
         ws.signal(ws_api.signals.CONTINUE, {});
-    }, body.class_accuracy_percent);
+    });
 });
 
 ws_api.support(handler, ws_api.signals.RESULTS,  (ws, body) => {
@@ -115,7 +97,7 @@ ws_api.support(handler, ws_api.signals.RESULTS,  (ws, body) => {
     }
     current_state = game_states.RESULTS_SERVED;
 
-    game_helpers.showLeaderboard(body.data_you, body.data_all, true, body.category_accuracy, () => {
+    game_helpers.showLeaderboard(body.data_you, body.data_all, body.category_accuracy, () => {
         current_state = game_states.WAITING;
         ws.signal(ws_api.signals.NEXTROUND, {});
     });
@@ -130,7 +112,7 @@ ws_api.support(handler, ws_api.signals.FINAL,  (ws, body) => {
     }
     current_state = game_states.FINAL_RESULTS_SERVED;
 
-    game_helpers.showEndLeaderboard(body.data_you, body.data_all, true, body.category_accuracy, body.questions, body.question_accuracies);
+    game_helpers.showEndLeaderboard(body.data_you, body.data_all, body.category_accuracy);
     
 });
 
@@ -154,7 +136,7 @@ ws_api.support(handler, ws_api.signals.GAMEOVER,  (ws, body) => {
 const fetchData = {
     method: "POST",
     headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({type: "teaching"})
+    body: JSON.stringify({type: "study"})
 };
 
 // initiate the game:
@@ -172,7 +154,8 @@ fetch("/api/games", fetchData)
         if(!code) {
             throw new Error("Did not receive code from server");
         }
-
+        console.log(`Game created with code ${code}; initiating Websocket connection`)
+        
         // initiate websocket connection to this code
         const ws_url = `wss://${window.location.host}/api/`;
         console.log(`Game created with code ${code}; initiating Websocket connection to ${ws_url}`);
@@ -187,7 +170,7 @@ fetch("/api/games", fetchData)
             ws.expect(ws_api.signals.JOIN, (success) => {
                 if(success) {
                     console.log(`Successfully joined ${code}`);
-                    game_helpers.createLobby(code, () => {
+                    game_helpers.createLobby(() => {
                         settings = game_helpers.getSettings();
 
                         current_state = game_states.WAITING;
@@ -199,7 +182,6 @@ fetch("/api/games", fetchData)
                             live: settings.live
                         });
                     });
-                    game_helpers.addHeaders(code, "Host");
                     return;
                 }
                 console.log(`Rejected from ${code}`, "Ouch! Rejection hurts")

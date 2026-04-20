@@ -278,15 +278,15 @@ body {
 
 /* ------------- Student Leaderboard ------------- */
 .box {
-    margin-top: 5vh;
-    margin-bottom: 5vh;
+    margin-top: 2vh;
+    margin-bottom: 2vh;
 }
 
 .self-ranking {
     font-size: 25px;
     text-align: center;
     background-color: rgba(255, 255, 255, 0.3);
-    height: 10vh;
+    min-height: 10vh;
     padding-top: 10px;
     padding-left: 10px;
     padding-right: 10px;
@@ -381,6 +381,20 @@ body {
 }
 
 /* ------------- Final Leaderboard ------------- */
+
+.your-learning, .class-learning {
+    font-size: 25px;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.3);
+    height: 6vh;
+    padding-top: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 5px;
+    color: white;
+    margin-top: 2vh;
+}
+
 
 .podium {
     display: flex;
