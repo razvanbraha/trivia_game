@@ -58,7 +58,7 @@ ws_api.support(handler, ws_api.signals.RESULTS, (ws, body) => {
 });
 
 ws_api.support(handler, ws_api.signals.FINAL, (ws, body) => {
-    game_helpers.showEndLeaderboard(body.data_you, body.data_all, false, body.category_accuracy);
+    game_helpers.showEndLeaderboard(body.data_you, body.data_all, false, body.category_accuracy, body.questions);
 });
 
 
