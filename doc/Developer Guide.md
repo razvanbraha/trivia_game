@@ -56,7 +56,7 @@ In the root of the repository, copy the `.env.template` file into a `.env` file 
 
 Inside the new `.env`, most of the variables are configured for you. However, you will need to set MYSQL_ROOT_PASSWORD, SERVER_NAME, GEMINI_KEY, and ADMIN_PASSWORD.
 
-MYSQL_ROOT_PASSWORD can be any arbitrary password, but make ADMIN_PASSWORD something you will remember, as it will be required to add/edit/delete users in the system.
+MYSQL_ROOT_PASSWORD can be any arbitrary password, but make ADMIN_PASSWORD something you will remember. It will be required every time you try to add/edit/delete users in the system.
 
 SERVER_NAME should be localhost for local development, for deployment see [the deployment guide.](#)
 ### AI integration
