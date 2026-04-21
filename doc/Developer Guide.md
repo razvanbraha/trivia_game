@@ -10,16 +10,20 @@ For info on how to deploy this application to a server, see (link to deployment 
 	* [Docker](#docker)
 * [Shibboleth](#shibboleth)
 * [Frontend structure](#frontend-structure)
+	* [Game client scripts](#game-client-scripts)
 * [API Calls](#api-calls)
 * [Web sockets](#web-sockets)
 	* [Connection](#connection)
 	* [Protocol](#protocol)
 	* [Code and Usage](#code-and-usage)
 * [Database Structure](#database-structure)
+	* [Users](#users)
+	* [Questions](#questions)
 * [Testing](#testing)
 	* [Setup Tests](#setup-tests)
 	* [Run Tests](#run-tests)
 	* [Writing Tests](#writing-tests)
+* [Example Modification](#example-modification)
 
 # Project Technologies
 ## Developer tools
@@ -65,6 +69,14 @@ Then copy the newly created key into .env like `GEMINI_KEY=AIzaSyCL-2g2AQ.....`.
 
 This is all you need to do to setup the AI integration, however, the number of requests will be fairly limited with a free account. If you would like to increase the limit, you may Set up Billing on the same API key you just created.
 ### Run project on docker
+
+First, ensure [Docker desktop](https://www.docker.com/products/docker-desktop/) is installed and running.
+
+To run the docker project, simply run
+
+`docker compose up --build`
+
+If you encounter issues with changes not being reflected in the browser, ensure you hard refresh your current page by pressing `Ctrl + Shift + R`.
 # Design Overview
 ## High Level
 ![](./img/high_level_design.png)
@@ -117,6 +129,20 @@ This login page is /teacher by default, as defined in .env as `LOGIN_PATH=/teach
 Upon returning from the login page, any requests made by the browser will now contain the username accessible by `req.headers["x-shib-uid"]` which our application then checks against authorized users. 
 # Frontend structure
 
+As seen in [Repository Structure](#repository-structure), while css and js are served from the frontend server, the html pages are served from the backend server.
+
+The file `styles.css` applies to all pages, while `games.css`, `questions.css`, and `interactive-box.css` are only applied to certain pages.
+
+The header component used by most pages is created by adding
+`<header-component></header-component>` 
+in the html of the page, which is then filled in by `/components/header.js`.
+
+## Game client scripts
+
+Game client scripts are contained in the files  `tg-host.js`, `tg-player.js`, and `sg-host.js`. These three files contain the logic enabling the clients(host and player) to communicate with the server via web sockets. See [Web Sockets](#web-sockets) for details on how these files work.
+
+Additionally, `study-game-helpers.js` and `game-helpers.js` contain logic to manipulate the html of the game page, so the user has a continuous gameplay experience without needing to navigate between different pages.
+
 # API Calls
 
 All API calls are routed through an [express](https://expressjs.com/en/guide/routing.html) server, which then are subdivided into several different routers. 
@@ -129,19 +155,18 @@ Pages are served by the paths `/teacher`, `/student`, and `/play` (aside from in
 API routes are served by the routes `/questions`, `/users`, `/ai`, and `/games`.
 
 Overview of API:
-* GET/POST/PUT/DELETE /api/questions - CRUD operations for questions
-* GET/POST/PUT/DELETE /api/users - CRUD operations for users
-* POST /api/ai/gemini - Prompt gemini AI for question generation
-* GET /api/games/:code - Check if game session exists
+* `GET/POST/PUT/DELETE /api/questions` - CRUD operations for questions
+* `GET/POST/PUT/DELETE /api/users` - CRUD operations for users
+* `POST /api/ai/gemini` - Prompt gemini AI for question generation
+* `GET /api/games/:code` - Check if game session exists
 	* Used before opening websocket 
-* POST /api/games/ - Create a game session
+* `POST /api/games/` - Create a game session
 
 All the API routes are well documented, so refer to those files in `/app/backend/rest-api/` for more details.
 # Web sockets
 Our websocket protocol is handled primarily by the file ws-api.js, which is copied via docker into both the frontend web server and backend. This provides an interface that the rest of the scripts interact with, as an extension of the base javascript websockets.
 
 We highly recommend reading [ws-api.js](http://ws-api.js) for more information.
-
 ## Connection
 
 Upon application start, the backend server initializes a websocket server at the same address and port as the http express server, just on a different protocol.
@@ -302,6 +327,46 @@ However, failing to send a response when the client expects one would be an erro
 expect(A, action) - send(A) - respond(A) - action(success)
 # Database Structure
 
+![](./img/ER-diagram.png)
+All fields are required.
+
+
+For information on using the REST API to access the database, see [API Calls](#api-calls).
+
+`/app/backend/db/` Files Overview:
+* `db.js` - Helper methods for other files
+* `question-dao.js` - methods for CRUD operations on questions
+* `question-validation.js` - methods for validating to-be-created questions
+* `user-dao.js` - methods for CRUD operations on users
+* `user-validation.js` - methods for validating to-be-created users
+## Users
+
+When a request is made to change users, the user making the request will have their unityID matched against [shibboleth](#shibboleth) authentication first for validity. Then userPriv will be queried to check permissions. 
+
+Note that users will only be able to manage users if they are:
+
+a. Granted the manage users permission
+
+AND
+
+b. Faculty OR in a list of dev users
+
+![](./img/db-code-1.png)
+## Questions
+
+Category is a number from 1-6 indicating the category. The isAI label will not be removed from an AI generated question, even if the question is edited by a human.
+
+When a request is made to change questions, the user making the request will have their unityID matched against [shibboleth](#shibboleth) authentication first for validity. Then questionPriv will be queried to check permissions
+
+Note that users will only be able to manage questions if they are:
+
+a. Granted the manage questions permission
+
+AND
+
+b. Faculty OR in a list of dev users
+
+![](./img/db-code-1.png)
 # Testing
 
 ## Setup Tests
@@ -332,3 +397,41 @@ Tests exist in the test folder `/app/backend/tests`.
 Since testing is currently done without docker, note that database tests must mock the returns from database queries.
 
 For more info on how to write tests, see [Jest Docs](https://jestjs.io/docs/getting-started).
+
+# Example Modification
+
+In this section we will list the steps needed to make a modification to the application. We will use the creation of a third, "multiplayer game" as an example.
+
+First, let us start with the backend.
+
+Begin by creating a new file `/app/backend/game/multiplayer-game.js`. You can model this file after `study-game.js` and `teaching-game.js`, or create a completely different game flow. These files are complex, and we recommend understanding the basics of how they work before writing your own.
+![](./img/example-code-1.png)
+
+Next, add the game type to `/shared/ws-api.js`.  
+![](./img/example-code-2.png)
+If you did decide to make changes to the web socket messaging from previous games, you will also need those changes to be defined in `ws-api.js` in order for these messages to not be rejected.
+![](./img/example-code-3.png)
+
+Next, add the new game type in `/app/backend/game/sessions.js`, the file which manages joining and creating sessions. This will import your `multiplayer-game.js`
+![](./img/example-code-4.png)
+
+Now, let us move on to the frontend.
+
+Begin this section by creating two new pages in `/app/backend/templates`, `mg-host.html` and `mg-player.html`. In this file, you will want to add a `<header-component>`, link `header.js`, bootstrap, and stylesheets. You will also want to link `/public/js/ws-api.js`, which will initialize the client websocket connection.
+![](./img/example-code-5.png)
+We structured our implementation so that the user would remain on the same html page throughout gameplay, with the html being dynamically modified by js files. We recommend this approach because it gives a more seamless user experience, and the web socket connection won't be broken by navigating away from the page.
+
+This is why `<div id="content">` is empty, as it will be filled by the js functions. You will also want to link a js file to this page.
+
+`<script defer type="module" src="/public/js/mg-host.js"></script>`
+
+Next, in `/app/backend/pages/game-pages.js`, create new endpoints to serve your html page.
+![](./img/example-code-6.png)
+
+Back to your `/app/frontend/public/mg-host.js` and `mg-player.js` files, you will then define the logic for the client pages to handle web socket messages from the server. We recommend reviewing how this is done in `tg-host.js` or `tg-player.js`, as well as having read the [Websockets](#websockets) section before this is done.
+![](./img/example-code-7.png)
+
+We also recommend using a separate file with helper methods to create and manage the html content, so your `mg-host/player.js` files do not become too cluttered. In our implementation(`game-helpers.js` for example), we use both templated strings and components stored in `/app/frontend/public/templates/question-template.html` to serve as starting points for making and managing the html content the user is presented.
+![](./img/example-code-8.png)
+
+Once you have completed these (very oversimplified) steps, you have everything you need to run a completely new game mode!
