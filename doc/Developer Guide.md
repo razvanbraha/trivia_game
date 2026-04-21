@@ -1,6 +1,6 @@
-For info on how to use our application, see (link to user guide).
+For info on how to use our application, see [User Guide](./User%20Guide.md).
 
-For info on how to deploy this application to a server, see (link to deployment guide).
+For info on how to deploy this application to a server, see [Deployment Guide](./Deployment%20Guide.md).
 # Contents
 * [Project Technologies](#project-technologies)
   * [Developer tools](#developer-tools)
