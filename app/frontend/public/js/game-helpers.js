@@ -812,7 +812,7 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
 /**
  * Generates and downloads a text file containing game statistics.
  * Supports both individual player stats (for each player) and class stats (for host).
- * 
+ * @author David Salinas
  * @param {Object|null} player Player object (null if user is host)
  * @param {Array} category_accuracy List of category statistics
  * @param {Array} all_players List of all players
@@ -887,7 +887,7 @@ function downloadStats(player, category_accuracy, all_players, questions, isHost
             const categoryName = CATEGORY_NAMES[cat] || `Category ${cat}`;
 
             text += `\n${categoryName}\n`;
-            text += `--------------------------\n`;
+            text += `----------------------------------\n`;
 
             categories[cat].forEach((q, i) => {
                 text += `Q${i + 1}: ${q.question}\n`;
@@ -906,9 +906,10 @@ function downloadStats(player, category_accuracy, all_players, questions, isHost
     const blob = new Blob([text], { type: "text/plain" });
     const url = window.URL.createObjectURL(blob);
 
+    const date = new Date().toISOString().replaceAll(':', '-');
     const a = document.createElement("a");
     a.href = url;
-    a.download = isHost ? `class_stats.txt` : `${player.name}_detailed_stats.txt`;
+    a.download = isHost ? `class_stats_${date}.txt` : `${player.name}_detailed_stats_${date}.txt`;
     a.click();
 
     window.URL.revokeObjectURL(url);

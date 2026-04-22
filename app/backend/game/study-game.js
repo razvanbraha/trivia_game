@@ -383,6 +383,7 @@ class studyGame {
             data_you: this.getSanitizedHost(),
             data_all: this.getCurrentAccuracy(),
             category_accuracy: this.getCategoryAccuracy(),
+            questions: this.questions
         });
 
         this.state = studyGame.STATES.FINAL;

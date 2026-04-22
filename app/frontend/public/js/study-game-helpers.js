@@ -17,6 +17,15 @@
 // Reference for template(from question-template.html) once it is loaded into DOM
 let template_question_container;
 
+const CATEGORY_NAMES = {
+    1: "History & Evolution",
+    2: "Technical Aspects & Engineering",
+    3: "Sustainability",
+    4: "Consumerism & Ethics",
+    5: "End-of-Life & Data",
+    6: "Logistics & Distribution"
+};
+
 //--- FUNCTIONS ---------------------------------------------------------------
 
 /**
@@ -287,8 +296,7 @@ function showAnswers(answers, timerStart) {
  * Makes answer choices clickable and attaches given handler (live time)
  * 
  * @param {Number} timerStart Starting time on the timer(Live time)
- * @param {Boolean} isHost If the page should be prepared for a host instead of a player view
- * @param {Function} answerHandler (not required if isHost) Handler to call when answer choice clicked. Receives parameter of the answer number.
+ * @param {Function} answerHandler Handler to call when answer choice clicked. Receives parameter of the answer number.
  */
 function answersClickable(timerStart, answerHandler) {
     const content_container = getContent();
@@ -323,9 +331,8 @@ function answersClickable(timerStart, answerHandler) {
  * 
  * @param {Number} chosenAnswerIdx Index (0-3) of the answer the user chose, or -1 if none chosen
  * @param {Number} correctAnswerIdx Number (0-3) of the correct answer
- * @param {Boolean} isHost If the page object should be prepared for a host instead of a player view
- * @param {Function} continueBtnHandler (not required if !isHost) Function to be called when host continue button is clicked
- * @param {Number} classAccuracyPercent (not required if !isHost) Class accuracy perecentage i.e. 55
+ * @param {Function} continueBtnHandler  Function to be called when host continue button is clicked
+ * @param {Number} classAccuracyPercent Class accuracy perecentage i.e. 55
  */
 function showCorrectAnswer(chosenAnswerIdx, correctAnswerIdx, continueBtnHandler) {
     if(!template_question_container) {
@@ -396,8 +403,7 @@ function getEncouragementText(current_accuracy) {
  * 
  * @param {{name: String, points: Number, latest_answer: Number}} current_player Current player's points, name, and latest answer in an object
  * @param {Array({name: String, points: Number, latest_answer: Number})} all_players Array of all player's points, name, and latest answer in an object
- * @param {Boolean} isHost If the page object should be prepared for a host instead of a player view
- * @param {Function} nextQuestionBtnHandler (not required if !isHost) Function to be called when host next question button is clicked
+ * @param {Function} nextQuestionBtnHandler Function to be called when host next question button is clicked
  */
 function showLeaderboard(current_player, current_accuracy, category_accuracy, nextQuestionBtnHandler) {
     if(!template_question_container) {
@@ -459,11 +465,10 @@ function showLeaderboard(current_player, current_accuracy, category_accuracy, ne
  * 
  * @param {{name: String, points: Number, latest_answer: Number}} current_player Current player's points, name, and latest answer in an object
  * @param {Array({name: String, points: Number, latest_answer: Number})} all_players Array of all player's points, name, and latest answer in an object
- * @param {Boolean} isHost If the page object should be prepared for a host instead of a player view
  * @param {List} category_accuracy Category statistics in form List({category_num, accuracy, num_correct, num_questions})
  * @returns cloneable object containing the body of the leaderboard page 
  */
-function showEndLeaderboard(current_player, current_accuracy, category_accuracy) {
+function showEndLeaderboard(current_player, current_accuracy, category_accuracy, questions) {
     if(!template_question_container) {
         throw new Error("Template content not yet loaded, please call loadTemplateContent.");
     }
@@ -509,6 +514,84 @@ function showEndLeaderboard(current_player, current_accuracy, category_accuracy)
     const new_game_btn = template_question_container.querySelector(".new-game-btn").cloneNode(true);
     new_game_btn.addEventListener("click", () => globalThis.location.reload());
     question_container.appendChild(new_game_btn);
+
+    const downloadBtn = document.createElement("button");
+    downloadBtn.innerText = "Download Class Stats";
+    downloadBtn.classList.add("btn", "btn-success", "mt-3");
+
+    downloadBtn.addEventListener("click", () => {
+        downloadStats(current_player, category_accuracy, questions);
+    });
+
+    question_container.appendChild(downloadBtn);
+}
+
+/**
+ * Generates and downloads a text file containing game statistics.
+ * Supports both individual player stats (for each player) and class stats (for host).
+ * @author David Salinas, Riley Wickens
+ * @param {Object|null} player Player object (null if user is host)
+ * @param {Array} category_accuracy List of category statistics
+ * @param {Array|null} questions List of questions (null if user is host)
+ */
+function downloadStats(player, category_accuracy, questions) {
+    let text = '';
+
+    text += `Your game results!\n`;
+    text += `----------------------------------\n`;
+    text += `Points: ${player.points}\n`;
+    text += `Questions Answered: ${player.answers.length}\n\n`;
+
+    const categories = {};
+
+    questions.forEach((q, idx) => {
+        const cat = q.category;
+
+        if (!categories[cat]) {
+            categories[cat] = [];
+        }
+
+        const studentAnswerIdx = player.answers[idx];
+        const studentAnswer = studentAnswerIdx === -1 ? "No Answer" : q.choices[studentAnswerIdx];
+        const correctAnswer = q.choices[q.correct_idx];
+
+        categories[cat].push({
+            question: q.text,
+            studentAnswer,
+            correctAnswer
+        });
+    });
+
+    for (const cat in categories) {
+        const categoryName = CATEGORY_NAMES[cat] || `Category ${cat}`;
+        text += `\n${categoryName}\n`;
+        text += `----------------------------------\n`;
+
+        categories[cat].forEach((q, i) => {
+            text += `Q${i + 1}: ${q.question}\n`;
+            text += `Your Answer: ${q.studentAnswer}\n`;
+            text += `Correct Answer: ${q.correctAnswer}\n\n`;
+        });
+    }
+
+    text += `\nCategory Performance Summary:\n`;
+    category_accuracy.forEach(cat => {
+        const categoryName = CATEGORY_NAMES[cat.category_num] || `Category ${cat.category_num}`;
+        text += `${categoryName}: ${cat.accuracy}% (${cat.num_correct}/${cat.num_questions})\n`;
+    });
+
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = globalThis.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+
+    const date = new Date().toISOString().replaceAll(':', '-');
+
+    a.download = `study_session_stats_${date}.txt`;
+    a.click();
+
+    globalThis.URL.revokeObjectURL(url);
 }
 
 // TODO add functions to create question text, create answer choices, etc
@@ -527,5 +610,6 @@ export default {
     answersClickable,
     showCorrectAnswer,
     showLeaderboard,
-    showEndLeaderboard
+    showEndLeaderboard,
+    downloadStats
 }

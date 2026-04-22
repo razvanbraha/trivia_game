@@ -9,7 +9,7 @@
  */
 //--- INCLUDE -----------------------------------------------------------------
 
-const ws_api = window.ws_api;
+const ws_api = globalThis.ws_api;
 import game_helpers from "./study-game-helpers.js";
 
 //--- SETUP -------------------------------------------------------------------
@@ -105,14 +105,13 @@ ws_api.support(handler, ws_api.signals.RESULTS,  (ws, body) => {
 });
 
 ws_api.support(handler, ws_api.signals.FINAL,  (ws, body) => {
-    // TODO endgame statistics not implemented(low prio)
     if(current_state != game_states.WAITING && current_state != game_states.RESULTS_SERVED) {
         console.log("Host desync detected");
         ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
     }
     current_state = game_states.FINAL_RESULTS_SERVED;
 
-    game_helpers.showEndLeaderboard(body.data_you, body.data_all, body.category_accuracy);
+    game_helpers.showEndLeaderboard(body.data_you, body.data_all, body.category_accuracy, body.questions);
     
 });
 
@@ -121,8 +120,6 @@ ws_api.support(handler, ws_api.signals.GAMEOVER,  (ws, body) => {
         console.log("Host desync detected");
         ws.signal(ws_api.signals.ERR, {err: "Host desync detected."});
     }
-
-    //TODO not implemented!!!!
 });
 
 //--- BUTTON CALLBACKS --------------------------------------------------------
