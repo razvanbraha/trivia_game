@@ -79,6 +79,8 @@ To run the docker project, simply run
 `docker compose up --build`
 
 If you encounter issues with changes not being reflected in the browser, ensure you hard refresh your current page by pressing `Ctrl + Shift + R`.
+
+You can also try running the `rebuild` script at the root of the directory `/`.
 # Design Overview
 ## High Level
 ![](./img/high_level_design.png)
@@ -116,6 +118,7 @@ Our project also integrates Gemini ai in order to assist teachers with question 
 	docker-compose.yml - Creates the docker structure shown in Design Overview
 	.env - Your filled out env file should be here
 	.env.template
+	rebuild - Helpful script to rebuild project without cache
 # Shibboleth
 
 See also documentation for the [apacheshib-proxy container](https://github.com/ncstate-csc/apacheshib/blob/main/apacheshib-proxy/README.md).
