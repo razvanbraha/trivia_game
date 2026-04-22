@@ -78,7 +78,6 @@ const create = (type) => {
         start_time: Date.now(),
     };
 
-    //TODO multiple game types
     if(type === sessionTypes.TEACHING) {
         sessions[code] = new teachingGame(data);
         console.log(`[Sessions]: added new teaching game session ${code}`);

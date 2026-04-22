@@ -15,7 +15,7 @@ const dbAPI = require('./rest-api/question');
 const userAPI = require('./rest-api/user');
 const gameAPI = require('./rest-api/game');
 const geminiAPI = require('./rest-api/gemini');
-const roomAPI = require("./rest-api/room");
+// const roomAPI = require("./rest-api/room");
 
 // game and websocket functions
 const sessions = require('./game/sessions');
@@ -36,7 +36,7 @@ app.use("/public", express.static(path.join(__dirname, "../frontend/public")));
 app.use(express.json());
 app.use("/questions", dbAPI);
 app.use("/users", userAPI);
-app.use("/room", roomAPI);
+// app.use("/room", roomAPI);
 app.use("/ai", geminiAPI);
 app.use("/games", gameAPI);
 

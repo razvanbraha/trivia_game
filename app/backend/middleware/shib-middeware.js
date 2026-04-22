@@ -10,7 +10,6 @@ async function isTeacher(req) {
     const uid = req.headers["x-shib-uid"];
     const primary = req.headers["x-shib-primary"]
 
-    // TODO add lavoine? This should probably be linked with user db in some way
     const devUsers = ["drsalin2", "wrmungas", "rmaalay", "rkwicken", "rbraha", "clhekkin"];
     if (devUsers.includes(uid)) {
         return true;
