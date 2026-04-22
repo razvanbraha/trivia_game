@@ -75,6 +75,12 @@
     color: white;
 }
 
+@media (max-width: 800px) {
+    .cube__face {
+        font-size: 22px;
+    }
+}
+
 /* Source: https://3dtransforms.desandro.com/cube */
 .cube__face--front  { background: linear-gradient(0deg, red, red var(--front-percentage), white var(--front-percentage), white); transform: rotateY(  0deg) translateZ(var(--cube-box-size));}
 .cube__face--right  { background: linear-gradient(0deg, blue, blue var(--right-percentage),white var(--right-percentage), white); transform: rotateY( 90deg) translateZ(var(--cube-box-size));}

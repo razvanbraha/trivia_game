@@ -799,7 +799,7 @@ function showEndLeaderboard(current_player, all_players, isHost, category_accura
 
         const downloadBtn = document.createElement("button");
         downloadBtn.innerText = "Download Class Stats";
-        downloadBtn.classList.add("btn", "btn-success", "mt-3");
+        downloadBtn.classList.add("btn", "btn-success", "mt-3", 'download-btn');
 
         downloadBtn.addEventListener("click", () => {
             downloadStats(null, category_accuracy, all_players, questions, true, question_accuracies);
@@ -854,7 +854,7 @@ function downloadStats(player, category_accuracy, all_players, questions, isHost
         for (const cat in categories) {
             const categoryName = CATEGORY_NAMES[cat] || `Category ${cat}`;
             text += `\n${categoryName}\n`;
-            text += `--------------------------\n`;
+            text += `----------------------------------\n`;
 
             categories[cat].forEach((q, i) => {
                 text += `Q${i + 1}: ${q.question}\n`;

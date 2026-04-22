@@ -517,7 +517,7 @@ function showEndLeaderboard(current_player, current_accuracy, category_accuracy,
 
     const downloadBtn = document.createElement("button");
     downloadBtn.innerText = "Download Class Stats";
-    downloadBtn.classList.add("btn", "btn-success", "mt-3");
+    downloadBtn.classList.add("btn", "btn-success", "mt-3", "download-btn");
 
     downloadBtn.addEventListener("click", () => {
         downloadStats(current_player, category_accuracy, questions);
