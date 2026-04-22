@@ -56,7 +56,7 @@ In the root of the repository, copy the `.env.template` file into a `.env` file 
 
 Inside the new `.env`, most of the variables are configured for you. However, you will need to set MYSQL_ROOT_PASSWORD, SERVER_NAME, GEMINI_KEY, and ADMIN_PASSWORD.
 
-MYSQL_ROOT_PASSWORD can be any arbitrary password, but make ADMIN_PASSWORD something you will remember. It will be required every time you try to add/edit/delete users in the system.
+MYSQL_ROOT_PASSWORD can be any arbitrary password, but make ADMIN_PASSWORD something you will remember. It will be required every time you try to add/edit/delete users in the system. In deployment, ADMIN_PASSWORD should be set by the teacher.
 
 SERVER_NAME should be localhost for local development, for deployment see [the deployment guide.](#)
 ### AI integration
@@ -71,6 +71,8 @@ This is all you need to do to setup the AI integration, however, the number of r
 ### Run project on docker
 
 First, ensure [Docker desktop](https://www.docker.com/products/docker-desktop/) is installed and running.
+
+Then navigate to the root of the directory `/`,  since this is where `docker-compose.yml` is located.
 
 To run the docker project, simply run
 
@@ -90,7 +92,7 @@ The application uses [apacheshib](https://github.com/ncstate-csc/apacheshib), a 
 
 The 'backend' is primarily coded in **Javascript**, using **Node JS**. The API is made accessible via an **Express** server. We also use a **websocket** server in parallel, in order to handle communication associated with gameplay.
 
-The database is a **mysql** instance holding user and question data, accessible inside docker to the 'backend'.
+The database is a **mariadb** instance holding user and question data, accessible inside docker to the 'backend'. Some variables may still reference MySQL, but they are functionally nearly the same.
 
 The 'frontend' serves css and client side js from an nginx web server.
 
@@ -112,6 +114,8 @@ Our project also integrates Gemini ai in order to assist teachers with question 
 	shared
 		ws-api.js - Websocket api shared between client & server
 	docker-compose.yml - Creates the docker structure shown in Design Overview
+	.env - Your filled out env file should be here
+	.env.template
 # Shibboleth
 
 See also documentation for the [apacheshib-proxy container](https://github.com/ncstate-csc/apacheshib/blob/main/apacheshib-proxy/README.md).
@@ -343,28 +347,22 @@ For information on using the REST API to access the database, see [API Calls](#a
 
 When a request is made to change users, the user making the request will have their unityID matched against [shibboleth](#shibboleth) authentication first for validity. Then userPriv will be queried to check permissions. 
 
-Note that users will only be able to manage users if they are:
+User management permissions can be granted during runtime, or by modifying `/app/database/schema/2-data.sql` to add permissions at database initialization.
+![697](./img/db-code-2.png)
 
-a. Granted the manage users permission
+Note that users can **only** have user-management permissions if they are Faculty OR in a list of dev users.
 
-AND
-
-b. Faculty OR in a list of dev users
-
-![](./img/db-code-1.png)
+![697](./img/db-code-1.png)
 ## Questions
 
 Category is a number from 1-6 indicating the category. The isAI label will not be removed from an AI generated question, even if the question is edited by a human.
 
 When a request is made to change questions, the user making the request will have their unityID matched against [shibboleth](#shibboleth) authentication first for validity. Then questionPriv will be queried to check permissions
 
-Note that users will only be able to manage questions if they are:
+Question management permissions can be granted during runtime, or by modifying `/app/database/schema/2-data.sql` to add permissions at database initialization.
+![697](./img/db-code-2.png)
 
-a. Granted the manage questions permission
-
-AND
-
-b. Faculty OR in a list of dev users
+Note that users can **only** have question-management permissions  if they are Faculty OR in a list of dev users
 
 ![](./img/db-code-1.png)
 # Testing
