@@ -14,13 +14,6 @@ const {studyGame} = require("./study-game");
 
 //--- CONSTANTS ---------------------------------------------------------------
 
-// 'enum' of all possible game types
-const sessionTypes = {
-    TEACHING: "teaching",
-    MULTIPLAYER: "multiplayer",
-    STUDY: "study"
-};
-
 // Time until any session automatically expires, regardless of state
 const SESSION_AUTO_EXPIRE_TIME = 30 * 60 * 1000; // 30mins(ms)
 
@@ -78,12 +71,12 @@ const create = (type) => {
         start_time: Date.now(),
     };
 
-    if(type === sessionTypes.TEACHING) {
+    if(type === ws_api.games.TEACHING) {
         sessions[code] = new teachingGame(data);
         console.log(`[Sessions]: added new teaching game session ${code}`);
         console.log(`[Sessions]: all sessions: `, Object.keys(sessions));
     }
-    else if (type === sessionTypes.STUDY) {
+    else if (type === ws_api.games.STUDY) {
         sessions[code] = new studyGame(data);
         console.log(`[Sessions]: added new study game session ${code}`);
         console.log(`[Sessions]: all sessions: `, Object.keys(sessions));
