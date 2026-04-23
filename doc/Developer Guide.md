@@ -1,9 +1,9 @@
 # Introduction
 This document is for developers working on the Sustainable Box Trivia Game, which we will refer to as "the project" in the abstract and "the application" as a running instance. We assume familiarity with the goals and motivation for the project. This guide provides a technical overview of the project, including the code and folder structure as well as the tools used to edit these and the technologies the project depends on.
 
-For info on how to *use* the application, see [User Guide](./User%20Guide.md).
+For info on how to *use* the application, see the [user's manual](./User%20Guide.md).
 
-For info on how to *deploy* the project to a server and *run* the application, see [Deployment Guide](./Deployment%20Guide.md).
+For info on how to *deploy* the project to a server and *run* the application, see the [Deployment Guide](./Deployment%20Guide.md).
 
 For a new developer (or team of developers), begin with the Getting Started section.
 
@@ -44,21 +44,21 @@ Here we present the essential tools and technologies used to develop, build, and
 
 ## 1.1 Project Technologies
 
-### i. Languages
+### Languages
 
 The project is primarily coded using JavaScript. As a web application, it necessarily uses HTML and CSS as well. The database uses SQL for data creation and manipulation. Docker uses `Dockerfile` commands and configurations in YAML. We also use Markdown for much of our notes and this documentation within the project.
 
-### ii. Dependencies
+### Dependencies
 
-The developer *must* have some familiarity with the following technologies that the project uses:
+The developer should have some familiarity with the following technologies that the project uses:
 - Docker: creates and manages containerized applications
 - Node.JS: JavaScript runtime for developing standalone applications outside of a web environment
 - Express: a Node.JS package that provides straightforward webserver capabilities
 - MariaDB/MySQL: database management
 
-Of these, only Docker is technically *required*; it handles installing all of the other technologies into the containers during the build process. 
+Of these, only Docker is technically *required* to be installed on the developer's machine; it handles installing all of the other technologies into the containers during the build process. 
 
-### iii. Developer tools
+### Developer tools
 
 The following technologies are used as part of development. The developer should have them installed and be familiar with their use:
 
@@ -86,7 +86,7 @@ The developer should be familiar with a command-line shell that interprets a bas
 
 Here are the basic steps to get the project code onto a developer's local machine. For a thorough guide to remote deployment, see the [Deployment Guide](./Deployment%20Guide.md).
 
-### i. SSH Setup
+### SSH Setup
 
 At the time of writing, the project is hosted on NCSU's Github Enterprise at the url: `https://github.com/ncstate-csc-sdc/2026Spring-Team05-Lavoine.git`
 
@@ -107,7 +107,7 @@ If you have already done all this, great! You should be able to clone the reposi
 
 NOTE: if you have a personal github account already that uses SSH, the hostname `git@github.com` will be ambiguous and cause errors. You should create a second SSH key and configure custom hostnames to get around this - one member of our team uses `id_school_ed25519` and `git@github-school` for this. This only causes issues when initially cloning the repository. Once cloned, the local `.git` data handles SSH for you.
 
-### ii. Clone The Repository
+### Clone The Repository
 
 Use `git` to clone the project repository via a terminal:
 - create a folder to hold the repository: `$ mkdir <path>`
@@ -120,7 +120,7 @@ Use `git` to clone the project repository via a terminal:
 
 For additional info on how to do this, see [GitHub Docs](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
 
-### iii. Configure Environment Variables
+### Configure Environment Variables
 
 Once you have cloned the repository, the next thing to do is setup environment variables in the `.env` file:
 
@@ -140,7 +140,7 @@ Once you have cloned the repository, the next thing to do is setup environment v
 	- copy the newly created key and paste it as the value of `GEMINI_KEY`
 	- NOTE: the number of requests will be fairly limited with a free account, and you may want to use a paid or upgraded account instead
 
-### iv. Run With Docker
+### Run With Docker
 
 1. Ensure Docker Desktop is installed and running (you may want to configure it to start automatically when your machine boots)
 2. Navigate to the root of the directory
@@ -166,9 +166,9 @@ The project is designed as a full-stack web application.
 
 The primary technology required for developing and running the application is Docker. We are assuming some familiarity with Docker; see the official website's [documentation](https://docs.docker.com/get-started/).
 
-As a brief introduction, Docker allows us to organize our application into individual components that run in isolated environments called *containers* These are like lightweight virtual machines, managed by the Docker engine. Designing the application like this ensures that each component builds and behaves consistently regardless of the underlying operating system. The group of containers working together is called a *container stack*.
+As a brief introduction, Docker allows us to organize our application into individual components that run in isolated environments called *containers*. These are like lightweight virtual machines, managed by the Docker engine. Designing the application like this ensures that each component builds and behaves consistently regardless of the underlying operating system. Our group of containers work together as part of a *compose stack* build using `docker compose`.
 
-Docker handles creating the containers and connecting them to each other, including importing required dependencies. This is extremely convenient: the developer only *really* needs git, docker, and a text editor to work on the project.
+Docker handles creating the containers and connecting them to each other, including importing required dependencies. This is extremely convenient: the developer only *really* needs git, docker, and a decent text editor to work on the project.
 
 Users interact with the running application via their browser. HTTP requests from the user flow to the container stack, where the application handles them.
 
@@ -176,7 +176,7 @@ Users interact with the running application via their browser. HTTP requests fro
 
 The application uses four containers that serve distinct purposes. This section is an overview of each one. The part of the title in parentheses is the name of the container service in our [docker-compose.yml](../docker-compose.yml) file.
 
-### i. Shibboleth (`apacheshib`)
+### Shibboleth (`apacheshib`)
 
 We use [apacheshib](https://github.com/ncstate-csc/apacheshib), a preconfigured Docker image which acts as a [reverse proxy](https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/). All external requests first go through this container before being routed internally to the other containers within the stack.
 
@@ -184,15 +184,17 @@ This image allows us to call into NCSU's Shibboleth service to authenticate the 
 
 For more info see [this section](#3-shibboleth).
 
-### ii. NginX (`frontend`)
+### NginX (`frontend`)
 
 The 'frontend' of the application is served from an `nginx` webserver container. This automatically handles requests for certain publicly visible resources listed in the HTML of pages, such as page scripts and CSS files. Importantly, this does NOT serve the HTML itself - those are behind API routes in the backend container to prevent unauthorized access to the teacher-only pages and avoid exposing the internal file structure of the code.
 
-### 2.2.iii Node (`api`)
+### Node (`api`)
 
 The 'backend' is primarily coded in JavaScript, which runs on an Express server in a `Node.JS` container. The backend supports API endpoints for viewing pages, managing questions and users, starting games, and upgrading to websocket connections for live gameplay.
 
-### 2.2.iv MariaDB
+JavaScript on the backend has proved (surprisingly) robust. Developers may have to contend with conflicts between the CommonJS and ESM module systems, since Node generally expects CommonJS imports with `require()` but some modules are moving towards using ESM. Developers should be familiar with both systems.
+
+### MariaDB
 
 The backend persists data by communicating with a `mariadb` container that maintains a `MySQL` database. 
 
@@ -225,7 +227,7 @@ Important folders/files:
 
 This folder structly loosely mirrors the containers created in Docker.
 
-### i. Backend:
+### Backend:
 
 Backend files are the bulk of the project code, under `app/backend/`. There are a few files stored here directly:
 - `Dockerfile`: commands to build the "api" (backend) container
@@ -240,11 +242,11 @@ The rest are further grouped into subfolders:
 - `game/`: code handling game sessions and gameplay
 - `middleware/`: Shibboleth middleware to gate page/API access
 - `pages/`: Express Router code to serve page contents (from `templates/`)
-- `rest_api/`: Express Router code to serve API endpoints (see [API Calls](#api-calls))
+- `rest_api/`: Express Router code to serve API endpoints (see [REST API](#5-rest-api))
 - `templates/`: HTML files for pages (corresponding frontend scripts are located under `/app/frontend/public/js`)
 
 
-### ii. Frontend:
+### Frontend:
 
 Frontend files are located under `app/frontend/`. Most of these are publicly-visible files that are requested by the HTML of each page, located under `app/frontend/public/`:
 - `css/`: CSS styling files
@@ -254,13 +256,13 @@ Frontend files are located under `app/frontend/`. Most of these are publicly-vis
 
 There is also `index.html` and `teacher/index.html` under `frontend/`, which exist to redirect the user to the `/api/` path for Shibboleth to kick in.
 
-### iii. Database
+### Database
 
 Outside of `app/`, there are a few other major files/folders. `database/` contains two folders. `schema/` contains the SQL files used to initiated the database from scratch. `data/` persists the data in the database when the container is not up, and should not be tampered with. It is included in our `.gitignore` to avoid overwriting the database with git operations. 
 
 In a pinch, `data/` can be deleted to completely wipe the database. `schema/` will be used to rebuild it and insert initial data on the next container rebuild.
 
-### iv. Additional
+### Additional
 The `shared/` folder contains the single file `ws-api.js`, which implements our WebSocket protocol. When the containers are built, docker copies this file into the backend *and* frontend containers; this way, developers need only edit the file in one location to apply changes consistently. 
 
 You may see an empty `ws-api.js` in the locations where the file is ultimately copied to. On the backend, this prevents Node from throwing errors due to a missing file at build time when the container is created but the volume that maps ws-api into the container has not yet been mounted.
@@ -277,7 +279,7 @@ See also documentation for the [apacheshib-proxy container](https://github.com/n
 
 From Campus IT, "[Shibboleth](https://incommon.org/software/shibboleth/) is a web-based federated authentication system, that allows for authentication across organizational boundaries.". Our application uses Shibboleth to authenticate teachers or any other users who are authorized to access teacher pages. 
 
-To find out more about how users may be added or removed from having teacher permissions, see [Database Structure.](#database-structure) 
+To find out more about how users may be added or removed from having teacher permissions, see [database](#7-database).
 
 We protect certain routes and pages behind middleware defined in [shib-middleware.js](/app/backend/middleware/shib-middleware.js) which, if the user does not have a cookie attached by shibboleth, redirects them to the login page. 
 
@@ -316,19 +318,10 @@ The page can then include whatever scripts and CSS are necessary from `app/front
 
 # 5. REST API
 
-## 5.1 Express Routers
+Due to how Shibboleth works, only traffic to paths starting with a specified value will be routed to the backend container. We have chosen the value `/api/` as our 'filter'. 
 
-All API calls are routed through an [express](https://expressjs.com/en/guide/routing.html) server, which then are subdivided into several different routers. 
+REST API endpoints are served by the routes `/questions`, `/users`, `/ai`, and `/games`. The following operations can be performed at each:
 
-All routes below are prepended by `<host>/api/` when accessed from the browser (e.g. `localhost/api/users`):
-
-![](./img/api-code-1.png)
-
-Pages are served by the paths `/teacher`, `/student`, and `/play` (aside from index.html). Details on these pages and their scripts can be found in [the previous section](#4-pages). 
-
-API routes are served by the routes `/questions`, `/users`, `/ai`, and `/games`.
-
-Overview of API:
 * `GET/POST/PUT/DELETE /api/questions` - CRUD operations for questions
 * `GET/POST/PUT/DELETE /api/users` - CRUD operations for users
 * `POST /api/ai/gemini` - Prompt gemini AI for question generation
@@ -336,11 +329,54 @@ Overview of API:
 	* Used before opening websocket 
 * `POST /api/games/` - Create a game session
 
-All the API routes are well documented, so refer to those files in `/app/backend/rest-api/` for more details.
+The code that handles these routes is under `app/backend/rest-api/` and is well-documented; use it as a reference.
+
+Pages are also served as part of the API. Pages are served by the paths `/teacher`, `/student`, and `/play` (aside from index.html). The code to handle each of these routes is under `app/backend/pages/` and can also be taken as a reference. Each route handler just responds to a GET request with the HTML content of the page.
+Details on these pages and their scripts can be found in [the previous section](#4-pages).
+
+## 5.1 Routers
+
+All API calls are sent to an [Express](https://expressjs.com/en/guide/routing.html) server, which uses routers to handle the different paths.
+
+Routers provide support for HTTP actions on a given path with a handler arrow function that takes the request and response objects generated by the HTTP request.
+
+```js
+	const router = express.Router();
+
+	router.get("/path", (req, res) => { /* handle... */ });
+```
+
+Routers are attached to other routers or the app with the `use()` function, which is an Express paradigm that takes an optional path and an object of functionality to use.
+
+For example:
+
+![](./img/api-code-1.png)
+
+where all of the `*API` and `*_pages` variables are routers imported from other files. This code attaches those routers to the overall `app` object in the server.
+
+`/api/` is automatically stripped from all routes by Shibboleth before they reach the backend container, so the backend should never include it in the path; however, frontend code must always call routes with `/api/` prepended.
 
 ## 5.2 Creating New Endpoints
 
+Creating new endpoints is fairly straightforward. First, if no router already exists for the endpoint path, create a new file under `app/backend/rest-api/` that exports a router; import that router in `app/backend/server.js` and attach it the path of the endpoint. 
 
+It is considered good endpoint design for the path/route to represent some resource the server controls, and the HTTP verb to represent the an operation requested by the client on that resource, corresponding to basic CRUD  operations:
+- Create: POST
+- Read: GET
+- Update: PUT
+- Delete: DELETE
+
+Once you have a router for your endpoint, add the functionality to handle your desired operations:
+
+```js
+router.get("/", (req, res) => { res.send(...)});
+
+router.post("/", ...);
+router.put("/", ...);
+router.delete("/", ...);
+```
+
+This is a very basic overview of how to respond to routes. See the Express documentation for more in-depth coverage of working with the `req` and `res` objects, adding route parameters, attaching middleware to routes, and other more advanced topics; or use our code as a reference.
 
 
 # 6. WebSockets
@@ -455,33 +491,44 @@ Two good example use cases for this mechanism are joining games and kicking play
 
 # 7. Database
 
+Our database is extremely simple. It supports the creation and manipulation of two entirely unrelated data types:
+
 ![](./img/ER-diagram.png)
 All fields are required.
 
 
-For information on using the REST API to access the database, see [API Calls](#api-calls).
+For information on using the REST API to access the database, see [REST API](#5-rest-api).
 
-`/app/backend/db/` Files Overview:
-* `db.js` - Helper methods for other files
-* `question-dao.js` - methods for CRUD operations on questions
-* `question-validation.js` - methods for validating to-be-created questions
-* `user-dao.js` - methods for CRUD operations on users
-* `user-validation.js` - methods for validating to-be-created users
-## Users
+## 7.1 Interfacing Code
 
-When a request is made to change users, the user making the request will have their unityID matched against [shibboleth](#shibboleth) authentication first for validity. Then userPriv will be queried to check permissions. 
+The code that the backend uses to connect to the database is under `app/backend/db/`:
+- `db.js`: manages general connections to the database and sending queries
+- `question-dao.js`: methods for CRUD operations on question data
+- `question-validation.js`: methods for validating incoming question data
+- `user-dao.js`: methods for CRUD operations on users
+- `user-validation.js`: methods for validating incoming user data
 
-User management permissions can be granted during runtime, or by modifying `/app/database/schema/2-data.sql` to add permissions at database initialization.
+## 7.2 Users
+
+When a request is made to from the frontend to edit users, the user making the request will have their unityID matched against [shibboleth](#3-shibboleth) authentication first for validity. Then the userPriv field will be queried to check permissions. 
+
+User management permissions can be granted during runtime, or by modifying `/app/database/schema/2-data.sql` to add permissions at database initialization. 
+
+Here, our dev team is automatically inserted into the database when built:
+
 ![697](./img/db-code-2.png)
 
-Note that users can **only** have user-management permissions if they are Faculty OR in a list of dev users.
+Note that users can **only** have user-management permissions if they are Faculty OR in a list of dev users. This list is also hardcoded into a function in `app/backend/middleware/shib-middleware.js`:
 
 ![697](./img/db-code-1.png)
-## Questions
+
+We recommend a developer team add themselves into this list (and remove us) for easy test access to the database.
+
+## 7.3 Questions
 
 Category is a number from 1-6 indicating the category. The isAI label will not be removed from an AI generated question, even if the question is edited by a human.
 
-When a request is made to change questions, the user making the request will have their unityID matched against [shibboleth](#shibboleth) authentication first for validity. Then questionPriv will be queried to check permissions
+When a request is made to change questions, the user making the request will have their unityID matched against [shibboleth](#3-shibboleth) authentication first for validity. Then questionPriv will be queried to check permissions
 
 Question management permissions can be granted during runtime, or by modifying `/app/database/schema/2-data.sql` to add permissions at database initialization.
 ![697](./img/db-code-2.png)
@@ -489,9 +536,10 @@ Question management permissions can be granted during runtime, or by modifying `
 Note that users can **only** have question-management permissions  if they are Faculty OR in a list of dev users
 
 ![](./img/db-code-1.png)
-# Testing
 
-## Setup Tests
+# 8. Testing
+
+## 8.1 Setup Tests
 
 Note that testing is done locally(not using docker) and as such, [Node JS - LTS 24](https://nodejs.org/en/download) is required. 
 
@@ -584,3 +632,33 @@ In our implementation (`game-helpers.js` for example), we use both templated str
 ![](./img/example-code-8.png)
 
 This is a very simplified look at the general details of implementing a new game. The specifics of new gameplay revolve around signals and responses and will likely be complicated - but this is also the fun and creative part of design and implementation! If you follow these general steps you will be well on the way to having a completely new game. 
+
+
+# 10. Improvement
+
+The project has several areas where it could be improved at the time of writing. We suggest a future team start with these, along with any suggestions by the sponsor. 
+
+## 10.1 Organization
+
+The project file structure could use some reorganization. Many decisions about this structure were made early in the semester while most of us were also only part of the way through a Web Development class. Had we known then the things we have learned from that class now, we would have organized the project differently.
+
+For starters, `app/` can probably be removed entirely, and the contents of `frontend/` and `backend/` moved up to the root of the project. This design stems from when the project originally used a single container for both backend and frontend.
+
+The subdirectories of `frontend/public/` could probably all be moved up as well, and `frontend/public/` itself also deleted. All publicly visible files should be served from one location, and `public/` might as well be removed if it is not that location. A cleaner solution for redirecting the user to `/api/` on loading the app page can probably be devised as well.
+
+## 10.2 Database
+
+Our database is simple but inflexible. The categories and types of supported questions are hardcoded. A better database structure would involve a four tables:
+- categories
+- questions
+- answers
+- a linking table of one question to many answers
+
+This way, answers could be reused across multiple questions, and other types of questions could be supported, such as 3-way multiple choice and true/false. Additional categories could also be added. This would require some frontend rework for how the user creates questions, but it might be worth it for the app to become a much more generally useful trivia tool.
+
+## 10.3 Multiplayer Game
+
+One major goal we were forced to abandon was the implementation of a multiplayer game mode based on Trivial Pursuit. This is mostly due to us struggling with our project structure in the early part of the semester, and failing to settle on technologies and start writing code until several weeks in. Because of this, and having to learn how WebSockets work, we did not get the *prototype* Teaching Game mode working until nearly 3/4ths of the way through the semester, and at this point we were forced to decide between rushing a shoddy multiplayer mode and playtesting/polishing the existing game.
+
+We had a lot of fun designing the games at the start of the semester (perhaps a bit too much - the sponsor couldn't indicate clearly a preference between Trivial Pursuit or Kahoot gameplay styles, so we offered modes based on each and spent way too much time designing these rather than writing actual code). Our multiplayer mode is well-defined and could certainly be implemented by a team with a full semester to focus on it.
+
