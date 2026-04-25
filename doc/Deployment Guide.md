@@ -1,6 +1,6 @@
 # Introduction
 
-This guide is for anyone seeking to deploy the Sustainable Box Trivia Game (the application) to a state where it can be accessed by others, whether for playtesting or real-world use.
+This guide is for anyone seeking to deploy the Sustainable Box Trivia Game ("the application" or "the project") to a state where it can be accessed by others, whether for playtesting or real-world use.
 
 For information on developing the application in general, see the [developer guide](./Developer%20Guide.md).
 
@@ -19,7 +19,7 @@ During development, our team deployed the application for remote testing to a Vi
 
 We accessed the server remotely via `ssh` and cloned our project files (using `git`) into the directory `/srv/lavoine-trivia/`. After setting up the `.env` file, starting the application was as simple as running the `rebuild` script.
 
-Our goal with this guide is to be accessible and thorough but concise. The project is not particularly difficult to set up with the technologies we used, and there are other, similar ones that a deployer might prefer. The steps should be consistent regardless. We do not assume technical expertise on the part of the deployer and provide explanations for technical details/activities.
+Our goal with this guide is to be accessible and thorough, while also staying as concise as possible. The project is not particularly difficult to set up with the technologies we used, and there are other, similar ones that a deployer might prefer. The steps should be consistent regardless. We do not assume technical expertise on the part of the deployer and provide explanations for technical details/activities.
 
 ### Contents
 1. [Terminology](#1-terminology)
@@ -33,7 +33,7 @@ Our goal with this guide is to be accessible and thorough but concise. The proje
 
 # 1. Terminology
 
-We will refer to the user of this guide as the *deployer*.
+We will refer to the user of this guide as the *deployer*, and the primary user of the application once deployed as the *teacher*. The deployer may also be the teacher, or may be someone setting up the application on the teacher's behalf.
 
 We will use a handful of terms we are familiar with as developers throughout this guide. Deployers with more technical expertise will be familiar with these, but we provide a brief explanation of each here:
 
@@ -47,7 +47,7 @@ We will use a handful of terms we are familiar with as developers throughout thi
 
 3. *directory*: 
 
-    Interchangable with 'folder'. A type of file on a computer that contains other files.
+    Interchangable with 'folder', preferred term among developers. A type of file on a computer that contains other files.
 
 4. *operating system (OS)*: 
 
@@ -69,7 +69,7 @@ We will use a handful of terms we are familiar with as developers throughout thi
 
     Also called a 'shell'; a program that allows a user to type and execute textual commands, forming a *command-line interface* (CLI). Most users do work on computers with a *graphical user interface* (GUI) and mouse actions like clicks and drags instead; however, developers prefer a shell for its power and precision when performing computer tasks. 
     
-    With shell commands, deploying our application is fairly straightforward. We provide a [reference](#shell-reference) section below as an overview of the basics of shell commands and clearly explain all commands used in the deployment steps.
+    With shell commands, deploying our application is fairly straightforward. We provide a [reference](#shell-reference) section below as an overview of the basics of shell commands and describe all commands used in the deployment steps.
 
 # 2. Requirements
 
@@ -77,29 +77,28 @@ The deployer should at least be familiar with their own machine, including runni
 
 The deployer must be able to access our project files. We assume our project will still be hosted on Github and that the deployer will use `git` software to clone the project onto the server; but we will also cover the case in which the deployer already has the project files on their own machine.
 
-The deployer must also have access to a server. The deployer can do this directly, if they have physical access to the machine, or may do this remotely with `ssh` (which we recommend) or another remote access method they are more familiar with, like a GUI client. The deployer need not have administrative permissions on the machine, so long as they can edit/create/run files and programs *somewhere* on it.
+The deployer must also have access to a server. The deployer can do this directly, if they have physical access to the machine, or may do this remotely with `ssh` (which we recommend) or another remote access method they are more familiar with, like a GUI client. The deployer need not have administrative permissions on the server, so long as they can edit/create/run files and programs *somewhere* on it.
 
 The major requirements for the server are:
-- Docker software must be installed on the machine
-- `git` software must be installed on the machine (or some other way to access the project files)
+- Docker software must be installed
+- `git` software must be installed (if the developer does not have the project files already, and they are still hosted on NCSU Github)
 - A decent internet connection within the NCSU network
 - Port 80 (HTTP) must be open for users to connect to the running website
-- If the deployer is using SSH for remote access (recommended), port 22 must also be open on the server and it must be configured to accept SSH connections
+- If the deployer is using SSH for remote access (recommended), port 22 must also be open and the server must be configured to accept SSH connections
 
 The hardware of the server does not matter much; we have not experienced lag with a comparatively low-end VM during development. The only major requirement is that the server can run Docker with four containers, so see the minimum recommended specs for Docker software for guidance. As a minimum, a machine with a CPU from the last 10 years, 4+ GB of RAM, and 4+ GB of disk storage available should do fine. 
 
-Similarly, the server OS does not matter much, only that it can run Docker and `git`. We recommend using a lightweight Linux server, accessing it remotely via SSH, and only running Docker with our application on it. This will allow the deployer to use our provided scripts for easy deployment. The overall steps will not differ much for Windows, but the choice of terminal is important -  see the [next section](#shell-reference) for more info.
+Similarly, the server OS does not matter much, only that it can run Docker and `git`. We recommend using a lightweight Linux server, accessing it remotely via SSH, and only running Docker with our application on it. This will allow the deployer to use our provided scripts for easy deployment. The broad steps will not differ much for a Windows, but some commands may not work or will be different. The deployer should be familiar with how to run commands on the server OS as well as their own machine -  see the [shell reference](#shell-reference) for more info.
 
-The specifics of setting up a machine like this are not entirely in our expertise - consult IT staff for additional help. 
-
+The specifics of setting up a server like this are not entirely in our expertise - consult IT staff for additional help. Our team requested a VM from the CSC IT staff configured with the desired qualities - the deployer may be able to do similar.
 
 # 3. Remote Access
 
 We will assume the use of SSH to access the server remotely. If the deployer can access the server directly, or has chosen to use a different remote client (perhaps with a GUI), the deployer is free to skip this section. Other methods of access work as long as the deployer can navigate the folder structure of the server and run commands in a Bash-compatible terminal.
 
-SSH, or 'secure shell', is a secure networking protocol commonly used to allow access to remote computer systems. We recommend it because it is simple to use and fairly universal to computers.
+SSH, or 'secure shell', is a secure networking protocol commonly used to allow access to remote computer systems. We recommend it because it is universal and simple to use. Odds are the deployer's machine already has a way to use SSH and one or more programs that do.
 
-To connect to the server via SSH (if you are unfamiliar with a terminal, see the [reference](#shell-reference) section):
+To connect to the server via SSH (if you are unfamiliar with a terminal, see the [shell reference](#shell-reference) section):
 
 
 1. Start a terminal and run the command: `$ ssh <username>@<url>`
@@ -112,10 +111,12 @@ After this step you should see that your command prompt has changed. It should n
 
 ![](./img/ssh-vm.png)
 
+The lower prompt indicates that the user `wrmungas` is now logged into `sd-vm41.csc.ncsu.edu`. 
+
 If you see this, congratulations! You are officially "in". The rest of the guide assumes you are on the server via SSH like this.
 
 If the command did not work, it could be for a few reasons:
-- you don't have SSH on your machine: you should install SSH and try again
+- you don't have `ssh` on your machine: you should install it and try again
 - the server is hosted within NCSU and you are trying to access it from outside the NCSU network: you must either go to a location on campus where you will be on the NCSU network, or connect to the NCSU VPN remotely with software like Cisco AnyConnect or `openconnect`
 - you don't have SSH access to the server: ensure the server is configured correctly to accept your remote access
 
@@ -123,7 +124,7 @@ Consult IT staff for additional help if needed.
 
 # 4. Copying Files
 
-Regardless of the method used to copy the files over, the user should first choose a suitable empty location for them to live on the server and navigate there:
+Regardless of the method used to copy the files over, the user should first choose a suitable empty location for the project to live on the server and navigate there:
 
 `$ mkdir <location>` (if it does not already exist)
 
@@ -143,8 +144,9 @@ If you are connected to the server via `ssh` already, do the following to discon
 
 Then, run:
 
-`$ scp <user1>@<host1>:<source> <user2>@<host2>:<destination>`
+`$ scp -r <user1>@<host1>:<source> <user2>@<host2>:<destination>`
 
+- `-r` makes the copy command *recursive* - it will copy all subdirectories and their files as well
 - `<user1>` and `<host1>` are the username and hostname on the deployer's own machine
 - `<user2>` and `<host2>` are the same username and hostname used to access the server with `ssh`
 - `<source>` is the directory that the project files are stored in on the deployer's machine
@@ -156,7 +158,7 @@ After this, reconnect to the server with `ssh` for configuration.
 
 ## 4.2 With `git`
 
-`git` is used by our development team as version-control for the project. It stores the state of various versions of the project as a 'repository' (repo), which is usually copied to a central location for developers to push and pull changes.
+`git` is used by our development team as version-control for the project. It stores the state of various versions of the project as a 'repository' (repo), which is usually hosted remotely for developers to push and pull changes from their local copies of the repository.
 
 If the project is still hosted on NCSU Github, the deployer must pass Single Sign On (SSO) authorization to clone the repo. This requires the deployer to create an `ssh` key on the server and add it to their Github account. If the repository is hosted somewhere else that doesn't require SSO authorization, this step may be skippable. 
 
@@ -170,7 +172,7 @@ To generate an `ssh` key (while already on the server):
 
 Copy the contents of the public key file generated: 
 - the location should be `~/.ssh/id_ed25519.pub` unless a different file location was chosen, in which case it will be that location with the `.pub` extension
-- use `$ cat <file>` substituting `<file>` with the public key file location to print the contents into the terminal like so and copy it (ignore the fancier prompt):
+- use `$ cat <file>` substituting `<file>` with the public key file location to print the contents into the terminal - copy them
 
 ![](./img/cat-ssh-key.png)
 
@@ -196,14 +198,14 @@ Authorize the key:
 
 ### Clone the Project
 
-For this step, the deployer needs the Github URL of the project. If they don't already have it:
+For this step, the deployer needs the SSH URL of the project. If they don't already have it:
 1. navigate to the project's Github page
 2. select the "Code" button and the "SSH" option in the pop-up that appears
 3. copy the displayed URL
 
 ![](./img/github-url.png)
 
-The deployer should be `ssh`-ed into the server and at their desired project destination directory. Do:
+The deployer should be `ssh`-ed into the server and at their desired project destination directory. Run the following command (note the dot at the end):
 
 `$ git clone <url> .`
 - substitute `<url>` for the URL of the project on Github
@@ -222,11 +224,69 @@ The deployer must set values of a few key variables. The deployer can edit the f
 - with in-terminal programs like `nano` or `vim`
 - with a text editor that supports remote access through `ssh` like VS Code
 
+In the `.env` file, every variable is in SCREAMING_SNAKE_CASE with a trailing equal sign, and the text immediately after that is its value. Any text following a `#` is ignored as a comment. Spaces are considered separators. For example:
+
+`THIS_IS_A_VARIABLE=some_value # comment`
+
+The deployer must set the values of:
+- `MYSQL_ROOT_PASSWORD`: used internally with your database
+- `SERVER_NAME`: the URL of your server
+- `GEMINI_KEY`: used for AI integration
+- `ADMIN_PASSWORD`: used when changing users in the database - should be secure and known to the teacher, if the teacher is not the deployer
+
 ## 5.1 Edit with `nano`
+
+Nano is a terminal text editor present universally on modern Linux/Unix machines, and is fairly user-friendly.
+
+Use `$ nano .env` to open the file in Nano.
+
+Use the arrow keys to navigate to variables that are blank.
+Type the desired values for each one.
+
+Nano lists available commands and user prompts at the bottom of the terminal window. You can perform these key chords to save the file and exit Nano:
+1. CTRL + o to write the file contents
+2. Check that the 'name to write' is `.env` to ensure the contents are written back to it
+3. Hit ENTER
+4. CTRL + x to exit Nano
 
 ## 5.2 Edit with `vim`
 
+Vim is an older in-terminal editor still commonly present on most systems. It is a 'modal' editor with a reputation for complexity, but for our purposes no prior knowledge of Vim is required.
+
+Use `$ vim .env` to open the file in Vim. If the machine has NeoVim, use `$ nvim .env`. If the machine has Vi (the precursor to Vim) use `$ vi .env`.
+
+The deployer should now see the file contents in Vim's View mode.
+
+Edit the variables:
+1. Navigate to the variable: use arrow keys or H, J, K, and L while in View mode (left, down, up, right, respectively)
+2. Place the cursor over the equal sign and hit 'a' to enter editing (Insert) mode at the position right after it; you can also put the cursor immediately after the equal sign and hit `i` to enter Insert mode at the same point
+2. Type the value you desire for the variable
+3. Hit the ESC key to exit Insert mode and return to View mode
+4. Repeat for other variables
+
+To save and exit the file:
+1. Hit the ESC key to ensure you are in View Mode 
+2. Hit ':' to enter Command Mode
+3. Type 'wq' to Write the file and Quit Vim
+4. ENTER
+
+If at any point the deployer feels they have messed something up, the key sequence ESC + ":q" + ENTER will quit the file without saving.
+
 ## 5.3 Edit with VS Code
+
+If the deployer cannot use a terminal text editor of choice or would prefer not to, another good option is using VS Code with the `ssh` extension. 
+
+To connect:
+
+1. Start VS Code on the deployer's own machine
+2. Ensure that the "remote editing with ssh" extension is installed:
+    - select "Extensions" from the left-hand sidebar menu (the icon with three squares and a diamond arranged in a grid) or perform CTRL + SHIFT + x
+    - search for "ssh" and select the Remote - SSH extension that appears near the top of the list
+    - select "install" if the extension does not indicate it is already installed
+3. Connect to the remote server with the extension: See Microsoft's steps listed under the extension
+
+Navigate to the project directory; click `.env` to open it. 
+Edit the variables and do CTRL + s to save the file.
 
 # 6. Building and Running
 
@@ -238,7 +298,9 @@ Building and running the program is very easy! Navigate to the project directory
 
 This may fail if the file is not executable; to ensure it is executable do:
 
-`$ chmod u+x ./rebuild`
+`$ chmod u+x ./rebuild` 
+
+This changes the "mode" (permissions) of the file to add execution (`x`) privilege for the owning user (`u`). Run the script again after this.
 
 This script will call several docker commands to clear existing containers, ask the user whether or not to clear the database (type `n` and hit ENTER), rebuild the containers, and ask the user whether to run them (type `y` and hit ENTER).
 
@@ -250,7 +312,24 @@ then
 
 `docker compose up`
 
-If this still fails due to the command 'docker' not being found, the deployer may need to start the Docker Engine on the server. 
+If this still fails due to the command 'docker' not being found, the Docker Engine may not be running on the server. 
+
+To detach from the stream of text that Docker spits out and run additional commands, hit 'd'.
+
+The developer can stop the containers with `docker compose down`. Adding the `-v` flag at the end will also delete volumes attached to them.
+
+The developer can rebuild the project at any time with the `rebuild` script. If the database is in a poor state, the developer can choose 'y' when prompted to clear it (requires administrative permissions, since the database files are created by the mariaDB container rather than the current user). Deleting the directory `<project>/database/data/` and its contents will clear the database manually.
+
+The database will automatically insert some starter data: the deployer can edit the file `database/02-data.sql` to add new data. Changes to this file will only be reflected when the database container is created without existing data - the developer should clear the existing data as noted above for a 'fresh' start.
+
+We suggest that deployers ensure the teacher and any TA's or developers are automatically added to the users table with appropriate permissions.
+
+If you have reached this point, verify that the website is accessible. Once Docker has stopped spewing text output into the terminal, and the message "server started on internal port 8080" appears, the application is running. In a web browser, navigate to the URL of the server to connect to it. The deployer should be greeted with the home page of the site.
+
+Congratulations! The application has been successfully deployed.
+
+
+
 
 # Shell Reference
 
@@ -263,16 +342,18 @@ This section serves as an overview of the basics of running shell commands:
 
 ## 1. Terminal Program
 
-We will assume the use of terminal that can run Bash commands. This is not a strict requirement - deployers can certainly perform the same steps in different ways if they know how. However, we recommend it since this is how our existing scripts/commands are written.
+We will assume the use of a terminal that can run Bash commands. This is not a strict requirement - deployers can certainly perform the same steps in different ways if they know how. However, we recommend it since this is how our existing scripts/commands are written.
 
 On Mac and Linux, these are native with the built-in terminal program. 
 
-On Windows, the deployer has more choices. The deployer can use PowerShell if they like, but they must be able to translate our commands to PowerShell equivalents. The deployer can instead use one of the following to run our commands without modification:
-- Git Bash, which is installed with the `git` software
-- MobaXTerm, which includes support for SSH sessions and GUI for file transfer
-- Windows Terminal with WSL, which is a very developer-friendly setup but is more advanced
+On Windows, the deployer has more choices. The deployer can use PowerShell if they like, but our commands are not PowerShell commands. The deployer must be able to translate to the PowerShell equivalents.
 
-If you already have a terminal program of choice installed and are familiar with using it, feel free to skip to the [next section](#4-remote-access).
+ The deployer can instead use one of the following to run our commands without modification:
+- Git Bash, which is installed with the `git` software
+- MobaXTerm, which includes support for SSH sessions and a GUI for file transfer
+- Windows Terminal with WSL, which is a very developer-friendly setup but is significantly more advanced
+
+If you already have a terminal program of choice installed and are familiar with using it, feel free to start the deployment at [remote access](#3-remote-access).
 
 ## 2. The Prompt
 
@@ -292,7 +373,7 @@ Here, the user `wrmungas` is logged into the machine `My-PC` and is at the locat
 
 Bash commands use Linux/Mac/Unix-style paths, using a forward slash `/` as a separator. By comparison, Windows paths use backlashes `\` as the separator, and start with a *drive letter* like `C:\` to denote the disk drive that the files are stored on. A Bash-compatible terminal should use the `/` style, but we note the Windows style just in case.
 
-`.` is often used as shorthand for the current working directory, and `..` as its *parent* (the directory that contains it). The *root* directory `/` is the parent directory of the entire file system.
+`.` is shorthand for the current working directory, and `..` for its *parent* (the directory that contains it). The *root* directory `/` is the parent directory of the entire file system.
 
 `~` is often used to denote a user's *home directory*. This is a special directory created for each user, where the majority of their files and folders are stored. On Linux this is usually `/home/<username>`, and on Windows it is usually `C:\Users\<username>`.
 
