@@ -6,69 +6,318 @@ For information on developing the application in general, see the [developer gui
 
 For information on how to use the application once deployed, see the [user's manual]().
 
-During development, our team deployed the application for remote testing to a Virtual Machine (VM) requested from and provided by the CSC department staff. We requested an Ubuntu Linux server installation with ports 22 (SSH) and 80 (HTTP) open.
+The basic steps of deployment are:
+1. Configure/acquire server machine
+2. Access the server
+3. Copy project files to the server
+4. Edit environment variables
+5. Build and start the project with Docker
 
-We accessed the server remotely via SSH and cloned our project files into the directory `/srv/lavoine-trivia/`. After setting up the `.env` file, starting the application was as simple as running the `rebuild` script.
+During development, our team deployed the application for remote testing to a Virtual Machine (VM) requested from and provided by the CSC department staff. We requested an Ubuntu Linux server installation with two ports open:
+- 22: remote command-line access via SSH for development
+- 80: normal HTTP traffic so users can visit the running website
 
-This deployment guide will focus on a similar process to the one we followed to get this working, while assuming as little about the user's familiarity with technical details.
+We accessed the server remotely via `ssh` and cloned our project files (using `git`) into the directory `/srv/lavoine-trivia/`. After setting up the `.env` file, starting the application was as simple as running the `rebuild` script.
+
+Our goal with this guide is to be accessible and thorough but concise. The project is not particularly difficult to set up with the technologies we used, and there are other, similar ones that a deployer might prefer. The steps should be consistent regardless. We do not assume technical expertise on the part of the deployer and provide explanations for technical details/activities.
 
 ### Contents
-1. [Technical Requirements]
-2. Using SSH
-3. Cloning the Project
-4. `.env` Configuration
-5. Building and Running
+1. [Terminology](#1-terminology)
+2. [Requirements](#2-requirements)
+3. [Remote Access](#4-remote-access)
+4. [Copying Files](#5-copying-files)
+5. [Configuration](#6-configuration)
+6. [Building and Running](#7-building-and-running)
 
-# 1. Technical Requirements
+[Shell Reference](#3-shell-reference)
 
-## 1.1 The Server
-We recommend using a Linux server for easy deployment with existing scripts in the project. The Linux distribution should be irrelevant, so long as it has Docker installed and has been granted SSH and HTTP access. Most of these steps can also be accomplished with Windows, but the details will differ. 
+# 1. Terminology
 
-Hardware requirements are not much of a concern. We have not encountered serious lag or issues of any sort while using a VM with relatively low specs. The VM or device used should ideally have a good connection to campus wifi, virtually any CPU from the last 10 years, and at least a few GB of both disk/SSD storage and RAM. There are no graphics requirements for the server - the application only renders simple webpages on client browsers. We deployed using SSH with no graphical user interface without issue.
+We will refer to the user of this guide as the *deployer*.
 
-The only major requirement is that the Docker software is installed on the device.
+We will use a handful of terms we are familiar with as developers throughout this guide. Deployers with more technical expertise will be familiar with these, but we provide a brief explanation of each here:
 
-## 1.2 The Deployer
+1. *machine*: 
 
-The deployer need not be a particularly technical person, provided they can get access to a server or VM configured as described above. Familiarity with ssh, a terminal, and git would be ideal but are not necessary as this guide will walk the deployer through the required steps with each of these tools.
+    A computer, in particular a larger, stationary computer like a desktop or server rack.
 
-To begin deployment, the deployer must have access to their own computer, access to the git repository of the project on Github, and know the URL of the server machine. The deployer must be a user with remote access on the server and know their username and password on the system. The deployer does not necessarily need administrative privileges.
+2. *server*: 
+    
+    The machine that hosts our project and provides access to the website once it is running.
 
-## 1.3 Notes
+3. *directory*: 
 
-Before proceeding, please note the following:
-- shell commands are denoted as `$ <name> <arguments>` - the dollar sign represents a command prompt symbol, and should not be literally entered along with the command
+    Interchangable with 'folder'. A type of file on a computer that contains other files.
 
-# 2. Using SSH
+4. *operating system (OS)*: 
 
-SSH, or 'secure shell', is a secure networking protocol commonly used to allow access to remote computer systems. We recommend it because it is simple and fairly universal to computers.
+    Software that acts as a layer between the hardware of a machine and programs or people which use it. Among other things, manages: 
+    - users 
+    - programs
+    - hardware devices
+    - the file/directory structure on the machine 
+    
+    Examples include Windows, Mac, iOS, Android, and Linux. 
 
-To connect to the server via SSH:
-- start a terminal (Mac/Linux) or PowerShell (Windows)
-- run the following command: `$ ssh <username>@<url>`, substituting `<username>` with your username on the server and `<url>` with the URL of the server
-- provide a password if prompted
-- you should be seeing another command prompt, possibly with some altered text that includes your username and the hostname of the machine, like so:
-`joebob@sd-vm41.csc.ncsu.edu`
+5. *virtual machine (VM)*:
 
-Here, `joebob` is the user, and `sd-vm41.csc.ncsu.edu` is the hostname of the server. If you see this, congratulations! You are officially "in".
+    A simulated machine/OS running *within* an existing machine/OS. Often used to guarantee that software is run in a consistent, closed ("sandboxed") environment. Software run within a VM only sees the simulated machine/OS, and is not aware of the host machine/OS beyond. 
 
-# 3. Prepare SSH Keys
+    The Docker technology our project uses allows us to organize the software as a series of 'containers', which are like lightweight VMs that can communicate to each other. This lets us run our software on any computer that can run Docker.
+
+6. *terminal*: 
+
+    Also called a 'shell'; a program that allows a user to type and execute textual commands, forming a *command-line interface* (CLI). Most users do work on computers with a *graphical user interface* (GUI) and mouse actions like clicks and drags instead; however, developers prefer a shell for its power and precision when performing computer tasks. 
+    
+    With shell commands, deploying our application is fairly straightforward. We provide a [reference](#shell-reference) section below as an overview of the basics of shell commands and clearly explain all commands used in the deployment steps.
+
+# 2. Requirements
+
+The deployer should at least be familiar with their own machine, including running programs and navigating the file/directory structure. The deployer should have access to a terminal program; see the [reference](#shell-reference) section below.
+
+The deployer must be able to access our project files. We assume our project will still be hosted on Github and that the deployer will use `git` software to clone the project onto the server; but we will also cover the case in which the deployer already has the project files on their own machine.
+
+The deployer must also have access to a server. The deployer can do this directly, if they have physical access to the machine, or may do this remotely with `ssh` (which we recommend) or another remote access method they are more familiar with, like a GUI client. The deployer need not have administrative permissions on the machine, so long as they can edit/create/run files and programs *somewhere* on it.
+
+The major requirements for the server are:
+- Docker software must be installed on the machine
+- `git` software must be installed on the machine (or some other way to access the project files)
+- A decent internet connection within the NCSU network
+- Port 80 (HTTP) must be open for users to connect to the running website
+- If the deployer is using SSH for remote access (recommended), port 22 must also be open on the server and it must be configured to accept SSH connections
+
+The hardware of the server does not matter much; we have not experienced lag with a comparatively low-end VM during development. The only major requirement is that the server can run Docker with four containers, so see the minimum recommended specs for Docker software for guidance. As a minimum, a machine with a CPU from the last 10 years, 4+ GB of RAM, and 4+ GB of disk storage available should do fine. 
+
+Similarly, the server OS does not matter much, only that it can run Docker and `git`. We recommend using a lightweight Linux server, accessing it remotely via SSH, and only running Docker with our application on it. This will allow the deployer to use our provided scripts for easy deployment. The overall steps will not differ much for Windows, but the choice of terminal is important -  see the [next section](#shell-reference) for more info.
+
+The specifics of setting up a machine like this are not entirely in our expertise - consult IT staff for additional help. 
 
 
+# 3. Remote Access
 
-# 4. Clone the Repository
+We will assume the use of SSH to access the server remotely. If the deployer can access the server directly, or has chosen to use a different remote client (perhaps with a GUI), the deployer is free to skip this section. Other methods of access work as long as the deployer can navigate the folder structure of the server and run commands in a Bash-compatible terminal.
 
-Now that you have access via SSH and cryptographic keys in-place, navigate to a folder location you would like to keep the project files in. For a fresh Linux server machine, we recommend `/srv/`, but if the deployer does not have admin privileges anywhere within their home directory (`~/`) should suffice.
+SSH, or 'secure shell', is a secure networking protocol commonly used to allow access to remote computer systems. We recommend it because it is simple to use and fairly universal to computers.
 
-For those unfamiliar with Linux/Unix commands, navigating file paths uses the command 
+To connect to the server via SSH (if you are unfamiliar with a terminal, see the [reference](#shell-reference) section):
 
-`$ cd <path>`
 
-Once you have navigated to a suitable location, clone the project with 
+1. Start a terminal and run the command: `$ ssh <username>@<url>`
+    - substitute `<username>` with your username on the server
+    - substitute `<url>` with the URL of the server
 
-`$ git clone <url> .` where `<url>` is the URL of the repository. This command will copy the repository contents into the current directory. If this directory is not empty or you otherwise wish the project code to go into a subdirectory instead, remove the `.` at the end of the command.
+3. provide a password if prompted and hit ENTER
 
-# 4. `.env` Configuration
+After this step you should see that your command prompt has changed. It should now refer to the server's hostname instead of your machine's, and your username on the server rather than on your machine. As an example, on our development VM:
 
-# 5. Building and Running
+![](./img/ssh-vm.png)
 
+If you see this, congratulations! You are officially "in". The rest of the guide assumes you are on the server via SSH like this.
+
+If the command did not work, it could be for a few reasons:
+- you don't have SSH on your machine: you should install SSH and try again
+- the server is hosted within NCSU and you are trying to access it from outside the NCSU network: you must either go to a location on campus where you will be on the NCSU network, or connect to the NCSU VPN remotely with software like Cisco AnyConnect or `openconnect`
+- you don't have SSH access to the server: ensure the server is configured correctly to accept your remote access
+
+Consult IT staff for additional help if needed.
+
+# 4. Copying Files
+
+Regardless of the method used to copy the files over, the user should first choose a suitable empty location for them to live on the server and navigate there:
+
+`$ mkdir <location>` (if it does not already exist)
+
+`$ cd <location>`
+
+In our deployment, we used `/srv/lavoine-trivia` as our location of choice - we chose the top-level directory `/srv` since it is recommended as a location for webserver files on Linux, and we wanted a shared location outside of any individual developer's home directory. Unless the deployer also wants other users to be able to mess with the project files, a location inside the deployer's home directory (`~/`) will suffice.
+
+If the deployer already has the project files on their machine, they can use the `scp` utility to copy the files onto the server. If the deployer does not have a local copy of the files, we assume they are still hosted on NCSU Github, and the deployer can use `git` to copy the project. If the deployer has access some other way, we recommend that the deployer copy the files first onto their machine and then use `scp`.
+
+## 4.1 With `scp`
+
+The `scp` (Secure Copy) command allows the user to copy files from one networked host to another. It uses `ssh` under the hood, but the deployer should not already be connected with it. 
+
+If you are connected to the server via `ssh` already, do the following to disconnect:
+
+`$ quit`
+
+Then, run:
+
+`$ scp <user1>@<host1>:<source> <user2>@<host2>:<destination>`
+
+- `<user1>` and `<host1>` are the username and hostname on the deployer's own machine
+- `<user2>` and `<host2>` are the same username and hostname used to access the server with `ssh`
+- `<source>` is the directory that the project files are stored in on the deployer's machine
+- `<destination>` is the location for the project to live on the server
+
+This will copy the directory `<source>` itself into `<destination>`; use `<source>/.` to copy the *contents* of this directory instead.
+
+After this, reconnect to the server with `ssh` for configuration.
+
+## 4.2 With `git`
+
+`git` is used by our development team as version-control for the project. It stores the state of various versions of the project as a 'repository' (repo), which is usually copied to a central location for developers to push and pull changes.
+
+If the project is still hosted on NCSU Github, the deployer must pass Single Sign On (SSO) authorization to clone the repo. This requires the deployer to create an `ssh` key on the server and add it to their Github account. If the repository is hosted somewhere else that doesn't require SSO authorization, this step may be skippable. 
+
+### Create an SSH Key
+
+To generate an `ssh` key (while already on the server):
+
+`$ ssh-keygen -t ed25519`
+- accept the default location of `~/.ssh/id_ed25519` unless a different one would be preferable
+- the command will prompt for a password; if one is entered, it must also be entered every time a `git` operation is performed. Leave blank to avoid this
+
+Copy the contents of the public key file generated: 
+- the location should be `~/.ssh/id_ed25519.pub` unless a different file location was chosen, in which case it will be that location with the `.pub` extension
+- use `$ cat <file>` substituting `<file>` with the public key file location to print the contents into the terminal like so and copy it (ignore the fancier prompt):
+
+![](./img/cat-ssh-key.png)
+
+
+Add the key to your NCSU Github account:
+1. visit `github.com` on a web browser and sign in with your account
+2. click on your profile in the top right, and select `settings` from the drop-down menu
+
+![](./img/github-settings.png)
+
+3. navigate to the section titled "SSH and GPG Keys" from the sidebar on the left
+
+![](./img/github-ssh-keys.png)
+
+4. select "New SSH Key"
+5. give the key a name, and then paste the contents of the public key file copied from the previous step
+
+![](./img/github-add-ssh-key.png)
+
+Authorize the key:
+1. from the "SSH and GPG Keys" screen, locate the new key and select the "configure SSO" option
+2. authorize the key with the organization that owns the project - this will redirect to an NCSU authorization service
+
+### Clone the Project
+
+For this step, the deployer needs the Github URL of the project. If they don't already have it:
+1. navigate to the project's Github page
+2. select the "Code" button and the "SSH" option in the pop-up that appears
+3. copy the displayed URL
+
+![](./img/github-url.png)
+
+The deployer should be `ssh`-ed into the server and at their desired project destination directory. Do:
+
+`$ git clone <url> .`
+- substitute `<url>` for the URL of the project on Github
+
+The dot copies the project files into the current directory; if removed, `git` creates a sub-directory for the project and copies the contents there, which may be desired. In this case, after running the command, navigate into the new directory with `$ cd` for the next steps.
+
+# 5. Configuration
+
+The project uses several environment variables declared in a file called `.env`. For security reasons this file is never added to git's file change tracking; instead we use a file called `.env.template` with sensitive variables left blank to note changes to the main `.env`.
+
+To configure the project, the deployer must create `.env` and copy the contents of `.env.template` into it. This can be done with one command: 
+
+`$ cat .env.template > .env`
+
+The deployer must set values of a few key variables. The deployer can edit the file remotely in a few ways:
+- with in-terminal programs like `nano` or `vim`
+- with a text editor that supports remote access through `ssh` like VS Code
+
+## 5.1 Edit with `nano`
+
+## 5.2 Edit with `vim`
+
+## 5.3 Edit with VS Code
+
+# 6. Building and Running
+
+If you have reached this point, congratulations!
+
+Building and running the program is very easy! Navigate to the project directory, then run the `rebuild` script included in the project:
+
+`$ ./rebuild`
+
+This may fail if the file is not executable; to ensure it is executable do:
+
+`$ chmod u+x ./rebuild`
+
+This script will call several docker commands to clear existing containers, ask the user whether or not to clear the database (type `n` and hit ENTER), rebuild the containers, and ask the user whether to run them (type `y` and hit ENTER).
+
+If this fails, the user can perform the same actions as the script manually by running:
+
+`docker compose build`
+
+then 
+
+`docker compose up`
+
+If this still fails due to the command 'docker' not being found, the deployer may need to start the Docker Engine on the server. 
+
+# Shell Reference
+
+This section serves as an overview of the basics of running shell commands:
+1. Choice of Terminal
+2. Understanding the Prompt
+3. Understanding File Paths
+4. Running Commands
+5. Basic Commands
+
+## 1. Terminal Program
+
+We will assume the use of terminal that can run Bash commands. This is not a strict requirement - deployers can certainly perform the same steps in different ways if they know how. However, we recommend it since this is how our existing scripts/commands are written.
+
+On Mac and Linux, these are native with the built-in terminal program. 
+
+On Windows, the deployer has more choices. The deployer can use PowerShell if they like, but they must be able to translate our commands to PowerShell equivalents. The deployer can instead use one of the following to run our commands without modification:
+- Git Bash, which is installed with the `git` software
+- MobaXTerm, which includes support for SSH sessions and GUI for file transfer
+- Windows Terminal with WSL, which is a very developer-friendly setup but is more advanced
+
+If you already have a terminal program of choice installed and are familiar with using it, feel free to skip to the [next section](#4-remote-access).
+
+## 2. The Prompt
+
+When the deployer starts a terminal program, they will typically be greeted with a prompt. This is some text that is typically structured like this:
+
+`<user>@<host><location> >`
+
+Here, `<user>` refers to the deployer's username on their machine. `<host>` is the hostname of the machine. `<location>` is the *current working directory*, which is a file location that the user is "currently at" in the machine. Any commands involving file paths will execute relative to this location. The trailing `>` is just a symbol that indicates the end of the prompt and the start of where the user types commands; the user cannot typically delete beyond this. 
+
+An example prompt might look like this:
+
+`wrmungas@My-PC ~ $`
+
+Here, the user `wrmungas` is logged into the machine `My-PC` and is at the location `~` (shorthand for `wrmungas`' home directory). `$` is the prompt symbol. 
+
+## 3. File Paths
+
+Bash commands use Linux/Mac/Unix-style paths, using a forward slash `/` as a separator. By comparison, Windows paths use backlashes `\` as the separator, and start with a *drive letter* like `C:\` to denote the disk drive that the files are stored on. A Bash-compatible terminal should use the `/` style, but we note the Windows style just in case.
+
+`.` is often used as shorthand for the current working directory, and `..` as its *parent* (the directory that contains it). The *root* directory `/` is the parent directory of the entire file system.
+
+`~` is often used to denote a user's *home directory*. This is a special directory created for each user, where the majority of their files and folders are stored. On Linux this is usually `/home/<username>`, and on Windows it is usually `C:\Users\<username>`.
+
+In a user's home directory, they have complete access to create, modify, and run files/programs. The deployer should be able to setup and run our project from any location within their home directory.
+
+Paths used in commands can be *relative*, starting without a leading `/` and interpreted as relative to the current working directory; or *absolute*, starting with a leading `/` and relative to the root directory.
+
+## 4. Running Commands
+
+We denote commands with `$ <name> <arguments>`, where the `$` represents the command-line prompt, `<name>` is the name of the command, and `<arguments>` are additional values that determine its exact behavior.
+
+Running a command is simple: type the command text and hit ENTER.
+
+## 5. Basic Commands
+
+The following are a few basic Linux/Unix commands used for file navigation/manipulation from the shell:
+
+- `$ cd <path>`: "change directory"
+
+    changes the current working directory (the user's current location in the file system) to the location specified by `<path>`. `<path>` is an optional argument; `$ cd` alone will send the user to their home directory
+
+- `$ ls <path>`: "list"
+    
+    lists the files/directories at a given directory path. `<path>` is again optional; `$ ls` alone will list the files at the user's current working directory
+
+- `$ mkdir <name>`: "make directory"
+    
+    creates a new directory with the given name at the current working directory. `<name>` can also have a leading path to specify a different location
