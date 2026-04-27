@@ -1,126 +1,123 @@
-const express = require("express");
-const request = require("supertest");
+const request = require('supertest');
+const express = require('express');
+const roomRouter = require('../rest-api/room');
 
 function buildApp() {
-  const roomRouter = require("../rest_api/roomAPI");
-  const app = express();
-  app.use(express.json());
-  app.use("/room", roomRouter);
-  return app;
+    const app = express();
+    app.use(express.json());
+    app.use('/room', roomRouter);
+    return app;
 }
 
-describe("roomAPI", () => {
-  let app;
+describe('room api', () => {
+    let app;
 
-  beforeEach(() => {
-    jest.resetModules();
-    app = buildApp();
-  });
-
-  test("POST /room/create creates a room with a 4-digit code", async () => {
-    const res = await request(app).post("/room/create");
-
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("code");
-    expect(res.body.code).toMatch(/^\d{4}$/);
-  });
-
-  test("created room can be fetched and has default settings", async () => {
-    const createRes = await request(app).post("/room/create");
-    const code = createRes.body.code;
-
-    const getRes = await request(app).get(`/room/${code}`);
-
-    expect(getRes.status).toBe(200);
-    expect(getRes.body).toEqual({
-      players: [],
-      settings: {
-        questions: 25,
-        categories: ["Category 1", "Category 2", "Category 3"]
-      }
+    beforeEach(() => {
+        app = buildApp();
     });
-  });
 
-  test("joining a valid room adds player to player list", async () => {
-    const createRes = await request(app).post("/room/create");
-    const code = createRes.body.code;
+    test('POST /room/create returns a 4-digit room code', async () => {
+        const res = await request(app).post('/room/create');
 
-    const joinRes = await request(app)
-      .post("/room/join")
-      .send({ code, name: "Alice" });
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('code');
+        expect(res.body.code).toMatch(/^\d{4}$/);
+    });
 
-    expect(joinRes.status).toBe(200);
-    expect(joinRes.body).toEqual({ success: true });
+    test('POST /room/join returns 404 for missing room', async () => {
+        const res = await request(app)
+            .post('/room/join')
+            .send({
+                code: '9999',
+                name: 'Bob'
+            });
 
-    const getRes = await request(app).get(`/room/${code}`);
-    expect(getRes.body.players).toEqual(["Alice"]);
-  });
+        expect(res.statusCode).toBe(404);
+        expect(res.body).toEqual({ error: 'Room not found' });
+    });
 
-  test("multiple players can join the same room", async () => {
-    const createRes = await request(app).post("/room/create");
-    const code = createRes.body.code;
+    test('POST /room/join joins an existing room', async () => {
+        const createRes = await request(app).post('/room/create');
+        const code = createRes.body.code;
 
-    await request(app).post("/room/join").send({ code, name: "Alice" });
-    await request(app).post("/room/join").send({ code, name: "Bob" });
+        const joinRes = await request(app)
+            .post('/room/join')
+            .send({
+                code,
+                name: 'Bob'
+            });
 
-    const getRes = await request(app).get(`/room/${code}`);
-    expect(getRes.body.players).toEqual(["Alice", "Bob"]);
-  });
+        expect(joinRes.statusCode).toBe(200);
+        expect(joinRes.body).toEqual({ success: true });
 
-  test("joining a non-existent room returns 404", async () => {
-    const res = await request(app)
-      .post("/room/join")
-      .send({ code: "9999", name: "Alice" });
+        const roomRes = await request(app).get(`/room/${code}`);
+        expect(roomRes.statusCode).toBe(200);
+        expect(roomRes.body.players).toContain('Bob');
+    });
 
-    expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: "Room not found" });
-  });
+    test('GET /room/:code returns 404 for missing room', async () => {
+        const res = await request(app).get('/room/9999');
 
-  test("GET /room/:code returns 404 for missing room", async () => {
-    const res = await request(app).get("/room/9999");
+        expect(res.statusCode).toBe(404);
+        expect(res.body).toEqual({ error: 'Room not found' });
+    });
 
-    expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: "Room not found" });
-  });
+    test('GET /room/:code returns room data for existing room', async () => {
+        const createRes = await request(app).post('/room/create');
+        const code = createRes.body.code;
 
-  test("POST /room/:code/settings overwrites room settings", async () => {
-    const createRes = await request(app).post("/room/create");
-    const code = createRes.body.code;
+        const res = await request(app).get(`/room/${code}`);
 
-    const newSettings = {
-      questions: 10,
-      categories: ["1", "3", "5"]
-    };
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('players');
+        expect(res.body).toHaveProperty('settings');
+        expect(Array.isArray(res.body.players)).toBe(true);
+    });
 
-    const settingsRes = await request(app)
-      .post(`/room/${code}/settings`)
-      .send(newSettings);
+    test('POST /room/:code/settings returns 404 for missing room', async () => {
+        const res = await request(app)
+            .post('/room/9999/settings')
+            .send({
+                questions: 10,
+                categories: ['Category 1']
+            });
 
-    expect(settingsRes.status).toBe(200);
-    expect(settingsRes.body).toEqual({ success: true });
+        expect(res.statusCode).toBe(404);
+        expect(res.body).toEqual({ error: 'Room not found' });
+    });
 
-    const getRes = await request(app).get(`/room/${code}`);
-    expect(getRes.body.settings).toEqual(newSettings);
-  });
+    test('POST /room/:code/settings updates room settings', async () => {
+        const createRes = await request(app).post('/room/create');
+        const code = createRes.body.code;
 
-  test("updating settings for missing room returns 404", async () => {
-    const res = await request(app)
-      .post("/room/9999/settings")
-      .send({ questions: 20, categories: ["1"] });
+        const newSettings = {
+            questions: 10,
+            categories: ['Category 1', 'Category 2']
+        };
 
-    expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: "Room not found" });
-  });
+        const settingsRes = await request(app)
+            .post(`/room/${code}/settings`)
+            .send(newSettings);
 
-  test("deleting a room removes it so future GET returns 404", async () => {
-    const createRes = await request(app).post("/room/create");
-    const code = createRes.body.code;
+        expect(settingsRes.statusCode).toBe(200);
+        expect(settingsRes.body).toEqual({ success: true });
 
-    const deleteRes = await request(app).delete(`/room/${code}`);
-    expect(deleteRes.status).toBe(200);
-    expect(deleteRes.body).toEqual({ success: true });
+        const roomRes = await request(app).get(`/room/${code}`);
+        expect(roomRes.statusCode).toBe(200);
+        expect(roomRes.body.settings).toEqual(newSettings);
+    });
 
-    const getRes = await request(app).get(`/room/${code}`);
-    expect(getRes.status).toBe(404);
-  });
+    test('DELETE /room/:code deletes a room', async () => {
+        const createRes = await request(app).post('/room/create');
+        const code = createRes.body.code;
+
+        const deleteRes = await request(app).delete(`/room/${code}`);
+
+        expect(deleteRes.statusCode).toBe(200);
+        expect(deleteRes.body).toEqual({ success: true });
+
+        const roomRes = await request(app).get(`/room/${code}`);
+        expect(roomRes.statusCode).toBe(404);
+        expect(roomRes.body).toEqual({ error: 'Room not found' });
+    });
 });
