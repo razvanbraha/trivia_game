@@ -41,7 +41,7 @@ We first define a few key terms we use in this guide:
 
 1. *machine*: 
 
-    A computer, in particular a larger, stationary computer like a desktop or server rack.
+    A stationary computer, like a desktop or server rack.
 
 2. *server*: 
     
@@ -56,8 +56,7 @@ We first define a few key terms we use in this guide:
     Software that acts as a layer between the hardware of a machine and programs or people which use it. Among other things, manages: 
     - users 
     - programs
-    - hardware devices
-    - the file/directory structure on the machine 
+    - files/memory
     
     Examples include Windows, Mac, iOS, Android, and Linux. 
 
@@ -67,8 +66,11 @@ We first define a few key terms we use in this guide:
 
     For example, you could use a VM to run Windows XP from a modern Mac installation. The programs run in the VM would only see the Windows XP environment.
 
+6. *container*:
 
-6. *terminal*: 
+    Containers are lightweight virtual machines managed by the Docker software. We use them to split our application into distinct components, and guarantee that each one runs in a consistent environment. If your machine can run Docker, it can run our application.
+
+7. *terminal*: 
 
     Also called a 'shell'; a program that allows a user to type and execute textual commands, forming a *command-line interface* (CLI). Most users do work on computers with a *graphical user interface* (GUI) through mouse actions like clicks and drags instead; however, developers prefer a shell for its power and precision when performing computer tasks. 
     
@@ -140,7 +142,7 @@ Regardless of how you get the files on the server, you should first choose a pla
 
 We used `/srv/lavoine-trivia` during development - we chose the top-level directory `/srv` since it is recommended as a location for webserver files on Linux, and we wanted a shared location outside of any individual developer's home directory. Unless you want other users to be able to mess with the project files, a location inside the your home directory (`~/`) will suffice.
 
-If you already has the project files on their machine, you can use the `scp` utility to copy the files onto the server. 
+If you already have the project files on your machine, you can use the `scp` utility to copy the files onto the server. 
 
 If not, we assume the files are still hosted on NCSU Github, and you can use `git` to copy the project. 
 
