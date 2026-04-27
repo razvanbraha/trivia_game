@@ -4,27 +4,70 @@ body {
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
     height: 100vh;
+    background-color: #7575eb;
 }
 
 .header {
     background-color: #8BE36B;
     height: 90px;
+    display: flex;
+    flex-direction: row;
+    justify-content:space-between;
 }
 
-.header .buttons {
+.headerBox {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.headerBox:first-child > div {margin-right: auto}
+.headerBox:last-child > div {margin-left: auto}
+
+.right {
+    display: flex;
+    justify-content: end;
+}
+
+.title {
+    text-align: center;
+    text-shadow: -0.5px 0 black, 0 0.5px black, 0.5px 0 black, 0 -0.5px black;
+    color: white;
+}
+
+.header-buttons {
     display: flexbox;
     flex-direction: row;
     position: absolute;
-    right: 25px;
+    margin-right: 10px;
 }
 
 .logo {
-    width: 50px;
-    height: 50px;
-    background-color: #8B6F2D;
-    position: absolute;
-    left: 25px;
-    transform: rotate(45deg);
+    width: 72.5px; 
+    height: 80px;
+    overflow: hidden;
+    margin-left: 10px;
+}
+
+.logo:hover {
+    cursor: pointer;
+}
+
+#dropdown {
+    display: none;
+    margin-right: 10px;
+    border-radius: 10px;
+}
+
+@media (max-width: 1000px) {
+    .header-buttons {
+        display: none;
+    }
+
+    #dropdown {
+        display: flex;
+    }
 }
 
 .return {
@@ -45,7 +88,7 @@ body {
 }
 
 .student-btn {
-    background-color: #7BC4A4;
+    background-color: #70a990;
     border: none;
     font-weight: bold;
     font-size: 1.3rem;
@@ -59,7 +102,7 @@ body {
 }
 
 button:hover {
-    opacity: 0.9;
+    background-image: linear-gradient(rgb(0 0 0/30%) 0 0);
 }
 
 .study-panel {
@@ -133,3 +176,4 @@ button:hover {
 #userListPanel:hover #userListContent::-webkit-scrollbar-thumb {
     background-color: rgba(211, 211, 211, 0.5);
 }
+

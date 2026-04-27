@@ -9,7 +9,12 @@ p {
 }
 
 body {
-    background-color: linear-gradient(#9292ff, #7575eb);
+    background-color: #7575eb;
+}
+
+#content {
+    height: calc(100vh - 90px);
+    background-color: #7575eb;
 }
 
 
@@ -387,12 +392,13 @@ body {
     text-align: center;
     background-color: rgba(255, 255, 255, 0.3);
     height: 6vh;
-    padding-top: 10px;
     padding-left: 10px;
     padding-right: 10px;
     border-radius: 5px;
     color: white;
     margin-top: 2vh;
+    display: flex;
+    align-items: center;
 }
 
 
@@ -457,7 +463,7 @@ body {
 .new-game-btn {
     width: 100vw;
     display: flex;
-    margin-top:auto;
+    margin-top:3vh;
     margin-bottom: 3vh;
     justify-content: center;
 }
@@ -526,5 +532,9 @@ body {
 
 .player p {
     margin-bottom: 0px;
+}
+
+.download-btn {
+    margin-bottom: 5vh;
 }
 

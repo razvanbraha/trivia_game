@@ -9,12 +9,31 @@
     <link rel="stylesheet" href="/public/css/questions.css">
     <script src="/public/js/menu-user.js" defer></script>
     <script type="module" src="/public/components/header.js" defer></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- FAVICON -->
+    <link rel="icon" type="image/png" href="/public/images/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg" />
+    <link rel="shortcut icon" href="/public/images/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/images/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Sustainable Box Trivia" />
+    <meta name="theme-color" content="#9292ff"/>
+    <!-- Installable App -->
+    <link rel="manifest" href="/public/site.webmanifest"/>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Sustainable Box Trivia">
+    <meta name="apple-mobile-web-app-title" content="Box Trivia">
+    <meta name="theme-color" content="#9292ff">
+    <meta name="msapplication-navbutton-color" content="#9292ff">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="msapplication-starturl" content="/">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 </head>
-<body class="vh-100 d-flex flex-column overflow-hidden">
+<body class="vh-100 d-flex flex-column">
 
     <header-component style="flex-shrink: 0;"></header-component>
 
-    <main class="container-fluid row m-0 flex-grow-1 overflow-hidden g-0" style="min-height: 0;">
+    <main class="container-fluid row m-0 flex-grow-1 g-0" style="min-height: 0;">
         <section id="userListPanel" class="left-panel col-md-6 h-100 d-flex flex-column p-4">
             <h3 class="text-white display-5 fw-bold mb-4 text-center">Existing Users</h2>
 
@@ -29,12 +48,12 @@
             <form id="userForm" class="form-container w-75 bg-white p-4 rounded shadow-sm">
                 <div class="mb-3 text-start">
                     <label for="unityID" class="form-label text-black fw-bold">Unity ID:</label>
-                    <input type="text" id="unityID" name="unityID" class="form-control border-secondary" minlength="1" maxlength="8" required/>
+                    <input type="text" id="unityID" name="unityID" class="form-control border-secondary" minlength="1" maxlength="8" autocomplete="off" required/>
                 </div>
 
                 <div class="mb-3 text-start">
                     <label for="note" class="form-label text-black fw-bold">Note:</label>
-                    <input type="text" id="note" name="note" class="form-control border-secondary"/>
+                    <input type="text" id="note" name="note" class="form-control border-secondary" autocomplete="off"/>
                 </div>
 
                 <div class="mb-4 text-start">

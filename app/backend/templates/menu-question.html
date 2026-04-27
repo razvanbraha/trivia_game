@@ -9,12 +9,32 @@
     <link rel="stylesheet" href="/public/css/questions.css">
     <script type="module" src="/public/components/header.js" defer></script>
     <script src="/public/js/menu-question.js" defer></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- FAVICON -->
+    <link rel="icon" type="image/png" href="/public/images/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg" />
+    <link rel="shortcut icon" href="/public/images/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/images/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Sustainable Box Trivia" />
+    <meta name="theme-color" content="#9292ff"/>
+    <!-- Installable App -->
+    <link rel="manifest" href="/public/site.webmanifest"/>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Sustainable Box Trivia">
+    <meta name="apple-mobile-web-app-title" content="Box Trivia">
+    <meta name="theme-color" content="#9292ff">
+    <meta name="msapplication-navbutton-color" content="#9292ff">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="msapplication-starturl" content="/">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
 </head>
 
-<body class="vh-100 d-flex flex-column overflow-hidden">
+<body class="vh-100 d-flex flex-column">
     <header-component style="flex-shrink: 0;"></header-component>
 
-    <main class="row g-0 flex-grow-1 overflow-hidden" style="min-height: 0;">
+    <main class="row g-0 flex-grow-1" style="min-height: 0;">
         <section id="questionListPanel" class="col-md-6 h-100 d-flex flex-column left-panel p-0">
             <h2 class="text-white py-4 text-center mb-0">Existing Questions</h2>
             <div id="questionListContent" class="overflow-y-auto flex-grow-1 px-4 pb-4">
@@ -36,19 +56,19 @@
                 <form id="questionForm">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Question Text:</label>
-                        <input type="text" id="question" name="question" class="form-control" required/>
+                        <input type="text" id="question" name="question" class="form-control" autocomplete="off" required/>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label fw-bold">Correct Answer:</label>
-                        <input type="text" id="correctAnswer" name="correctAnswer" class="form-control border-success" required/>
+                        <input type="text" id="correctAnswer" name="correctAnswer" class="form-control border-success" autocomplete="off" required/>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Incorrect Answers:</label>
-                        <input type="text" id="wrongAnswer1" name="wrongAnswer1" class="form-control mb-2" placeholder="Option 1" required/>
-                        <input type="text" id="wrongAnswer2" name="wrongAnswer2" class="form-control mb-2" placeholder="Option 2" required/>
-                        <input type="text" id="wrongAnswer3" name="wrongAnswer3" class="form-control" placeholder="Option 3" required/>
+                        <input type="text" id="wrongAnswer1" name="wrongAnswer1" class="form-control mb-2" placeholder="Option 1" autocomplete="off" required/>
+                        <input type="text" id="wrongAnswer2" name="wrongAnswer2" class="form-control mb-2" placeholder="Option 2" autocomplete="off" required/>
+                        <input type="text" id="wrongAnswer3" name="wrongAnswer3" class="form-control" placeholder="Option 3" autocomplete="off" required/>
                     </div>
 
                     <div class="mb-3">
