@@ -22,7 +22,7 @@ const sessionTypes = {
 };
 
 // Time until any session automatically expires, regardless of state
-const SESSION_AUTO_EXPIRE_TIME = 30 * 60 * 1000; // 30mins(ms)
+const SESSION_AUTO_EXPIRE_TIME = 10 * 60 * 1000; // 10mins(ms)
 
 // Time between sessions automatically checking for expired sessions
 const SESSION_EXPIRE_CHECK_TIME = 2 * 60 * 1000; // 2mins(ms)

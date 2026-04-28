@@ -431,12 +431,13 @@ function showLeaderboard(current_player, current_accuracy, category_accuracy, ne
         // Note this just goes off of order, does not check cube face names
         let box_side = box.querySelector(box_side_name);
         const stats_label = box_side.querySelector(".cube_face_stats");
+        const face_label = box_side.querySelector(".cube_face_label");
         const category_stat = category_accuracy[idx];
 
         if (category_stat.num_questions === 0) {
-            document.documentElement.style.setProperty(colors[idx], '100%');
-            box_side.style.color = 'white';
-            stats_label.innerText = `Category Unselected`;
+            document.documentElement.style.setProperty(colors[idx], '0%');
+            stats_label.innerText = ``;
+            face_label.innerText = ``;
         } else {
             document.documentElement.style.setProperty(colors[idx], category_accuracy[idx].accuracy + '%');
             stats_label.innerText = `${category_stat.num_correct}/${category_stat.num_questions} ${category_stat.accuracy}% accuracy`;
@@ -487,12 +488,13 @@ function showEndLeaderboard(current_player, current_accuracy, category_accuracy,
         // Note this just goes off of order, does not check cube face names
         let box_side = box.querySelector(box_side_name);
         const stats_label = box_side.querySelector(".cube_face_stats");
+        const face_label = box_side.querySelector(".cube_face_label");
         const category_stat = category_accuracy[idx];
 
         if (category_stat.num_questions === 0) {
-            document.documentElement.style.setProperty(colors[idx], '100%');
-            box_side.style.color = 'white';
-            stats_label.innerText = `Category Unselected`;
+            document.documentElement.style.setProperty(colors[idx], '0%');
+            stats_label.innerText = ``;
+            face_label.innerText = ``;
         } else {
             document.documentElement.style.setProperty(colors[idx], category_accuracy[idx].accuracy + '%');
             stats_label.innerText = `${category_stat.num_correct}/${category_stat.num_questions} ${category_stat.accuracy}% accuracy`;
@@ -508,7 +510,7 @@ function showEndLeaderboard(current_player, current_accuracy, category_accuracy,
 
     const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
     self_ranking.querySelectorAll('p')[0].innerText =  `You finished ${current_accuracy.accuracy}% accurate with ${current_player.points} points!`;
-    self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(current_accuracy);
+    self_ranking.querySelectorAll('p')[1].innerText = "Good job!";
     question_container.appendChild(self_ranking);
 
     const new_game_btn = template_question_container.querySelector(".new-game-btn").cloneNode(true);
