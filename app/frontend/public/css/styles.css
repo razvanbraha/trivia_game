@@ -32,7 +32,7 @@ body {
 
 .title {
     text-align: center;
-    text-shadow: -0.5px 0 black, 0 0.5px black, 0.5px 0 black, 0 -0.5px black;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 1px black;
     color: white;
 }
 
@@ -88,7 +88,7 @@ body {
 }
 
 .student-btn {
-    background-color: #70a990;
+    background-color: #29AB87;
     border: none;
     font-weight: bold;
     font-size: 1.3rem;

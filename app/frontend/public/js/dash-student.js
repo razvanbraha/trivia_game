@@ -1,6 +1,5 @@
 
 const joinRoomButton = document.querySelector('#joinRoomButton');
-const launchMultiplayerButton = document.querySelector('#launchMultiplayerButton');
 const launchStudyButton = document.querySelector('#launchStudyButton');
 
 /**
@@ -45,7 +44,7 @@ async function joinRoom() {
             if(res.ok) {
                 localStorage.setItem("room code", code);
                 localStorage.setItem("player name", name);
-                window.location.href = "/api/play/teaching/player";
+                globalThis.location.href = "/api/play/teaching/player";
             }
             else {
                 console.log(res);
@@ -54,14 +53,9 @@ async function joinRoom() {
         });
 }
 
-function launchMultiplayer() {
-    window.location.href = "/api/play/multi/host";
-}
-
 function launchStudy() {
-    window.location.href = "/api/play/study";
+    globalThis.location.href = "/api/play/study";
 }
 
 joinRoomButton.onclick = joinRoom;
-launchMultiplayerButton.onclick = launchMultiplayer;
 launchStudyButton.onclick = launchStudy;

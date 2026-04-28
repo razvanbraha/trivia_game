@@ -84,6 +84,16 @@ ws_api.init(ws, ws_api.users.CLIENT, handler, () => {
             window.location.href = "/api/student/home";
         }
     });
+
+    ws.onclose = (event) => {
+        console.log('Closed', event.code);
+        globalThis.location.href = "/api/student/home";
+
+        if (event.code === 1000) {
+            alert(`You have been removed from lobby ${code}.`)
+        }
+    }
+
     ws.signal(ws_api.signals.JOIN, body)
 });
 

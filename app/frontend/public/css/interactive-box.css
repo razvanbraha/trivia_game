@@ -8,7 +8,7 @@
 
     --cube-scene-size: 36vh;
     --cube-box-size: 18vh;
-    --cube-font-size: 30px;
+    --cube-font-size: 5vh;
 }
 
 
@@ -82,12 +82,12 @@
 }
 
 /* Source: https://3dtransforms.desandro.com/cube */
-.cube__face--front  { background: linear-gradient(0deg, red, red var(--front-percentage), white var(--front-percentage), white); transform: rotateY(  0deg) translateZ(var(--cube-box-size));}
-.cube__face--right  { background: linear-gradient(0deg, blue, blue var(--right-percentage),white var(--right-percentage), white); transform: rotateY( 90deg) translateZ(var(--cube-box-size));}
-.cube__face--back   { background: linear-gradient(0deg, green, green var(--back-percentage), white var(--back-percentage), white); transform: rotateY(180deg) translateZ(var(--cube-box-size));}
-.cube__face--left   { background: linear-gradient(0deg, gold, gold var(--left-percentage), white var(--left-percentage), white); transform: rotateY(-90deg) translateZ(var(--cube-box-size));}
-.cube__face--top   { background: linear-gradient(0deg, magenta, magenta var(--top-percentage), white var(--top-percentage), white); transform: rotateX( 90deg) translateZ(var(--cube-box-size)); }
-.cube__face--bottom { background: linear-gradient(0deg, orange, orange var(--bottom-percentage), white var(--bottom-percentage), white); transform: rotateX(-90deg) translateZ(var(--cube-box-size));}
+.cube__face--front  { background: linear-gradient(0deg, red, red var(--front-percentage), #ADADAD var(--front-percentage), #ADADAD); transform: rotateY(  0deg) translateZ(var(--cube-box-size));}
+.cube__face--right  { background: linear-gradient(0deg, blue, blue var(--right-percentage),#ADADAD var(--right-percentage), #ADADAD); transform: rotateY( 90deg) translateZ(var(--cube-box-size));}
+.cube__face--back   { background: linear-gradient(0deg, green, green var(--back-percentage), #ADADAD var(--back-percentage), #ADADAD); transform: rotateY(180deg) translateZ(var(--cube-box-size));}
+.cube__face--left   { background: linear-gradient(0deg, gold, gold var(--left-percentage), #ADADAD var(--left-percentage), #ADADAD); transform: rotateY(-90deg) translateZ(var(--cube-box-size));}
+.cube__face--top   { background: linear-gradient(0deg, magenta, magenta var(--top-percentage), #ADADAD var(--top-percentage), #ADADAD); transform: rotateX( 90deg) translateZ(var(--cube-box-size)); }
+.cube__face--bottom { background: linear-gradient(0deg, orange, orange var(--bottom-percentage), #ADADAD var(--bottom-percentage), #ADADAD); transform: rotateX(-90deg) translateZ(var(--cube-box-size));}
 
 .cube.show-front  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY(   0deg); }
 .cube.show-right  { transform: translateZ(calc(-1 * var(--cube-box-size))) rotateY( -90deg); }
