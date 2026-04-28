@@ -81,6 +81,23 @@ To run the docker project, simply run
 If you encounter issues with changes not being reflected in the browser, ensure you hard refresh your current page by pressing `Ctrl + Shift + R`.
 
 You can also try running the `rebuild` script at the root of the directory `/`.
+
+### Reset database
+
+If at any point you want to change the database schema or reset the database to the initial condition, you may run
+
+`docker compose down -v` 
+
+to delete the docker volume. Also,
+
+delete the `app/database/data` folder:
+
+`rm -rf app/database/data`
+
+Be careful though, since this will completely delete any saved questions you have that aren't initialized by the SQL in 
+
+`app/database/schema/2-data.sql` - the file which initializes database contents.
+
 # Design Overview
 ## High Level
 ![](./img/high_level_design.png)
