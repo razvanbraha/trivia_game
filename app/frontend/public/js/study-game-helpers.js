@@ -510,7 +510,7 @@ function showEndLeaderboard(current_player, current_accuracy, category_accuracy,
 
     const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
     self_ranking.querySelectorAll('p')[0].innerText =  `You finished ${current_accuracy.accuracy}% accurate with ${current_player.points} points!`;
-    self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(current_accuracy);
+    self_ranking.querySelectorAll('p')[1].innerText = "Good job!";
     question_container.appendChild(self_ranking);
 
     const new_game_btn = template_question_container.querySelector(".new-game-btn").cloneNode(true);
