@@ -32,7 +32,13 @@ const PORT = process.env.BACKEND_PORT;
 
 const app = express();
 module.exports = app;
-app.use("/public", express.static(path.join(__dirname, "../frontend/public")));
+app.use("/public", express.static(static_dir));
+app.get("/favicon.ico", (req, res) => {
+    res.sendFile(path.join(static_dir, "images/favicon.ico"));
+});
+app.get("/apple-touch-icon.png", (req, res) => {
+    res.sendFile(path.join(static_dir, "images/apple-touch-icon.png"));
+});
 app.use(express.json());
 app.use("/questions", dbAPI);
 app.use("/users", userAPI);
@@ -88,4 +94,3 @@ if (require.main === module) {
         setupWSS(server);
     });
 }
-

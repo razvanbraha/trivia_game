@@ -8,6 +8,8 @@ services:
     volumes:
     # map source code for live updates with nodemon
       - ./app/backend:/app
+    # map frontend assets so the API can serve /public files
+      - ./app/frontend:/frontend
     # map shared ws-api
       - ./shared/ws-api.js:/app/ws-api.js
     # anonymous volume to protect containers node_modules (prevents host node_modules from overwriting)

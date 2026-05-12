@@ -12,6 +12,9 @@ COPY shared/ws-api.js ./ws-api.js
 # copy rest of backend source
 COPY app/backend .
 
+# copy frontend assets served by the backend at /public
+COPY app/frontend /frontend
+
 RUN if [ -f package.json ]; then \
       npm install; \
     else \
