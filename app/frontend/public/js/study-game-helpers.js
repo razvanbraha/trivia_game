@@ -193,11 +193,6 @@ function createQuestion(text, prev, num, rounds) {
         template_div.innerHTML = template_str;
         const template = template_div.querySelector("#game-ui-template");
         template_question_container = template.content.querySelector("#question-container").cloneNode(true);
-        if(globalThis.location.href.includes("test-tg-templates")) {
-            document.body.appendChild(template_question_container);
-            // Tell script in interactive-box.js that the cube exists
-            document.dispatchEvent(new Event('boxAdded'));
-        }
         showQuestion(text, prev, num, rounds);
     });
 

@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Express backend for Sustainable Box Trivia, including REST APIs and WebSocket game sessions.",
   "main": "server.js",
   "scripts": {
     "test": "jest --collectCoverage",

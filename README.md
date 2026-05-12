@@ -1,57 +1,61 @@
 # Sustainable Box Trivia
 
-Sustainable Box Trivia is a Dockerized web app for sustainable-packaging trivia.
-It includes a Node/Express backend, MariaDB database, static HTML/CSS/JavaScript
-frontend pages, REST APIs, and WebSocket-based game sessions.
+Sustainable Box Trivia is a full-stack trivia application for sustainable
+packaging education. It provides instructor-managed question and user workflows,
+live hosted game sessions, individual study mode, and WebSocket-driven gameplay.
 
-## Current Features
+## Highlights
 
-- Landing page with student and teacher entry points.
-- Student dashboard for joining a game or starting study mode.
-- Teacher dashboard for hosting games and managing questions/users.
-- Question management page backed by question CRUD API routes.
-- User management page backed by user CRUD API routes.
-- Teaching game host and player pages.
-- Study game page.
-- Game session creation and lookup API routes.
-- WebSocket protocol for game communication.
-- MariaDB schema and seed data for users and questions.
-- Gemini endpoint for generating formatted trivia questions.
-- Jest tests for backend APIs, validation, WebSocket helpers, sessions, and game
-  logic.
+- Dockerized Node.js/Express backend with MariaDB persistence.
+- Static HTML/CSS/JavaScript frontend served by Express and an Nginx frontend
+  container.
+- REST APIs for questions, users, game sessions, and AI-assisted question
+  generation.
+- WebSocket protocol shared by the browser and backend for live game events.
+- Instructor pages for managing question banks and authorized users.
+- Player pages for joining hosted sessions and running study mode.
+- Seeded sustainable-packaging question data.
+- Jest/Supertest coverage for API routes, validation, sessions, WebSocket
+  helpers, and game logic.
 
 ## Tech Stack
 
 - Node.js
 - Express
 - MariaDB
-- Static HTML/CSS/JavaScript
 - WebSockets with `ws`
+- HTML, CSS, and browser JavaScript modules
 - Docker Compose
 - Jest and Supertest
+- Google Gemini API
 
-## Project Structure
+## Repository Structure
 
 ```text
-app/backend/              Express server, APIs, game logic, tests
-app/backend/templates/    HTML pages served by Express
-app/frontend/public/      CSS, browser JS, images, manifest
-shared/ws-api.js          Shared WebSocket protocol code
-database/schema/          Database setup and seed SQL
-docker-compose.yml        Local Docker services
-.env.template             Environment variable template
+app/backend/              Express server, APIs, game/session logic, tests
+app/backend/templates/    HTML pages served by the backend
+app/frontend/public/      Static CSS, browser JavaScript, images, manifest
+database/schema/          Database schema and seed data
+shared/ws-api.js          Shared browser/backend WebSocket protocol helper
+docker-compose.yml        Local service orchestration
+.env.template             Local environment variable template
 ```
 
-## Setup
+## Requirements
 
-Create a local environment file:
+- Docker Desktop or Docker Engine with Docker Compose
+- A `.env` file based on `.env.template`
+- A Gemini API key only if AI question generation is used
+
+## Local Setup
+
+Create the environment file:
 
 ```bash
 cp .env.template .env
 ```
 
-Fill in the values in `.env`. For local Docker usage, the important defaults
-are:
+For local Docker usage, use these service values:
 
 ```text
 SERVER_NAME=localhost
@@ -64,32 +68,32 @@ DB_HOST=db
 DB_PORT=3306
 ```
 
-Also set:
+Set local credentials and optional AI configuration:
 
 ```text
-MYSQL_ROOT_PASSWORD=
+MYSQL_ROOT_PASSWORD=<root password>
 MYSQL_DATABASE=trivia
 MYSQL_USER=user
 MYSQL_PASSWORD=password
-ADMIN_PASSWORD=
-GEMINI_KEY=
+ADMIN_PASSWORD=<admin password>
+GEMINI_KEY=<Gemini API key>
 ```
 
-Start the app:
+Start the stack:
 
 ```bash
 docker compose up --build
 ```
 
-Open:
+Open the app:
 
-- `http://localhost:8080` for the backend-served app
-- `https://localhost` for the proxy-served app
-- `localhost:3307` for MariaDB access from host database tools
+- Backend-served app: `http://localhost:8080`
+- Proxy-served app: `https://localhost`
+- MariaDB host port: `localhost:3307`
 
-## Routes
+## Main Routes
 
-Page routes:
+Pages:
 
 - `GET /`
 - `GET /student/home`
@@ -101,7 +105,7 @@ Page routes:
 - `GET /play/multi/host`
 - `GET /play/study`
 
-API routes:
+APIs:
 
 - `GET /questions`
 - `POST /questions`
@@ -117,19 +121,19 @@ API routes:
 
 ## Database
 
-The database initializes from:
+MariaDB initializes from:
 
 ```text
 database/schema/1-setup.sql
 database/schema/2-data.sql
 ```
 
-Current tables:
+The current schema defines:
 
 - `users`
 - `questions`
 
-Docker Compose persists database files under `database/data`.
+Docker Compose persists local database files under `database/data`.
 
 ## Tests
 
@@ -142,11 +146,9 @@ npm test
 
 ## Development Notes
 
-- `docker compose up --build` runs the full local stack.
-- The backend container runs `nodemon`.
+- The backend container runs with `nodemon`.
 - Frontend assets are bind-mounted and served from `/public`.
-- If static files return MIME errors after Docker changes, recreate the API
-  container:
+- If Docker changes cause stale static-file behavior, rebuild the API service:
 
 ```bash
 docker compose up -d --build api

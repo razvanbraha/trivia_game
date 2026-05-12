@@ -2,19 +2,13 @@
 /**
  * @file db.js
  * 
- * @description Consolidate original split database files into one set of
- * connection and access functions - code more or less taken from Web Dev 
- * (CSC 342) credit to Dr. Ignacio Dominguez
+ * @description Database connection and query helpers.
  * 
  * @author Will Mungas
  */
 //--- IMPORTS -----------------------------------------------------------------
 
-// Some bs to work around latest mariadb requiring usage of ESM, which
-// breaks node building everything else since the rest of the app uses CommonJS
-// modules like a good node app should.
-//
-// JavaScript modularization is hell.
+// Load mariadb lazily because the rest of the backend uses CommonJS modules.
 let mariadb;
 
 //--- INTERNAL ----------------------------------------------------------------

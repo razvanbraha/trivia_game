@@ -6,11 +6,11 @@ WORKDIR /app
 COPY app/backend/package*.json ./
 RUN npm install && npm install -g nodemon
 
-# copy real protocol.json from shared
-COPY shared/ws-api.js ./ws-api.js
-
 # copy rest of backend source
 COPY app/backend .
+
+# copy real WebSocket protocol helper from shared
+COPY shared/ws-api.js ./ws-api.js
 
 # copy frontend assets served by the backend at /public
 COPY app/frontend /frontend

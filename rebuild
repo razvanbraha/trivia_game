@@ -1,22 +1,25 @@
-#! /bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "clearing old containers and volumes..."
+echo "Stopping containers and removing Docker volumes..."
 
 docker compose down -v
 
-read -p "clear database? [y/n] " ans
+read -r -p "Remove local database files in database/data? [y/N] " ans
 
-if [ "$ans" == "y" ]; then
-    echo -e "\nclearing database..."
-    sudo rm -rf database/data
+if [[ "$ans" =~ ^[Yy]$ ]]; then
+    echo
+    echo "Removing local database files..."
+    rm -rf database/data
 fi
 
-echo -e "\nrebuilding..."
+echo
+echo "Rebuilding images without cache..."
 
 docker compose build --no-cache
 
-read -p "start? [y/n] " ans
+read -r -p "Start the stack now? [y/N] " ans
 
-if [ "$ans" == "y" ]; then
+if [[ "$ans" =~ ^[Yy]$ ]]; then
     docker compose up
 fi

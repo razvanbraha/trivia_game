@@ -57,11 +57,6 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "./templates/index.html"));
 });
 
-//TODO remove, just for testing
-app.get("/test-tg-templates", (req, res) => {
-    res.sendFile(path.join(__dirname, "./templates/test-tg-templates.html"));
-});
-
 //--- SET UP WEBSOCKETS -------------------------------------------------------
 
 // basic handler that only supports the JOIN signal, for bootstrapping the

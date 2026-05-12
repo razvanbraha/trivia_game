@@ -3,5 +3,7 @@ node_modules
 database/data/
 
 app/**/ws-api.js
+!/app/backend/ws-api.js
+/app/package-lock.json
 **/.DS_Store
 coverage/
