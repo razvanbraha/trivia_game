@@ -154,7 +154,8 @@ fetch("/api/games", fetchData)
         console.log(`Game created with code ${code}; initiating Websocket connection`)
         
         // initiate websocket connection to this code
-        const ws_url = `wss://${window.location.host}/api/`;
+        const proto = window.location.protocol === "https:" ? "wss" : "ws";
+        const ws_url = `${proto}://${window.location.host}/api/`;
         console.log(`Game created with code ${code}; initiating Websocket connection to ${ws_url}`);
         ws = new WebSocket(ws_url);
 

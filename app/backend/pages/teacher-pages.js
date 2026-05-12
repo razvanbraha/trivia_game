@@ -62,6 +62,11 @@ teacher_page_router.get("/home", shib_middleware, (req, res) => {
     res.sendFile(path.join(templates_dir, "dash-teacher.html"));
 });
 
+// Redirect base /teacher to /teacher/home
+teacher_page_router.get("/", (req, res) => {
+    res.sendFile(path.join(templates_dir, "teacher-login.html"));
+});
+
 //--- EXPORTS -----------------------------------------------------------------
 
 module.exports = teacher_page_router;

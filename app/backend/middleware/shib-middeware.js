@@ -42,7 +42,7 @@ async function shibMiddleware(req, res, next) {
     const user = req.headers["x-shib-uid"];
     
     if (!user) {
-        return res.redirect("/teacher");
+        return res.redirect("/teacher/login");
     }
     if (!(await isTeacher(req))) {
         return res.status(403).send("You need teacher/TA permission");

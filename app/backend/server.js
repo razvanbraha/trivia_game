@@ -15,7 +15,7 @@ const dbAPI = require('./rest-api/question');
 const userAPI = require('./rest-api/user');
 const gameAPI = require('./rest-api/game');
 const geminiAPI = require('./rest-api/gemini');
-// const roomAPI = require("./rest-api/room");
+const roomAPI = require("./rest-api/room");
 
 // game and websocket functions
 const sessions = require('./game/sessions');
@@ -40,13 +40,18 @@ app.get("/apple-touch-icon.png", (req, res) => {
     res.sendFile(path.join(static_dir, "images/apple-touch-icon.png"));
 });
 app.use(express.json());
-app.use("/questions", dbAPI);
-app.use("/users", userAPI);
-// app.use("/room", roomAPI);
-app.use("/ai", geminiAPI);
-app.use("/games", gameAPI);
+app.use("/api/questions", dbAPI);
+app.use("/api/users", userAPI);
+app.use("/api/room", roomAPI);
+app.use("/api/ai", geminiAPI);
+app.use("/api/games", gameAPI);
 
-// Pages paths
+// Pages paths (exposed under /api for frontend routing)
+app.use("/api/teacher", teacher_pages);
+app.use("/api/student", student_pages);
+app.use("/api/play", game_pages);
+
+// Also expose pages without the /api prefix so direct navigation works
 app.use("/teacher", teacher_pages);
 app.use("/student", student_pages);
 app.use("/play", game_pages);

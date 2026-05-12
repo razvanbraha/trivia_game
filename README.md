@@ -4,6 +4,17 @@ Sustainable Box Trivia is a full-stack trivia application for sustainable
 packaging education. It provides instructor-managed question and user workflows,
 live hosted game sessions, individual study mode, and WebSocket-driven gameplay.
 
+## Screenshots
+
+### Home Page
+![Home Page](doc/screenshots/homePage.png)
+
+### Student Dash
+![Student Dash](doc/screenshots/studentDash.png)
+
+### Study Game Lobby
+![Study Game Lobby](doc/screenshots/studyGameDash.png)
+
 ## Highlights
 
 - Dockerized Node.js/Express backend with MariaDB persistence.
