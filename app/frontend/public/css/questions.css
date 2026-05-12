@@ -1,0 +1,90 @@
+* {
+    box-sizing: border-box;
+    margin: 0px;
+    padding: 0px;
+}
+
+.question {
+    grid-area: question;
+    padding: 5px;
+    font-weight: bold;
+}
+
+/* Use the new class name from your template */
+.category-label {
+    grid-area: category;
+    text-align: left;
+}
+
+/* Ensure the container has enough height and doesn't collapse */
+.questionDisplayContainer {
+    margin: 15px;
+    background-color: white; /* Changed from grey for better visibility */
+    border-radius: 8px;
+    display: grid;
+    grid-template-areas: 
+        "question question"
+        "answers answers"
+        "category ai"
+        "footer footer"; /* Added a footer area for buttons */
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+    text-align: center;
+    color: black;
+}
+
+.answers {
+    grid-area: answers;
+    display: grid;
+    grid-template-areas: 
+    "corr wrong1"
+    "wrong2 wrong3";
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    place-items: center;
+    width:  100%;
+    height: 100%;
+    padding: 5px;
+}
+
+.correctAnswer {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.wrongAnswer1, .wrongAnswer2, .wrongAnswer3 {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Custom Scrollbar for Questions */
+#questionListContent::-webkit-scrollbar {
+    width: 6px;
+}
+#questionListContent::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+.ai {
+    grid-area: ai;
+    text-align: right;
+}
+
+/* Add this to handle your buttons in the grid */
+.btn-group-wrapper {
+    grid-area: footer;
+    padding-top: 10px;
+}
+
+#editBtn {
+    grid-area: edit;
+}
+
+#deleteBtn {
+    grid-area: delete;
+}
+
+
+
+

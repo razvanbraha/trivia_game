@@ -1,0 +1,67 @@
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: ./app/backend/Dockerfile
+    container_name: trivia-api
+    volumes:
+    # map source code for live updates with nodemon
+      - ./app/backend:/app
+    # map shared ws-api
+      - ./shared/ws-api.js:/app/ws-api.js
+    # anonymous volume to protect containers node_modules (prevents host node_modules from overwriting)
+      - /app/node_modules 
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    # use nodemon for live updates
+    command: nodemon server.js
+
+  frontend:
+    image: nginx:alpine
+    container_name: trivia-frontend
+    volumes:
+      - ./app/frontend:/usr/share/nginx/html
+      - ./shared/ws-api.js:/usr/share/nginx/html/public/js/ws-api.js
+    expose:
+      - "80"
+
+  db:
+    image: mariadb:latest
+    container_name: trivia-db
+    restart: unless-stopped
+    env_file: 
+      - .env
+    volumes:
+    # mount persistent data under database/data
+      - "./database/data:/var/lib/mysql"
+    # mount our schema setup file to be executed when the container is created
+      - "./database/schema:/docker-entrypoint-initdb.d"
+    ports:
+    # allow a database client (MySQL Workbench, for example) on the host machine access into the container
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  apacheshib:
+    image: dockerhub.csc.ncsu.edu/ignacioxd/apacheshib-proxy
+    container_name: shib-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api
+      - frontend
+    env_file:
+      - .env
+
+volumes:
+  mysql-data:

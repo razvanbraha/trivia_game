@@ -1,0 +1,22 @@
+#! /bin/bash
+
+echo "clearing old containers and volumes..."
+
+docker compose down -v
+
+read -p "clear database? [y/n] " ans
+
+if [ "$ans" == "y" ]; then
+    echo -e "\nclearing database..."
+    sudo rm -rf database/data
+fi
+
+echo -e "\nrebuilding..."
+
+docker compose build --no-cache
+
+read -p "start? [y/n] " ans
+
+if [ "$ans" == "y" ]; then
+    docker compose up
+fi

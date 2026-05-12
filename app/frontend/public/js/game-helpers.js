@@ -1,0 +1,942 @@
+//--- HEADER ------------------------------------------------------------------
+/**
+ * @file game-helpers.js
+ * 
+ * @description Provides helper functions to manipulate the DOM for all game
+ * pages
+ * 
+ * @author Will Mungas
+ * Creation, initial contents for teaching game
+ * 
+ * @author Connor Hekking
+ * updatePlayers, loadTemplateContent, showQuestion, showAnswers, 
+ * answersClickable, showCorrectAnswer, showLeaderboard, showEndLeaderboard
+ */
+//--- GLOBALS ---------------------------------------------------------------
+
+// Reference for template(from question-template.html) once it is loaded into DOM
+let template_question_container;
+
+const CATEGORY_NAMES = {
+    1: "History & Evolution",
+    2: "Technical Aspects & Engineering",
+    3: "Sustainability",
+    4: "Consumerism & Ethics",
+    5: "End-of-Life & Data",
+    6: "Logistics & Distribution"
+};
+
+//--- FUNCTIONS ---------------------------------------------------------------
+
+/**
+ * @author Will Mungas
+ * @description gets the content element of the page
+ * @returns The content element of the page
+ */
+function getContent() {
+    return document.querySelector("#content");
+}
+
+/**
+ * @author Will Mungas
+ * @description clears the page content, removing contained text, HTML, and 
+ * all class-based css styling
+ */
+function clearContent() {
+    const content = getContent();
+    content.innerHTML = "";
+    content.innerText = "";
+    content.className = "";
+}
+
+
+/**
+ * @author Will Mungas
+ * @description Creates a lobby page within the content element, listing the
+ * settings and the currently joined players
+ * @param {String} code game code
+ * @param {Function} start function to start the game
+ */
+function createLobby(code, start) {
+    const content = getContent();
+
+    clearContent();
+
+    content.innerHTML += `
+    <div class="container-fluid main-container">
+        <div class="row h-100 text-white">
+            <div class="col-md-4 left-panel p-4">
+                <h3>Settings</h3>
+
+                <label class="mt-3">Questions: <span id="questionCount">25</span></label>
+                <input type="range" min="1" max="50" value="25" id="questionSlider" class="form-range">
+
+                <label class="mt-3">Question Preview Time: <span id="previewTime">5</span> seconds</label>
+                <input type="range" min="1" max="30" value="5" id="previewSlider" class="form-range">
+
+                <label class="mt-3">Answer Preview Time: <span id="deadTime">3</span> seconds</label>
+                <input type="range" min="1" max="30" value="3" id="deadSlider" class="form-range">
+
+                <label class="mt-3">Answering Period: <span id="liveTime">10</span> seconds</label>
+                <input type="range" min="1" max="30" value="10" id="liveSlider" class="form-range">
+
+                <h5 class="mt-4">Categories</h5>
+                <div>
+                    <input type="checkbox" checked value="1">History & Evolution<br>
+                    <input type="checkbox" checked value="2">Technical Aspects & Engineering<br>
+                    <input type="checkbox" checked value="3">Sustainability<br>
+                    <input type="checkbox" checked value="4">Consumerism & Ethics<br>
+                    <input type="checkbox" checked value="5">End-of-Life & Data<br>
+                    <input type="checkbox" checked value="6">Logistics & Distribution<br>
+                </div>
+
+            </div>
+
+            <div class="col-md-8 right-panel p-4">
+
+                <h4>CODE: <span id="roomCode">${code}</span></h4>
+
+                <h5 class="mt-4">Joinees</h5>
+                <div class="players" id="players"></div>
+
+                <div class="mt-5 d-flex gap-4">
+                    <button id="cancelRoomButton" class="btn btn-danger">Cancel</button>
+                    <button id="startGameButton" class="btn btn-primary"">Start</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    `
+
+    content.querySelector("#cancelRoomButton").addEventListener("click", () => {
+        //TODO should replace this with main.js method instead
+        globalThis.location.href = "/api/teacher/home";
+    });
+
+    content.querySelector("#startGameButton").addEventListener("click", () => {
+        //TODO Reject game start if no players present
+        start();
+    });
+
+    const sliders = ["questionSlider", "previewSlider", "deadSlider", "liveSlider"];
+    const countDisplays = ["questionCount", "previewTime", "deadTime", "liveTime"];
+
+    for(let i = 0; i < sliders.length; i++) {
+        const slider = document.getElementById(sliders[i]);
+        const countDisplay = document.getElementById(countDisplays[i]);
+        slider.addEventListener("input", () => {
+            countDisplay.innerText = slider.value;
+        });
+    }
+
+    content.classList.add("lobby-ctnr")
+}
+
+/**
+ * @author Will Mungas, Riley Wickens
+ * @description Creates a lobby page for study games within the content element, listing the
+ * settings
+ * @param {Function} start function to start the game
+ */
+function createStudyLobby(start) {
+    const content = getContent();
+
+    clearContent();
+
+    content.innerHTML += `
+    <div class="container-fluid main-container">
+        <div class="row h-100 text-white">
+            <div class="col-md-4 left-panel p-4">
+                <h3>Settings</h3>
+
+                <label class="mt-3">Questions: <span id="questionCount">25</span></label>
+                <input type="range" min="1" max="50" value="25" id="questionSlider" class="form-range">
+
+                <label class="mt-3">Question Preview Time: <span id="previewTime">5</span> seconds</label>
+                <input type="range" min="1" max="30" value="5" id="previewSlider" class="form-range">
+
+                <label class="mt-3">Answer Preview Time: <span id="deadTime">3</span> seconds</label>
+                <input type="range" min="1" max="30" value="3" id="deadSlider" class="form-range">
+
+                <label class="mt-3">Answering Period: <span id="liveTime">10</span> seconds</label>
+                <input type="range" min="1" max="30" value="10" id="liveSlider" class="form-range">
+
+                <h5 class="mt-4">Categories</h5>
+                <div>
+                    <input type="checkbox" checked value="1">History & Evolution<br>
+                    <input type="checkbox" checked value="2">Technical Aspects & Engineering<br>
+                    <input type="checkbox" checked value="3">Sustainability<br>
+                    <input type="checkbox" checked value="4">Consumerism & Ethics<br>
+                    <input type="checkbox" checked value="5">End-of-Life & Data<br>
+                    <input type="checkbox" checked value="6">Logistics & Distribution<br>
+                </div>
+            </div>
+
+            <div class="col-md-8 right-panel p-4">
+                <div class="mt-3">
+                    <h5>Study Game</h5>
+                    <p>Welcome! Once your settings have been set click the start button to begin.</p>
+                </div>
+                <div class="mt-5 d-flex gap-4">
+                    <button id="cancelRoomButton" class="btn btn-danger">Cancel</button>
+                    <button id="startGameButton" class="btn btn-primary"">Start</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    `
+
+    content.querySelector("#cancelRoomButton").addEventListener("click", () => {
+        globalThis.location.href = "/api/student/home";
+    });
+
+    content.querySelector("#startGameButton").addEventListener("click", () => {
+        start();
+    });
+
+    const sliders = ["questionSlider", "previewSlider", "deadSlider", "liveSlider"];
+    const countDisplays = ["questionCount", "previewTime", "deadTime", "liveTime"];
+
+    for(let i = 0; i < sliders.length; i++) {
+        const slider = document.getElementById(sliders[i]);
+        const countDisplay = document.getElementById(countDisplays[i]);
+        slider.addEventListener("input", () => {
+            countDisplay.innerText = slider.value;
+        });
+    }
+    content.classList.add("lobby-ctnr")
+}
+
+/**
+ * @author Riley Wickens
+ * @description display for players to confirm lobby join, something to see while waiting on host to begin
+ */
+function waitingRoom() {
+    const content = getContent();
+
+    content.innerHTML += `
+     <main id="question-container">
+        <div class="next-question-container">Successfully Joined!</div>
+        <div class="waiting-container">Waiting for the host to begin game.</div>
+        <div class="loader"></div>
+    </main>
+    `
+}
+
+function addHeaders(code, name) {
+    const header = document.querySelector("header");
+    const title = header.querySelector("h1");
+
+    // Insert code before title
+    const codeLabel = document.createElement('h6');
+    codeLabel.className = "code-label";
+    codeLabel.classList.add("my-0", "me-5")
+    codeLabel.textContent = `Code: ${code}`;
+    header.insertBefore(codeLabel, title);
+
+    // Insert header after title
+    const nameLabel = document.createElement('h6');
+    nameLabel.className = "name-label";
+    nameLabel.classList.add("my-0", "ms-5")
+    nameLabel.textContent = `${name}`;
+    title.insertAdjacentElement("afterend", nameLabel);
+}
+
+/**
+ * @author Will Mungas
+ * @description Updates the list of players & attaches their kick buttons
+ * @param {*} players list of player names
+ * @param {(name: String)} kick function to call to kick a player by name (called when button is clicked)
+ */
+function updatePlayers(players, kick) {
+    const player_section = document.getElementById("players");
+    player_section.innerHTML = "";
+    for(const player of players) {
+        player_section.innerHTML += 
+        `
+        <div class="player">
+            <p>${player}</p>
+            <button class="btn btn-danger">Kick</button>
+        </div>
+        `;
+    }
+    // add functionality to kick buttons
+    const player_elements = player_section.querySelectorAll("div");
+    for(const player of player_elements) {
+        const text = player.querySelector("p").innerText;
+        const kick_btn = player.querySelector("button");
+        kick_btn.onclick = () => {
+            kick(text);
+        }
+    }
+}
+
+/**
+ * @author Connor Hekking
+ * @description Loads settings from page elements
+ * @return object {
+ *  rounds: Number,
+ *  categories: Array,
+ *  preview: Number,
+ *  Dead: Number, 
+ *  Live: Number
+ * }
+ */
+function getSettings() {
+    const rounds = document.getElementById("questionSlider").value;
+    const categories = [...document.querySelectorAll("input[type=checkbox]:checked")]
+        .map(c => c.value);
+    const preview = document.getElementById("previewSlider").value;
+    const dead = document.getElementById("deadSlider").value;
+    const live = document.getElementById("liveSlider").value;
+
+    return {
+        rounds,
+        categories,
+        preview,
+        dead,
+        live
+    }
+}
+
+//--- TIMER SETUP -------------------------------------------------------------
+
+/**
+ * @author Connor Hekking
+ * 
+ * Resets round-time-bar animation and time
+ * 
+ * @param {String} countdown Countdown element
+ * @param {Number} timerStart Start time of timer
+ */
+function resetTimer(countdown, timerStart) {
+    const timer_bar = countdown.querySelector('.round-time-bar div');
+
+    // Reset animation
+    timer_bar.style.animation = 'none';
+    timer_bar.offsetHeight;
+    timer_bar.style.animation = null;
+
+    // Update duration
+    countdown.querySelector('.round-time-bar').style = `--duration: ${timerStart};`;
+}
+
+//--- QUESTIONS ---------------------------------------------------------------
+
+/**
+ * Pulls 
+ * @param {*} text Text of the question
+ * @param {*} prev preview time before answers will be received
+ * @param {*} num Question number
+ * @param {*} rounds Number of rounds(questions)
+ */
+function createQuestion(text, prev, num, rounds) {
+    const template_div = document.createElement('div');
+
+    fetch('/public/templates/question-template.html')
+    .then(res => res.text())
+    .then((template_str) => {
+        template_div.innerHTML = template_str;
+        const template = template_div.querySelector("#game-ui-template");
+        template_question_container = template.content.querySelector("#question-container").cloneNode(true);
+        if(window.location.href.includes("test-tg-templates")) {
+            document.body.appendChild(template_question_container);
+            // Tell script in interactive-box.js that the cube exists
+            document.dispatchEvent(new Event('boxAdded'));
+        }
+        showQuestion(text, prev, num, rounds);
+    });
+
+
+}
+
+/**
+ * @author Connor Hekking
+ * 
+ * Fills content with the question preview page
+ * 
+ * @param {String} questionText Text of the question
+ * @param {Number} timerStart Start time of timer (preview time)
+ * @param {Number} num Question number
+ * @param {Number} rounds Number of rounds(questions)
+ */
+function showQuestion(questionText, timerStart, num, rounds) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call loadTemplateContent.");
+    }
+
+    const content_container = getContent();
+    
+    // Empty page
+    clearContent();
+
+    // Create new empty instance of question_container
+    const question_container = template_question_container.cloneNode(false);
+
+    // Clone new elements
+    const question_number = template_question_container.querySelector(".question-number").cloneNode(true);
+    const next_question = template_question_container.querySelector(".next-question").cloneNode(true);
+    const question_text = template_question_container.querySelector(".question-text").cloneNode(true);
+    const countdown = template_question_container.querySelector(".countdown").cloneNode(true);
+
+    // Edit elements
+    question_number.querySelector('h5').innerText = `Question ${num}/${rounds}`;
+    question_text.querySelector('p').innerText = questionText;
+    resetTimer(countdown, timerStart);
+
+    // Add new elements
+    question_container.appendChild(question_number);
+    question_container.appendChild(next_question);
+    question_container.appendChild(question_text);
+    question_container.appendChild(countdown);
+
+    // Add obj to content_container
+    content_container.appendChild(question_container);
+}
+
+/**
+ * @author Connor Hekking
+ * 
+ * Shows answer choices which start greyed out (dead time)
+ * 
+ * @param {Array} answers List of the four answers in the order to be displayed
+ * @param {Number} timerStart Starting time on the timer(dead time)
+ */
+function showAnswers(answers, timerStart) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call loadTemplateContent.");
+    }
+
+    // Check length of answers array
+    if(answers.length != 4) {
+        throw new Error("answers array must be of length 4");
+    }
+
+    const content_container = getContent();
+    const question_container = content_container.querySelector("#question-container");
+
+    // Get current elements
+    const next_question = question_container.querySelector(".next-question");
+    const question_text = question_container.querySelector(".question-text");
+    const countdown = question_container.querySelector(".countdown");
+
+    // Remove unwanted elements
+    question_container.removeChild(next_question);
+    
+    // Clone new elements
+    const answer_choices = template_question_container.querySelector(".answer-choices").cloneNode(true);
+
+    // Edit elements
+    resetTimer(countdown, timerStart);
+    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice, idx) => {
+        answer_choice.innerText = answers[idx];
+        answer_choice.classList.add("preview");
+    });
+
+    // Add new elements
+    question_container.insertBefore(answer_choices, countdown)
+}
+
+/**
+ * @author Connor Hekking
+ * 
+ * Makes answer choices clickable and attaches given handler (live time)
+ * 
+ * @param {Number} timerStart Starting time on the timer(Live time)
+ * @param {Boolean} isHost If the page should be prepared for a host instead of a player view
+ * @param {Function} answerHandler (not required if isHost) Handler to call when answer choice clicked. Receives parameter of the answer number.
+ */
+function answersClickable(timerStart, isHost, answerHandler) {
+    const content_container = getContent();
+    const question_container = content_container.querySelector("#question-container");
+
+    // Get current elements
+    const answer_choices = question_container.querySelector(".answer-choices");
+    const countdown = question_container.querySelector(".countdown");
+
+    // Edit elements
+    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice, idx) => {
+        if(!isHost){
+            answer_choice.addEventListener('click', () => {
+                answerHandler(idx)
+                answer_choices.querySelectorAll('.answer-choice-container').forEach((choices, i) => {
+                    if (i != idx && !choices.classList.contains('picked')) {
+                        choices.classList.add('unpicked');
+                    } 
+                    else {
+                        choices.classList.add('picked');
+                    }
+                });
+        }, {once: true});
+        } else {
+            answer_choice.classList.add("host");
+        }
+        answer_choice.classList.remove("preview");
+    });
+    resetTimer(countdown, timerStart);
+}
+
+/**
+ * @author Connor Hekking
+ * 
+ * Changes the question element to the showing correct/incorrect answer state
+ * 
+ * @param {Number} chosenAnswerIdx Index (0-3) of the answer the user chose, or -1 if none chosen
+ * @param {Number} correctAnswerIdx Number (0-3) of the correct answer
+ * @param {Boolean} isHost If the page object should be prepared for a host instead of a player view
+ * @param {Function} continueBtnHandler (not required if !isHost) Function to be called when host continue button is clicked
+ * @param {Number} classAccuracyPercent (not required if !isHost) Class accuracy perecentage i.e. 55
+ */
+function showCorrectAnswer(chosenAnswerIdx, correctAnswerIdx, isHost, continueBtnHandler, classAccuracyPercent) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call loadTemplateContent.");
+    }
+
+    const content_container = getContent();
+    const question_container = content_container.querySelector("#question-container");
+
+    // Get current elements
+    const question_text = question_container.querySelector(".question-text");
+    const answer_choices = question_container.querySelector(".answer-choices");
+    const countdown = question_container.querySelector(".countdown");
+
+    // Remove unwanted elements
+    question_container.removeChild(countdown);
+
+    // Add new elements
+    if(!isHost) {
+        if(chosenAnswerIdx == correctAnswerIdx) {
+            // Add correct element
+            const correct_prompt = template_question_container.querySelector(".correct-prompt").cloneNode(true);
+            question_container.appendChild(correct_prompt);
+        } else {
+            // Add incorrect element
+            const incorrect_prompt = template_question_container.querySelector(".incorrect-prompt").cloneNode(true);
+            question_container.appendChild(incorrect_prompt);
+        }
+    } else {
+        // Add class accuracy element
+        const class_accuracy = template_question_container.querySelector(".question-class-accuracy").cloneNode(true);
+        question_container.appendChild(class_accuracy);
+        class_accuracy.querySelector('p').innerText = `${classAccuracyPercent}% Class Accuracy!`;
+
+        // Host has continue control
+        const next_question_btn = template_question_container.querySelector(".next-question-btn").cloneNode(true);
+        question_container.appendChild(next_question_btn);
+        next_question_btn.addEventListener("click", () => {
+            continueBtnHandler();
+        });
+    }
+
+    // Edit elements
+    answer_choices.querySelectorAll('.answer-choice-container').forEach((answer_choice, idx) => {
+        if(idx === correctAnswerIdx) {
+            if (answer_choice.classList.contains('unpicked')) answer_choice.classList.remove('unpicked');
+            answer_choice.classList.add("correct");
+        } else if(idx === chosenAnswerIdx) {
+            // Add incorrect styling only if chosen & NOT correct
+            answer_choice.classList.add("incorrect");
+        } else {
+            answer_choice.classList.add("unpicked");
+        }
+    });
+}
+
+/**
+ * @author Connor Hekking
+ * 
+ * Returns the place text ('You are in/finished 1st place')
+ * 
+ * @param {Number} place Current player's rank
+ * @param {Boolean} final If the text is for current position(false) or final position(true)
+ * @returns place text ('You are in/finished 1st place')
+ */
+function getPlaceText(place, final) {
+    let place_text = '';
+    if(final) {
+        place_text += 'You finished ';
+    } else {
+        place_text += 'You are in ';
+    }
+
+    // Get ordinal suffix
+    const lastTwo = place % 100;
+    const last = place % 10;
+    if (lastTwo >= 11 && lastTwo <= 13) place_text += place + 'th';
+    else if (last === 1) place_text += place + 'st';
+    else if (last === 2) place_text += place + 'nd';
+    else if (last === 3) place_text += place + 'rd';
+    else place_text += place + 'th';
+
+    place_text += ' place!';
+    
+    return place_text;
+}
+
+/**
+ * @author Connor Hekking
+ * 
+ * Returns the encouragement text ('Keep it up!/Good job!')
+ * 
+ * @param {Number} place Current player's rank
+ * @param {Boolean} final If the text is for current position(false) or final position(true)
+ * @returns encouragement text ('Keep it up!/Good job!')
+ */
+function getEncouragementText(place, final) {
+    let idx = place - 1;
+    const encouragement_texts_ongoing = ['On top of the world!', 'Almost perfect!', 'Nearly there!', 'Keep up the lead!', 'Nice work!', 'Keep it up!'];
+    const encouragement_texts_final = ['Gold medal!', 'Silver medal!', 'Bronze medal!', 'You are on the podium!', 'You are on the podium!', 'Good game!'];
+    let encouragement_text;
+    if(idx >= (encouragement_texts_ongoing.length - 1)) {
+        // Default is last in array
+        idx = encouragement_texts_ongoing.length - 1;
+    }
+    if(final) {
+        encouragement_text = encouragement_texts_final[idx];
+    } else {
+        encouragement_text = encouragement_texts_ongoing[idx];
+    }
+    return encouragement_text;
+}
+
+/**
+ * @author Connor Hekking, Riley Wickens
+ * 
+ * Populates the page with the leaderboard
+ * 
+ * @param {{name: String, points: Number, latest_answer: Number}} current_player Current player's points, name, and latest answer in an object
+ * @param {Array({name: String, points: Number, latest_answer: Number})} all_players Array of all player's points, name, and latest answer in an object
+ * @param {Boolean} isHost If the page object should be prepared for a host instead of a player view
+ * @param {Function} nextQuestionBtnHandler (not required if !isHost) Function to be called when host next question button is clicked
+ */
+function showLeaderboard(current_player, all_players, isHost, category_accuracy, nextQuestionBtnHandler) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call loadTemplateContent.");
+    }
+
+    const content_container = getContent();
+    const question_container = content_container.querySelector("#question-container");
+
+    // Get Current Elements
+    const answer_choices = question_container.querySelector(".answer-choices");
+    const prev_next_question_btn = question_container.querySelector(".next-question-btn");
+    
+    if(isHost) {
+        // Remove unwanted elements
+        answer_choices.remove();
+        prev_next_question_btn.remove();
+
+        // Clone new elements
+        const leaderboard = template_question_container.querySelector(".small-leaderboard").cloneNode(true);
+
+
+        // Edit Elements
+        leaderboard.querySelectorAll('p').forEach((ranking, idx) => {
+            if(all_players[idx]) {
+                ranking.innerText = `${ranking.innerText.split(":")[0]} ${all_players[idx].name} with ${all_players[idx].points} points`;
+            }
+            else if (idx < 3) {
+                const medals = leaderboard.querySelectorAll('.medal-winner');
+                medals.forEach((medal) => {
+                    if (idx + 1 === Number.parseInt(medal.querySelector(".medal").innerText)) {
+                        medal.remove();
+                    }
+                })
+            }
+            else ranking.remove();
+        });
+
+        //Add Elements
+        question_container.appendChild(leaderboard);
+
+        // host has continue control
+        const next_question_btn = template_question_container.querySelector(".next-question-btn").cloneNode(true);
+        question_container.appendChild(next_question_btn);
+        next_question_btn.addEventListener("click", () => {
+            nextQuestionBtnHandler();
+        });
+    }
+    
+    // Add new elements
+    if(!isHost) {
+        //Empty Page Contents
+        question_container.innerHTML = '';
+
+        // Get current player's rank
+        const rank = 1 + all_players.findIndex((player) => player.name == current_player.name);
+
+        const box = template_question_container.querySelector(".box").cloneNode(true);
+        
+        //Set Box Colour Gradients & Accuracy message
+        const box_sides = [".cube__face--front", ".cube__face--back", ".cube__face--right", ".cube__face--left", ".cube__face--top", ".cube__face--bottom"];
+        const colors = ["--front-percentage", "--back-percentage", "--right-percentage", "--left-percentage", "--top-percentage", "--bottom-percentage"];
+        box_sides.forEach((box_side_name, idx) => {
+            // Note this just goes off of order, does not check cube face names
+            let box_side = box.querySelector(box_side_name);
+            const stats_label = box_side.querySelector(".cube_face_stats");
+            const face_label = box_side.querySelector(".cube_face_label");
+            const category_stat = category_accuracy[idx];
+
+            if (category_stat.num_questions === 0) {
+                document.documentElement.style.setProperty(colors[idx], '0%');
+                stats_label.innerText = ``;
+                face_label.innerText = ``;
+            } else {
+                document.documentElement.style.setProperty(colors[idx], category_accuracy[idx].accuracy + '%');
+                stats_label.innerText = `${category_stat.num_correct}/${category_stat.num_questions} ${category_stat.accuracy}% accuracy`;
+            }
+        });
+
+        question_container.appendChild(box);   
+        document.dispatchEvent(new Event('boxAdded'));
+
+        const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
+        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(rank, false);
+        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, false);
+        question_container.appendChild(self_ranking);
+    }
+}
+
+/**
+ * @author Connor Hekking, Riley Wickens
+ * 
+ * Populates the page with the ENDING leaderboard
+ * 
+ * @param {{name: String, points: Number, latest_answer: Number}} current_player Current player's points, name, and latest answer in an object
+ * @param {Array({name: String, points: Number, latest_answer: Number})} all_players Array of all player's points, name, and latest answer in an object
+ * @param {Boolean} isHost If the page object should be prepared for a host instead of a player view
+ * @param {List} category_accuracy Category statistics in form List({category_num, accuracy, num_correct, num_questions})
+ * @returns cloneable object containing the body of the leaderboard page 
+ */
+function showEndLeaderboard(current_player, all_players, isHost, category_accuracy, questions, question_accuracies) {
+    if(!template_question_container) {
+        throw new Error("Template content not yet loaded, please call loadTemplateContent.");
+    }
+    const content_container = getContent();
+    const question_container = content_container.querySelector("#question-container");
+
+    // Remove unwanted elements
+    question_container.innerHTML = '';
+    
+    // Clone new elements
+    const podium = template_question_container.querySelector(".podium").cloneNode(true);
+    const box = template_question_container.querySelector(".box").cloneNode(true);
+
+
+    // Your/class learning
+    if(isHost) {
+        const learning = template_question_container.querySelector(".class-learning").cloneNode(true);
+        question_container.appendChild(learning);
+    } else {
+        const learning = template_question_container.querySelector(".your-learning").cloneNode(true);
+        question_container.appendChild(learning);
+    }
+
+    // Setup Podium
+    for (let idx = 0; idx < 5; idx++) {
+        const column = podium.querySelector(`.position-${idx + 1}`);
+        if(all_players[idx]) {
+            column.querySelector(`.winner-text-${idx + 1}`).innerText = all_players[idx].name;
+            column.querySelector(`.points-text-${idx + 1}`).innerText = `${all_players[idx].points} points`;
+        }
+        else column.remove();
+    }
+
+    //Set Box Colour Gradients & Accuracy message
+    const box_sides = [".cube__face--front", ".cube__face--back", ".cube__face--right", ".cube__face--left", ".cube__face--top", ".cube__face--bottom"];
+    const colors = ["--front-percentage", "--back-percentage", "--right-percentage", "--left-percentage", "--top-percentage", "--bottom-percentage"];
+    box_sides.forEach((box_side_name, idx) => {
+        // Note this just goes off of order, does not check cube face names
+        let box_side = box.querySelector(box_side_name);
+        const stats_label = box_side.querySelector(".cube_face_stats");
+        const face_label = box_side.querySelector(".cube_face_label");
+        const category_stat = category_accuracy[idx];
+
+        if (category_stat.num_questions === 0) {
+            document.documentElement.style.setProperty(colors[idx], '0%');
+            stats_label.innerText = ``;
+            face_label.innerText = ``;
+        } else {
+            document.documentElement.style.setProperty(colors[idx], category_accuracy[idx].accuracy + '%');
+            stats_label.innerText = `${category_stat.num_correct}/${category_stat.num_questions} ${category_stat.accuracy}% accuracy`;
+        }
+    });
+
+    document.documentElement.style.setProperty('--cube-scene-size', '32vh');
+    document.documentElement.style.setProperty('--cube-box-size', '16vh');
+    document.documentElement.style.setProperty('--cube-font-size', '24px');
+
+    // Add new elements
+    question_container.appendChild(box);
+    // Tell script in interactive-box.js that the box exists
+    document.dispatchEvent(new Event('boxAdded'));
+
+    if(!isHost) {
+        // Get current player's rank
+        const rank = 1 + all_players.findIndex((player) => player.name == current_player.name);
+
+        const self_ranking = template_question_container.querySelector(".self-ranking").cloneNode(true);
+        self_ranking.querySelectorAll('p')[0].innerText = getPlaceText(rank, true);
+        self_ranking.querySelectorAll('p')[1].innerText = getEncouragementText(rank, true);
+        question_container.appendChild(self_ranking);
+
+        const downloadBtn = document.createElement("button");
+        downloadBtn.innerText = "Download My Stats";
+        downloadBtn.classList.add("btn", "btn-success", "mt-3");
+
+        downloadBtn.addEventListener("click", () => {
+            downloadStats(current_player, category_accuracy, all_players, questions);
+        });
+
+        question_container.appendChild(downloadBtn);
+    }
+    question_container.appendChild(podium);
+    if(isHost) {
+        //TODO END GAME
+        const new_game_btn = template_question_container.querySelector(".new-game-btn").cloneNode(true);
+        new_game_btn.addEventListener("click", () => globalThis.location.reload());
+        question_container.appendChild(new_game_btn);
+
+        const downloadBtn = document.createElement("button");
+        downloadBtn.innerText = "Download Class Stats";
+        downloadBtn.classList.add("btn", "btn-success", "mt-3", 'download-btn');
+
+        downloadBtn.addEventListener("click", () => {
+            downloadStats(null, category_accuracy, all_players, questions, true, question_accuracies);
+        });
+
+        question_container.appendChild(downloadBtn);
+    }
+}
+
+/**
+ * Generates and downloads a text file containing game statistics.
+ * Supports both individual player stats (for each player) and class stats (for host).
+ * @author David Salinas
+ * @param {Object|null} player Player object (null if user is host)
+ * @param {Array} category_accuracy List of category statistics
+ * @param {Array} all_players List of all players
+ * @param {Array|null} questions List of questions (null if user is host)
+ * @param {Boolean} [isHost=false] Whether the download is for the host
+ */
+function downloadStats(player, category_accuracy, all_players, questions, isHost = false, question_accuracies = []) {
+    let text = '';
+
+    if (!isHost) {
+        const rank = 1 + all_players.findIndex(p => p.name === player.name);
+
+        text += `Game Results for ${player.name}\n`;
+        text += `----------------------------------\n`;
+        text += `Rank: ${rank}\n`;
+        text += `Points: ${player.points}\n`;
+        text += `Questions Answered: ${player.answers.length}\n\n`;
+
+        const categories = {};
+
+        questions.forEach((q, idx) => {
+            const cat = q.category;
+
+            if (!categories[cat]) {
+                categories[cat] = [];
+            }
+
+            const studentAnswerIdx = player.answers[idx];
+            const studentAnswer = studentAnswerIdx !== -1 ? q.choices[studentAnswerIdx] : "No Answer";
+            const correctAnswer = q.choices[q.correct_idx];
+
+            categories[cat].push({
+                question: q.text,
+                studentAnswer,
+                correctAnswer
+            });
+        });
+
+        for (const cat in categories) {
+            const categoryName = CATEGORY_NAMES[cat] || `Category ${cat}`;
+            text += `\n${categoryName}\n`;
+            text += `----------------------------------\n`;
+
+            categories[cat].forEach((q, i) => {
+                text += `Q${i + 1}: ${q.question}\n`;
+                text += `Your Answer: ${q.studentAnswer}\n`;
+                text += `Correct Answer: ${q.correctAnswer}\n\n`;
+            });
+        }
+    } else {
+        text += `Class Results\n`;
+        text += `----------------------------------\n`;
+        text += `Total Players: ${all_players.length}\n\n`;
+
+        const categories = {};
+
+        questions.forEach((q, idx) => {
+            const cat = q.category;
+
+            if (!categories[cat]) {
+                categories[cat] = [];
+            }
+
+            categories[cat].push({
+                question: q.text,
+                correctAnswer: q.choices[q.correct_idx],
+                accuracy: question_accuracies[idx]
+            });
+        });
+
+        for (const cat in categories) {
+            const categoryName = CATEGORY_NAMES[cat] || `Category ${cat}`;
+
+            text += `\n${categoryName}\n`;
+            text += `----------------------------------\n`;
+
+            categories[cat].forEach((q, i) => {
+                text += `Q${i + 1}: ${q.question}\n`;
+                text += `Correct Answer: ${q.correctAnswer}\n`;
+                text += `Class Accuracy: ${q.accuracy}%\n\n`;
+            });
+        }
+    }
+
+    text += `\nCategory Performance Summary:\n`;
+    category_accuracy.forEach(cat => {
+        const categoryName = CATEGORY_NAMES[cat.category_num] || `Category ${cat.category_num}`;
+        text += `${categoryName}: ${cat.accuracy}% (${cat.num_correct}/${cat.num_questions})\n`;
+    });
+
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = window.URL.createObjectURL(blob);
+
+    const date = new Date().toISOString().replaceAll(':', '-');
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = isHost ? `class_stats_${date}.txt` : `${player.name}_detailed_stats_${date}.txt`;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+}
+
+// TODO add functions to create question text, create answer choices, etc
+    // Why would creating questions go here? 
+
+//--- EXPORTS -----------------------------------------------------------------
+
+export default {
+    getContent,
+    clearContent,
+    createLobby,
+    createStudyLobby,
+    waitingRoom,
+    addHeaders,
+    updatePlayers,
+    getSettings,
+    createQuestion,
+    showQuestion,
+    showAnswers,
+    answersClickable,
+    showCorrectAnswer,
+    showLeaderboard,
+    showEndLeaderboard,
+    downloadStats
+}
